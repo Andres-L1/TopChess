@@ -50,13 +50,22 @@ const TeacherDashboard = () => {
                     <Logo className="w-8 h-8 text-gold" />
                     <h1 className="text-xl font-bold tracking-tight text-white">Panel de <span className="text-gold">Grandes Maestros</span></h1>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 text-text-muted hover:text-red-400 transition-colors text-xs uppercase font-bold tracking-wider"
-                >
-                    <LogOut size={16} />
-                    <span>Cerrar Sesión</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate(`/room/${currentUserId}`)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gold/10 hover:bg-gold hover:text-black text-gold border border-gold/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider mr-4"
+                    >
+                        <Logo className="w-4 h-4" />
+                        <span>Mi Aula</span>
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 text-text-muted hover:text-red-400 transition-colors text-xs uppercase font-bold tracking-wider"
+                    >
+                        <LogOut size={16} />
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-6 py-8">
@@ -103,27 +112,36 @@ const TeacherDashboard = () => {
                         {/* Dynamic Level Info */}
                         {(() => {
                             const comm = mockDB.calculateCommission(currentUserId);
-                            const percent = comm.nextLevelStart
-                                ? ((comm.activeStudents - (comm.nextLevelStart > 10 ? 10 : comm.nextLevelStart > 3 ? 3 : 0)) / (comm.nextLevelStart - (comm.nextLevelStart > 10 ? 10 : comm.nextLevelStart > 3 ? 3 : 0))) * 100
-                                : 100;
-                            // Simplified progress logic for display:
-                            // Just active / target
                             const progress = comm.nextLevelStart ? (comm.activeStudents / comm.nextLevelStart) * 100 : 100;
+
+                            // Determine next rate for motivation
+                            let nextRateDisplay = '';
+                            if (comm.activeStudents < 3) nextRateDisplay = '65%';
+                            else if (comm.activeStudents < 10) nextRateDisplay = '75%';
+                            else if (comm.activeStudents < 20) nextRateDisplay = '85%';
+
 
                             return (
                                 <div className="mt-2">
                                     <div className="flex justify-between items-end mb-1">
                                         <span className="text-2xl font-black text-white">{comm.levelName}</span>
-                                        <span className="text-gold font-bold text-xl">{(comm.rate * 100).toFixed(0)}%</span>
+                                        <span className="text-gold font-bold text-xl">{(comm.rate * 100).toFixed(0)}% <span className="text-[10px] text-text-muted font-normal">COMISIÓN</span></span>
                                     </div>
-                                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-1">
+                                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-2">
                                         <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${Math.min(progress, 100)}%` }}></div>
                                     </div>
-                                    <p className="text-[10px] text-text-muted">
-                                        {comm.nextLevelStart
-                                            ? `Faltan ${comm.nextLevelStart - comm.activeStudents} alumnos para el siguiente nivel.`
-                                            : '¡Nivel Máximo alcanzado!'}
-                                    </p>
+                                    <div className="flex justify-between items-start">
+                                        <p className="text-[10px] text-text-muted max-w-[70%]">
+                                            {comm.nextLevelStart
+                                                ? `Faltan ${comm.nextLevelStart - comm.activeStudents} alumnos para subir de nivel.`
+                                                : '¡Has alcanzado el nivel máximo de comisión!'}
+                                        </p>
+                                        {comm.nextLevelStart && (
+                                            <span className="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30">
+                                                Next: {nextRateDisplay}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })()}

@@ -65,7 +65,7 @@ const Home = () => {
 
                 </div>
             ) : (
-                <div className="w-full max-w-2xl animate-enter">
+                <div className="w-full max-w-2xl animate-enter relative z-20">
                     <button
                         onClick={() => setShowWizard(false)}
                         className="mb-8 text-text-muted hover:text-white flex items-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors"
