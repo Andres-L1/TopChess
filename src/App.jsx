@@ -17,12 +17,19 @@ const AuthProvider = ({ children }) => {
   const currentUserId = userRole === 'teacher' ? 'teacher1' : 'student1';
   const isAuthenticated = true; // For now, always authenticated for demo purposes
 
+  const logout = () => {
+    setUserRole(null);
+    // In a real app, this would clear tokens
+  };
+
   return (
-    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated }}>
+    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => React.useContext(AuthContext);
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = React.useContext(AuthContext);

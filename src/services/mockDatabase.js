@@ -366,5 +366,43 @@ export const mockDB = {
 
         window.dispatchEvent(new Event('wallet-update'));
         return { success: true };
+    },
+
+    // Scheduling System
+    getTeacherAvailability: (teacherId) => {
+        const avail = JSON.parse(localStorage.getItem('topchess_availability') || '{}');
+        return avail[teacherId] || []; // Array of slot IDs e.g. "Mon-10:00"
+    },
+
+    updateTeacherAvailability: (teacherId, slots) => {
+        const avail = JSON.parse(localStorage.getItem('topchess_availability') || '{}');
+        avail[teacherId] = slots;
+        localStorage.setItem('topchess_availability', JSON.stringify(avail));
+    },
+
+    getBookings: () => {
+        return JSON.parse(localStorage.getItem('topchess_bookings') || '[]');
+    },
+
+    createBooking: (studentId, teacherId, slotId, dateIso) => {
+        // Simple booking logic
+        const bookings = mockDB.getBookings();
+        // Check collision
+        if (bookings.find(b => b.teacherId === teacherId && b.slotId === slotId && b.date === dateIso && b.status !== 'cancelled')) {
+            return { success: false, error: 'Horario ya reservado' };
+        }
+
+        const newBooking = {
+            id: 'bk_' + Date.now(),
+            studentId,
+            teacherId,
+            slotId, // e.g. "10:00"
+            date: dateIso, // e.g. "2023-11-20"
+            status: 'confirmed',
+            timestamp: Date.now()
+        };
+        bookings.push(newBooking);
+        localStorage.setItem('topchess_bookings', JSON.stringify(bookings));
+        return { success: true, booking: newBooking };
     }
 };

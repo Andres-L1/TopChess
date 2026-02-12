@@ -1,14 +1,13 @@
-```javascript
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Users, DollarSign, Clock, Trophy, ChevronRight, ExternalLink, Calendar as CalendarIcon, Bell, Check, X, Video, LogOut } from 'lucide-react';
+import { useAuth } from '../App';
 import { mockDB } from '../services/mockDatabase';
-import { useAuth } from '../context/AuthContext';
-import { Users, DollarSign, Clock, Trophy, ChevronRight, ExternalLink, Calendar as CalendarIcon, Bell, Check, X, Video } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar';
 import toast from 'react-hot-toast';
 
 const TeacherDashboard = () => {
-    const { logout, currentUserId } = useAuth();
+    const { currentUserId, logout } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview'); // overview, students, schedule
     const [stats, setStats] = useState({ earnings: 0, students: 0, hours: 0 });
@@ -39,9 +38,9 @@ const TeacherDashboard = () => {
     }, [currentUserId]);
 
     const handleAcceptRequest = (studentId) => {
-        mockDB.approveRequest(studentId, currentUserId); // Assuming this is the correct mockDB method
+        mockDB.updateRequestStatus(studentId, currentUserId, 'approved');
         setRequests(prev => prev.filter(r => r.studentId !== studentId));
-        // Recalc stats if real
+        toast.success(`Solicitud de ${studentId} aceptada`);
     };
 
     const handleSaveAvailability = (newAvail) => {
@@ -65,226 +64,173 @@ const TeacherDashboard = () => {
                     </h1>
                     <p className="text-text-muted">Gestiona tus alumnos y ganancias.</p>
                 </div>
-                <div className="flex gap-4">
-                     <Link to={`/ classroom / ${ currentUserId } `} className="btn-secondary flex items-center gap-2">
+                <div className="flex gap-4 items-center">
+                    <Link to={`/classroom/${currentUserId}`} className="btn-secondary flex items-center gap-2">
                         <ExternalLink size={18} />
                         Mi Aula
                     </Link>
                     <div className="flex gap-2 p-1 bg-dark-panel rounded-lg border border-white/5">
-                        <button 
+                        <button
                             onClick={() => setActiveTab('overview')}
-                            className={`px - 4 py - 2 rounded - md text - sm font - medium transition - all ${ activeTab === 'overview' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white' } `}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'overview' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
                         >
                             Resumen
                         </button>
-                        <button 
+                        <button
                             onClick={() => setActiveTab('schedule')}
-                            className={`px - 4 py - 2 rounded - md text - sm font - medium transition - all ${ activeTab === 'schedule' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white' } `}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'schedule' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
                         >
                             Horario
                         </button>
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        className="ml-2 p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg border border-transparent hover:border-red-500/20"
+                        title="Cerrar Sesión"
+                    >
+                        <LogOut size={20} />
+                    </button>
                 </div>
             </div>
 
             {activeTab === 'schedule' ? (
                 <div className="glass-panel p-6 rounded-2xl animate-enter">
-                    <Calendar 
-                        mode="edit" 
-                        availability={availability} 
-                        onSaveAvailability={handleSaveAvailability} 
+                    <Calendar
+                        mode="edit"
+                        availability={availability}
+                        onSaveAvailability={handleSaveAvailability}
                     />
                 </div>
             ) : (
                 <>
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* ... Existing Stats ... */}
-                    <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
-                        <div className="flex justify-between items-start">
-                            <div className="p-3 rounded-xl bg-green-500/10 text-green-400 group-hover:scale-110 transition-transform">
-                                <DollarSign size={24} />
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
+                            <div className="flex justify-between items-start">
+                                <div className="p-3 rounded-xl bg-green-500/10 text-green-400 group-hover:scale-110 transition-transform">
+                                    <DollarSign size={24} />
+                                </div>
+                                <span className="text-xs font-mono text-green-400/80">+15% este mes</span>
                             </div>
-                            <span className="text-xs font-mono text-green-400/80">+15% este mes</span>
-                        </div>
-                        <div className="mt-4">
-                            <span className="text-3xl font-bold text-white tracking-tight">{stats.earnings.toFixed(2)}€</span>
-                            <p className="text-sm text-text-muted">Ganancias Totales</p>
-                        </div>
-                    </div>
-                    {/* ... other stats ... */}
-                    <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
-                        <div className="flex justify-between items-start">
-                             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
-                                <Users size={24} />
+                            <div className="mt-4">
+                                <span className="text-3xl font-bold text-white tracking-tight">{stats.earnings.toFixed(2)}€</span>
+                                <p className="text-sm text-text-muted">Ganancias Totales</p>
                             </div>
                         </div>
-                        <div className="mt-4">
-                            <span className="text-3xl font-bold text-white tracking-tight">{stats.students}</span>
-                            <p className="text-sm text-text-muted">Estudiantes Activos</p>
-                        </div>
-                    </div>
-                     <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
-                        <div className="flex justify-between items-start">
-                             <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-                                <Clock size={24} />
-                            </div>
-                        {/* Quick Actions & Status */}
-                        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Upcoming Classes - Dynamic Mock */}
-                            <div className="bg-dark-panel p-6 rounded-2xl border border-white/5 border-l-4 border-l-gold shadow-lg">
-                                <h2 className="text-sm font-bold text-white mb-4 flex items-center justify-between">
-                                    <span className="uppercase tracking-wider">Próxima Clase</span>
-                                    {requests.some(r => r.status === 'approved') && (
-                                        <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gold animate-pulse">En vivo</span>
-                                    )}
-                                </h2>
 
-                                {requests.some(r => r.status === 'approved') ? (
-                                    (() => {
-                                        const nextStudent = requests.find(r => r.status === 'approved');
-                                        return (
-                                            <>
-                                                <div className="flex items-center gap-4 mb-6">
-                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-yellow-600 flex items-center justify-center text-black font-bold text-lg shadow-lg">
-                                                        {nextStudent.studentId.substring(0, 2).toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-white text-lg">Estudiante {nextStudent.studentId}</div>
-                                                        <div className="text-xs text-text-muted">Clase Regular • 1500 ELO</div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => navigate(`/ room / ${ currentUserId } `)}
-                                                    className="w-full py-3 bg-gold text-black font-bold rounded-lg hover:bg-white transition-all shadow-lg shadow-gold/10 flex items-center justify-center gap-2"
-                                                >
-                                                    <span>Ir al Aula</span>
-                                                    <Logo className="w-4 h-4" />
-                                                </button>
-                                            </>
-                                        );
-                                    })()
-                                ) : (
-                                    <div className="text-center py-4">
-                                        <p className="text-text-muted text-sm italic mb-2">No tienes clases programadas.</p>
-                                        <p className="text-[10px] text-gray-500">Acepta solicitudes para gestionar tu agenda.</p>
+                        <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
+                            <div className="flex justify-between items-start">
+                                <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
+                                    <Users size={24} />
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <span className="text-3xl font-bold text-white tracking-tight">{stats.students}</span>
+                                <p className="text-sm text-text-muted">Estudiantes Activos</p>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
+                            <div className="flex justify-between items-start">
+                                <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
+                                    <Clock size={24} />
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <span className="text-3xl font-bold text-white tracking-tight">{stats.hours}h</span>
+                                <p className="text-sm text-text-muted">Clases Impartidas</p>
+                            </div>
+                        </div>
+
+                        {/* Gamification Card */}
+                        <div className="glass-panel p-6 rounded-2xl bg-gradient-to-br from-dark-panel to-gold/5 border-gold/20 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Trophy size={20} className="text-gold" />
+                                    <span className="text-gold font-bold text-sm uppercase tracking-wider">Nivel Maestro</span>
+                                </div>
+                                <div className="w-full bg-black/40 h-2 rounded-full mb-2 overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-gold to-orange-500 w-[75%] shadow-[0_0_10px_rgba(255,215,0,0.5)]"></div>
+                                </div>
+                                <p className="text-xs text-text-muted flex justify-between">
+                                    <span>Progreso: 75%</span>
+                                    <span className="text-gold">Próx: Gran Maestro</span>
+                                </p>
+                                <div className="mt-3 pt-3 border-t border-white/5 text-[10px] space-y-1">
+                                    <p className="flex justify-between text-white/80"><span>Comisión actual:</span> <span className="text-green-400 font-mono">15%</span></p>
+                                    <p className="flex justify-between text-white/50"><span>Siguiente nivel:</span> <span className="text-gold font-mono">10%</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-6 flex-col lg:flex-row h-full">
+                        {/* Requests Feed */}
+                        <div className="flex-1 glass-panel rounded-2xl p-6 min-h-[400px]">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-white">Solicitudes Pendientes</h2>
+                                <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-xs font-bold animate-pulse">{requests.length} nuevas</span>
+                            </div>
+
+                            <div className="space-y-4">
+                                {requests.length === 0 ? (
+                                    <div className="text-center py-10 text-text-muted">
+                                        <Bell size={40} className="mx-auto mb-4 opacity-20" />
+                                        <p>No tienes solicitudes nuevas.</p>
                                     </div>
+                                ) : (
+                                    requests.map(req => (
+                                        <div key={req.id} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex items-center justify-between group">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white">
+                                                    {req.studentId.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white">{req.studentId}</h4>
+                                                    <p className="text-xs text-text-muted">Quiere aprender Defensa India</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleAcceptRequest(req.studentId)}
+                                                    className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-all" title="Aceptar">
+                                                    <Check size={18} />
+                                                </button>
+                                                <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Rechazar">
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
                                 )}
                             </div>
+                        </div>
 
-                            {/* Requests Section - Refined */}
-                            <div className="bg-dark-panel p-6 rounded-2xl border border-white/5">
-                                <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                    <span className="uppercase tracking-wider">Solicitudes</span>
-                                    {requests.filter(r => r.status === 'pending').length > 0 && (
-                                        <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-                                            {requests.filter(r => r.status === 'pending').length}
-                                        </span>
-                                    )}
-                                </h2>
-
-                                <div className="space-y-3 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
-                                    {requests.length === 0 ? (
-                                        <div className="text-center py-4 opacity-50 text-xs italic">
-                                            No hay solicitudes pendientes.
-                                        </div>
-                                    ) : (
-                                        requests.map(req => (
-                                            <div key={req.studentId} className="bg-white/5 p-3 rounded-xl border border-white/5 flex justify-between items-center group hover:bg-white/10 transition-colors">
-                                                <div>
-                                                    <span className="font-bold text-white text-xs block">Estudiante {req.studentId}</span>
-                                                    <span className={`text - [9px] uppercase font - bold tracking - wider ${
-    req.status === 'pending' ? 'text-yellow-500' :
-    req.status === 'approved' ? 'text-green-500' : 'text-red-500'
-} `}>
-                                                        {req.status === 'pending' ? 'Pendiente' : req.status}
-                                                    </span>
-                                                </div>
-                                                {req.status === 'pending' && (
-                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => handleApprove(req.studentId)}
-                                                            className="p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg transition-colors"
-                                                            title="Aprobar"
-                                                        >
-                                                            <CheckCircle size={14} />
-                                                        </button>
-                                                        <button className="p-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-lg transition-colors" title="Rechazar">
-                                                            <XCircle size={14} />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))
-                                    )}
+                        {/* Quick Classroom Link */}
+                        <div className="w-full lg:w-80 glass-panel rounded-2xl p-6 flex flex-col gap-4">
+                            <h2 className="text-xl font-bold text-white mb-2">Acceso Rápido</h2>
+                            <Link to={`/classroom/${currentUserId}`} className="group relative overflow-hidden rounded-xl aspect-video bg-black flex items-center justify-center border border-white/10 hover:border-gold/50 transition-all">
+                                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1529699211952-734e80c4d42b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
+                                <div className="relative z-10 flex flex-col items-center gap-2">
+                                    <div className="w-12 h-12 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.3)] group-hover:scale-110 transition-transform">
+                                        <Video size={24} />
+                                    </div>
+                                    <span className="font-bold text-white tracking-wide">Entrar al Aula</span>
                                 </div>
+                            </Link>
+                            <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                                <h4 className="font-bold text-sm text-gold">Próxima Clase</h4>
+                                <p className="text-xs text-white">Hoy, 18:00 - vs. Student1</p>
+                                <div className="h-1 w-full bg-black/50 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-500 w-[60%]"></div>
+                                </div>
+                                <p className="text-[10px] text-text-muted text-right">En 2 horas</p>
                             </div>
-                        </section>
-
-                        {/* My Students Section - NEW */}
-                        <section>
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-gold rounded-full"></span>
-                                Mis Alumnos Activos
-                            </h2>
-                            {requests.filter(r => r.status === 'approved').length === 0 ? (
-                                <div className="bg-dark-panel rounded-xl p-8 text-center border border-white/5 border-dashed text-text-muted italic">
-                                    No tienes alumnos activos aún.
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-3">
-                                    {requests.filter(r => r.status === 'approved').map(req => (
-                                        <div key={req.studentId} className="bg-dark-panel p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row justify-between items-center hover:border-gold/30 transition-all gap-4">
-                                            <div className="flex items-center gap-4 w-full sm:w-auto">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
-                                                    ST
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-white text-sm">Estudiante {req.studentId}</div>
-                                                    <div className="text-[10px] text-green-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                        <CheckCircle size={10} /> Activo
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 w-full sm:w-auto">
-                                                <button
-                                                    onClick={() => navigate(`/ chat / ${ req.studentId } `)} // In MVP chat ID is likely student ID or shared ID
-                                                    className="flex-1 sm:flex-none px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 transition-colors flex items-center justify-center gap-2 text-xs font-bold"
-                                                >
-                                                    <LogOut size={14} className="rotate-180" /> {/* Chat Icon */}
-                                                    Chat
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`/ room / ${ currentUserId } `)}
-                                                    className="flex-1 sm:flex-none px-3 py-1.5 bg-gold/10 hover:bg-gold hover:text-black text-gold border border-gold/30 rounded-lg transition-all flex items-center justify-center gap-2 text-xs font-bold"
-                                                >
-                                                    <CheckCircle size={14} />
-                                                    Clase
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
+                        </div>
                     </div>
-
-                    {/* Sidebar / News */}
-                    <div className="bg-dark-panel border border-white/5 rounded-2xl p-6 h-fit">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4">Novedades TopChess</h3>
-                        <ul className="space-y-4">
-                            <li className="pb-4 border-b border-white/5 last:border-0 last:pb-0">
-                                <span className="text-[10px] text-gold font-bold block mb-1">NUEVO</span>
-                                <p className="text-sm text-text-primary leading-relaxed">Hemos actualizado el tablero a la versión 2.0 con validación estricta y mejor respuesta táctil.</p>
-                            </li>
-                            <li className="pb-4 border-b border-white/5 last:border-0 last:pb-0">
-                                <span className="text-[10px] text-blue-400 font-bold block mb-1">PAGOS</span>
-                                <p className="text-sm text-text-primary leading-relaxed">Los pagos del mes de Enero ya han sido procesados. Revisa tu cuenta.</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+                </>
+            )}
         </div>
     );
 };

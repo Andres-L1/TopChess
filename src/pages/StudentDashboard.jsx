@@ -1,27 +1,25 @@
-```javascript
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Added Link
+import { useAuth } from '../App';
 import { mockDB } from '../services/mockDatabase';
-import { AuthContext } from '../App'; // Keep AuthContext for now, as useAuth is not explicitly requested
-import { LogOut, BookOpen, MessageSquare, Clock, Search, Shield, Award, Calendar as CalendarIcon, X, Trophy, Target, Video } from 'lucide-react'; // Added CalendarIcon, X, Trophy, Target, Video
-import Logo from '../components/Logo';
-import Calendar from '../components/Calendar'; // New import
-import toast from 'react-hot-toast'; // New import
+import { Link, useNavigate } from 'react-router-dom';
+import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X, LogOut, Search } from 'lucide-react';
+import Calendar from '../components/Calendar';
+import toast from 'react-hot-toast';
 
 const StudentDashboard = () => {
-    const { logout, currentUserId } = React.useContext(AuthContext);
+    const { currentUserId, logout } = useAuth();
     const navigate = useNavigate();
+    const [balance, setBalance] = useState(0);
     const [myTeachers, setMyTeachers] = useState([]);
     const [pendingRequests, setPendingRequests] = useState([]);
-    const [balance, setBalance] = useState(0);
 
     // Booking Modal State
     const [bookingTeacher, setBookingTeacher] = useState(null);
     const [teacherAvailability, setTeacherAvailability] = useState([]);
 
     useEffect(() => {
-        // Init balance safely
-        const wallet = mockDB.getWallet(currentUserId) || { balance: 0 };
+        // Init balance
+        const wallet = mockDB.getWallet(currentUserId);
         setBalance(wallet.balance);
 
         // Fetch data
@@ -43,19 +41,11 @@ const StudentDashboard = () => {
 
         // Force update on wallet change
         const walletHandler = () => {
-            const updatedWallet = mockDB.getWallet(currentUserId);
-            if (updatedWallet) {
-                setBalance(updatedWallet.balance);
-            }
+            setBalance(mockDB.getWallet(currentUserId).balance);
         };
         window.addEventListener('wallet-update', walletHandler);
         return () => window.removeEventListener('wallet-update', walletHandler);
     }, [currentUserId]);
-
-    const handleLogout = () => {
-        logout();
-        navigate('/');
-    };
 
     const openBookingModal = (teacher) => {
         const avail = mockDB.getTeacherAvailability(teacher.id);
@@ -67,177 +57,184 @@ const StudentDashboard = () => {
         // Mock Booking Logic
         // In real app, we need Date selection. Here we just say "Next Week: [Day] [Hour]"
         const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        const dateStr = `Próximo ${ dayNames[slot.dayIndex] } `;
-        
+        const dateStr = `Próximo ${dayNames[slot.dayIndex]}`;
+
         toast.promise(
             new Promise((resolve) => setTimeout(resolve, 1000)),
             {
                 loading: 'Confirmando reserva...',
-                success: `Clase reservada para el ${ dateStr } a las ${ slot.hour } `,
+                success: `Clase reservada para el ${dateStr} a las ${slot.hour}`,
                 error: 'Error al reservar',
             }
         ).then(() => {
-            mockDB.createBooking(currentUserId, bookingTeacher.id, `${ slot.dayIndex } -${ slot.hour } `, "2023-11-20");
+            mockDB.createBooking(currentUserId, bookingTeacher.id, `${slot.dayIndex}-${slot.hour}`, "2023-11-20");
             setBookingTeacher(null);
         });
     };
 
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     return (
-        <div className="min-h-screen bg-dark-bg text-text-primary font-sans">
+        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
             {/* Header */}
-            <div className="border-b border-white/5 bg-dark-panel/50 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-                <div className="flex items-center gap-3">
-                    <Logo className="w-8 h-8 text-white" />
-                    <h1 className="text-xl font-bold tracking-tight text-white">Panel de <span className="text-white">Estudiante</span></h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold font-display text-white">
+                        Hola, <span className="text-gold">Estudiante</span>
+                    </h1>
+                    <p className="text-text-muted">Continúa tu camino hacia la maestría.</p>
                 </div>
-                <button
-                    onClick={() => navigate('/wallet')}
-                    className="flex items-center gap-2 text-gold hover:text-white transition-colors text-xs uppercase font-bold tracking-wider mr-4"
-                >
-                    <div className="bg-gold/10 px-3 py-1 rounded-full border border-gold/20 flex items-center gap-2">
-                        <span>{balance.toFixed(2)} €</span>
-                    </div>
-                </button>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 text-text-muted hover:text-red-400 transition-colors text-xs uppercase font-bold tracking-wider"
-                >
-                    <LogOut size={16} />
-                    <span>Cerrar Sesión</span>
-                </button>
-            </div>
-
-            <div className="max-w-5xl mx-auto px-6 py-8">
-
-                {/* Welcome / Stats Banner */}
-                <div className="bg-gradient-to-r from-dark-panel to-[#262421] p-6 rounded-2xl border border-white/5 shadow-lg mb-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div>
-                        <h2 className="text-2xl font-black text-white mb-2">¡Hola, Estudiante!</h2>
-                        <p className="text-text-secondary text-sm">Continúa tu camino hacia la maestría. Tienes <strong className="text-gold">{myTeachers.length} profesores</strong> activos.</p>
+                <div className="flex items-center gap-4">
+                    <div className="bg-dark-panel border border-white/10 rounded-xl p-3 flex items-center gap-4 shadow-lg">
+                        <div className="text-right">
+                            <p className="text-[10px] text-text-muted uppercase tracking-wider">Saldo Disponible</p>
+                            <p className="text-xl font-bold text-white font-mono">{balance.toFixed(2)}€</p>
+                        </div>
+                        <Link to="/wallet" className="btn-primary py-1.5 px-3 text-xs">
+                            Recargar
+                        </Link>
                     </div>
                     <button
-                        onClick={() => navigate('/')}
-                        className="px-6 py-3 bg-white/5 hover:bg-gold hover:text-black text-white border border-white/10 rounded-xl font-bold transition-all flex items-center gap-2"
+                        onClick={handleLogout}
+                        className="ml-2 p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg border border-transparent hover:border-red-500/20"
+                        title="Cerrar Sesión"
                     >
-                        <Search size={18} />
-                        Buscar Nuevo Profesor
+                        <LogOut size={20} />
                     </button>
                 </div>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Column: My Teachers */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <section>
-                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-gold rounded-full"></span>
-                                Mis Profesores
-                            </h3>
+            {/* Main Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                            {myTeachers.length === 0 ? (
-                                <div className="bg-dark-panel rounded-xl p-8 text-center border border-white/5 border-dashed">
-                                    <p className="text-text-muted italic mb-4">Aún no tienes profesores activos.</p>
-                                    <button onClick={() => navigate('/')} className="text-gold hover:underline text-sm font-bold">Encontrar un mentor</button>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-4">
-                                    {myTeachers.map((teacher) => (
-                                        <div key={teacher.id} className="bg-dark-panel p-5 rounded-xl border border-white/5 hover:border-gold/30 transition-all group flex flex-col sm:flex-row justify-between items-center gap-4">
-                                            <div className="flex items-center gap-4 w-full sm:w-auto">
-                                                <div className="relative">
-                                                    <div className="w-14 h-14 rounded-full bg-cover bg-center border-2 border-white/10" style={{ backgroundImage: `url(${ teacher.image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400' })` }}></div>
-                                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-dark-panel" title="En línea"></div>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-white text-lg">{teacher.name}</h4>
-                                                    <div className="flex items-center gap-2 text-xs text-text-muted">
-                                                        <span className="bg-gold/10 text-gold px-1.5 py-0.5 rounded border border-gold/20 font-bold">{teacher.title}</span>
-                                                        <span>• Elo {teacher.rating}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                {/* Left Col: Learning Journey */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Active Mentors */}
+                    <section>
+                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <Trophy className="text-gold" size={20} /> Mis Mentores
+                        </h2>
 
-                                            <div className="flex gap-2 w-full sm:w-auto">
-                                                <button
-                                                    onClick={() => navigate(`/ chat / ${ teacher.id } `)}
-                                                    className="flex-1 sm:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
-                                                >
-                                                    <MessageSquare size={16} />
-                                                    Chat
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`/ room / ${ teacher.id } `)}
-                                                    className="flex-1 sm:flex-none px-4 py-2 bg-gold text-black rounded-lg hover:bg-white transition-colors shadow-lg shadow-gold/10 flex items-center justify-center gap-2 font-bold text-sm"
-                                                >
-                                                    <BookOpen size={16} />
-                                                    Aula
-                                                </button>
-                                                <button 
-                                                    onClick={() => openBookingModal(teacher)}
-                                                    className="flex-1 sm:flex-none px-4 py-2 bg-white/5 hover:bg-gold hover:text-black border border-white/10 text-white rounded-lg transition-all flex items-center justify-center gap-2"
-                                                >
-                                                    <CalendarIcon size={16} /> Agendar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {myTeachers.length === 0 && (
+                                <div className="col-span-2 p-8 rounded-2xl border border-dashed border-white/10 text-center text-text-muted">
+                                    <p>Aún no tienes mentores activos.</p>
+                                    <Link to="/" className="text-gold hover:underline mt-2 inline-block">Buscar Profesor</Link>
                                 </div>
                             )}
-                        </section>
+
+                            {myTeachers.map(teacher => (
+                                <div key={teacher.id} className="glass-panel p-4 rounded-xl flex flex-col gap-4 group hover:border-gold/30 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <img src={teacher.image} alt={teacher.name} className="w-12 h-12 rounded-full object-cover border-2 border-gold/20" />
+                                        <div>
+                                            <h3 className="font-bold text-white">{teacher.name}</h3>
+                                            <p className="text-xs text-text-muted">GM • 2850 ELO</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 mt-auto">
+                                        <Link to={`/classroom/${teacher.id}`} className="flex-1 btn-secondary text-center text-xs py-2 flex items-center justify-center gap-2">
+                                            <Video size={14} /> Entrar al Aula
+                                        </Link>
+                                        <button
+                                            onClick={() => openBookingModal(teacher)}
+                                            className="flex-1 bg-white/5 hover:bg-gold hover:text-black border border-white/10 text-white text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <CalendarIcon size={14} /> Agendar
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Progress Stats (Mock) */}
+                    <section className="glass-panel p-6 rounded-2xl">
+                        <h2 className="text-lg font-bold text-white mb-4">Tu Progreso Semanal</h2>
+                        <div className="flex justify-between items-end h-32 gap-2">
+                            {[40, 65, 30, 85, 50, 90, 60].map((h, i) => (
+                                <div key={i} className="flex-1 bg-white/5 rounded-t-lg relative group overflow-hidden">
+                                    <div
+                                        style={{ height: `${h}%` }}
+                                        className="absolute bottom-0 w-full bg-gradient-to-t from-gold/20 to-gold/60 transition-all duration-500 group-hover:to-gold"
+                                    ></div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between mt-2 text-xs text-text-muted font-mono">
+                            <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                        </div>
+                    </section>
+                </div>
+
+                {/* Right Col: Requests & Upcoming */}
+                <div className="space-y-6">
+                    {/* Pending Requests */}
+                    <div className="glass-panel p-6 rounded-2xl">
+                        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                            <Clock className="text-blue-400" size={18} /> Solicitudes Enviadas
+                        </h3>
+                        <div className="space-y-3">
+                            {pendingRequests.length === 0 && <p className="text-xs text-text-muted italic">No tienes solicitudes pendientes.</p>}
+                            {pendingRequests.map(req => (
+                                <div key={req.id} className="p-3 bg-white/5 rounded-lg border border-white/5 flex items-center gap-3 opacity-70">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs">
+                                        {req.name.substring(0, 2)}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm text-white font-medium">{req.name}</p>
+                                        <p className="text-[10px] text-yellow-500">Pendiente de aprobación</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Sidebar: Pending & Progress */}
-                    <div className="space-y-6">
-                        {/* Pending Requests */}
-                        <section className="bg-dark-panel border border-white/5 rounded-2xl p-6">
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4 flex items-center gap-2">
-                                <Clock size={14} /> Solicitudes Pendientes
-                            </h3>
-                            {pendingRequests.length === 0 ? (
-                                <p className="text-xs text-text-muted italic">No tienes solicitudes pendientes.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {pendingRequests.map(req => (
-                                        <div key={req.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5">
-                                            <div className="w-8 h-8 rounded-full bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${ req.image })` }}></div>
-                                            <div className="overflow-hidden">
-                                                <div className="text-sm font-bold text-white truncate">{req.name}</div>
-                                                <div className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider">Esperando aprobación</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
-                        {/* Achievements / Progress Placeholder */}
-                        <section className="bg-dark-panel border border-white/5 rounded-2xl p-6">
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4 flex items-center gap-2">
-                                <Award size={14} /> Tu Progreso
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-white font-bold">Problemas Tácticos</span>
-                                        <span className="text-gold">1450</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                        <div className="w-[70%] h-full bg-gold rounded-full"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-xs mb-1">
-                                        <span className="text-white font-bold">Clases Completadas</span>
-                                        <span className="text-gold">12</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                        <div className="w-[40%] h-full bg-blue-500 rounded-full"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
+                    {/* Upcoming Classes Box */}
+                    <div className="glass-panel p-6 rounded-2xl bg-gradient-to-br from-dark-panel to-green-900/10 border-green-500/10">
+                        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                            <Target className="text-green-400" size={18} /> Próxima Clase
+                        </h3>
+                        <div className="text-center py-6">
+                            <p className="text-3xl font-bold text-white mb-1">18:00</p>
+                            <p className="text-sm text-green-400 font-mono mb-4">Hoy, 13 Nov</p>
+                            <button className="w-full btn-primary py-2 text-sm">
+                                Unirse ahora
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Booking Modal */}
+            {bookingTeacher && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-dark-panel border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative">
+                        <button
+                            onClick={() => setBookingTeacher(null)}
+                            className="absolute top-4 right-4 text-text-muted hover:text-white"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <div className="p-6 border-b border-white/5">
+                            <h2 className="text-xl font-bold text-white">Reservar Clase</h2>
+                            <p className="text-sm text-text-muted">con <span className="text-gold">{bookingTeacher.name}</span></p>
+                        </div>
+
+                        <div className="p-6">
+                            <Calendar
+                                mode="view"
+                                availability={teacherAvailability}
+                                onSlotClick={handleSlotBook}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
