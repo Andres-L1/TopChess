@@ -98,44 +98,64 @@ const Classroom = () => {
             <div className="flex-grow flex flex-col md:flex-row overflow-hidden relative">
 
                 {/* BOARD AREA - Cockpit Style */}
-                <div className="flex-grow flex flex-col items-center justify-center bg-[#0a0a0a] relative md:border-r border-white/5 p-4">
+                <div className="flex-grow flex flex-col items-center justify-center bg-[#0a0a0a] relative md:border-r border-white/5 p-4 transition-all duration-300">
                     {/* Background Grid/Effects */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 to-transparent opacity-40 pointer-events-none"></div>
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
 
-                    <div className="flex flex-col gap-2 w-full max-w-[min(100%,calc(100vh-140px))] aspect-[3/4] md:aspect-auto md:h-full justify-center relative z-10">
+                    {/* Toggle Button - Floating on the right edge of the board area */}
+                    <button
+                        onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
+                        className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-dark-panel border-y border-l border-white/10 text-gold p-2 rounded-l-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:bg-gold hover:text-black transition-all duration-300
+                            ${!isSidePanelOpen ? 'translate-x-0' : 'translate-x-full opacity-0 pointer-events-none'}
+                        `}
+                        title="Mostrar Herramientas"
+                    >
+                        <MessageSquare size={20} />
+                    </button>
+
+                    <div className="flex flex-col gap-4 w-full max-w-[min(100%,calc(100vh-140px))] aspect-[3/4] md:aspect-auto md:h-full justify-center relative z-10 transition-all duration-300">
 
                         {/* Top Player (Opponent/Teacher) */}
-                        <div className="flex items-center justify-between px-2 text-text-secondary">
-                            <div className="flex items-center gap-3 bg-dark-panel/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center">
-                                    <span className="text-gold font-bold text-xs">{teacherId?.substring(0, 2).toUpperCase()}</span>
+                        <div className="flex items-center justify-between px-2 text-text-secondary bg-black/20 p-2 rounded-xl backdrop-blur-sm border border-white/5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center shadow-lg relative">
+                                    <span className="text-gold font-bold text-sm">{teacherId?.substring(0, 2).toUpperCase()}</span>
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-dark-bg border border-white/10 flex items-center justify-center rounded-full">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    </div>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-white tracking-wide">GM {teacherId}</span>
-                                    <span className="text-[10px] text-gold/80 font-mono">2850 ELO</span>
+                                    <span className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+                                        GM {teacherId}
+                                        <span className="px-1.5 py-0.5 bg-gold/20 text-gold text-[8px] rounded font-black tracking-widest border border-gold/20">PRO</span>
+                                    </span>
+                                    <span className="text-[10px] text-gold/80 font-mono flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full border border-gold/50"></span>
+                                        2850 ELO
+                                    </span>
                                 </div>
                             </div>
-                            <div className="text-xs font-mono text-white/50 bg-black/30 px-3 py-1 rounded">10:00</div>
+                            <div className="text-sm font-mono text-white/90 bg-black/40 px-4 py-2 rounded-lg border border-white/5 shadow-inner">10:00</div>
                         </div>
 
                         {/* Chess Board Container */}
-                        <div className="relative group shadow-2xl shadow-black/50 rounded-lg">
+                        <div className="relative group shadow-2xl shadow-black/80 rounded-lg mx-auto w-full aspect-square">
                             <Board teacherId={teacherId} onGameStateChange={handleGameStateChange} />
                         </div>
 
                         {/* Bottom Player (You) */}
-                        <div className="flex items-center justify-between px-2 text-text-secondary mt-1">
-                            <div className="flex items-center gap-3 bg-dark-panel/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 flex items-center justify-center">
-                                    <span className="text-green-500 font-bold text-xs">{currentUserId?.substring(0, 2).toUpperCase()}</span>
+                        <div className="flex items-center justify-between px-2 text-text-secondary bg-black/20 p-2 rounded-xl backdrop-blur-sm border border-white/5 mt-1">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 flex items-center justify-center shadow-lg">
+                                    <span className="text-green-500 font-bold text-sm">{currentUserId?.substring(0, 2).toUpperCase()}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-white tracking-wide">{currentUserId || 'Tú'}</span>
+                                    <span className="text-sm font-bold text-white tracking-wide">{currentUserId || 'Tú'}</span>
                                     <span className="text-[10px] text-green-400/80 font-mono">1500 ELO</span>
                                 </div>
                             </div>
-                            <div className="text-xs font-mono text-white bg-black/30 px-3 py-1 rounded border-b-2 border-green-500/50">09:45</div>
+                            <div className="text-sm font-mono text-white bg-black/40 px-4 py-2 rounded-lg border-b-2 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]">09:45</div>
                         </div>
 
                     </div>
@@ -143,16 +163,24 @@ const Classroom = () => {
 
                 {/* RIGHT PANEL - Glassmorphism, Collapsible */}
                 <div className={`flex-none bg-dark-panel/95 backdrop-blur-xl flex flex-col border-t md:border-t-0 md:border-l border-white/5 relative z-20 shadow-2xl transition-all duration-300 ease-in-out
-                    ${isSidePanelOpen ? 'h-[35vh] md:h-auto md:w-[400px]' : 'h-0 md:h-auto md:w-0 overflow-hidden'}
+                    ${isSidePanelOpen ? 'h-[40vh] md:h-auto md:w-[400px] opacity-100' : 'h-0 md:h-auto md:w-0 overflow-hidden opacity-0'}
                 `}>
 
-                    {/* Toggle Button (Absolute on left of panel if desktop, top if mobile) */}
+                    {/* Close Button (Internal) */}
+                    <button
+                        onClick={() => setIsSidePanelOpen(false)}
+                        className="absolute top-2 right-2 text-text-muted hover:text-white p-2 z-50 md:hidden"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+
+                    {/* Toggle Button for Desktop (Collapsing) */}
                     <button
                         onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
-                        className="absolute md:left-0 md:-translate-x-full top-4 bg-dark-panel border border-white/5 border-r-0 text-gold p-2 rounded-l-lg shadow-lg z-50 hover:bg-white/5 transition-colors"
-                        title={isSidePanelOpen ? "Modo Zen" : "Mostrar Herramientas"}
+                        className="hidden md:flex absolute top-4 -left-4 bg-dark-panel border border-white/5 border-r-0 text-gold p-1.5 rounded-l-lg shadow-lg z-50 hover:bg-white/5 transition-colors items-center justify-center"
+                        title="Ocultar Herramientas"
                     >
-                        {isSidePanelOpen ? <ChevronRight size={20} /> : <div className="animate-pulse"><MessageSquare size={20} /></div>}
+                        <ChevronRight size={16} />
                     </button>
 
                     {/* Tab Navigation */}

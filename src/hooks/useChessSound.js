@@ -19,8 +19,17 @@ const useChessSound = () => {
         try {
             const sound = SOUNDS[event];
             if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(err => console.error("Audio play failed", err));
+                // Resetting currentTime can fail if not loaded
+                if (sound.readyState >= 2) {
+                    sound.currentTime = 0;
+                }
+                const promise = sound.play();
+                if (promise !== undefined) {
+                    promise.catch(error => {
+                        // Auto-play was prevented or source not supported
+                        // console.warn("Audio play prevented:", error);
+                    });
+                }
             }
         } catch (error) {
             console.error("Audio error", error);
