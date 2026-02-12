@@ -98,20 +98,40 @@ export const mockDB = {
         }));
     },
 
-    // Subscribe to room changes (Mocking onValue)
+    // Subscribe to room changes (Mocking onValue with CROSS-TAB support)
     subscribeToRoom: (teacherId, callback) => {
-        const handler = (e) => {
+        // 1. Same-tab updates (via CustomEvent)
+        const localHandler = (e) => {
             if (e.detail.teacherId === teacherId) {
                 callback(e.detail.data);
             }
         };
-        window.addEventListener('room-update', handler);
+        window.addEventListener('room-update', localHandler);
+
+        // 2. Cross-tab updates (via storage event)
+        const storageHandler = (e) => {
+            if (e.key === DB_KEYS.ROOMS && e.newValue) {
+                try {
+                    const rooms = JSON.parse(e.newValue);
+                    const roomData = rooms[teacherId];
+                    if (roomData) {
+                        callback(roomData);
+                    }
+                } catch (err) {
+                    console.error("Error parsing storage update", err);
+                }
+            }
+        };
+        window.addEventListener('storage', storageHandler);
 
         // Initial call
         const currentData = mockDB.getRoom(teacherId);
         if (currentData) callback(currentData);
 
-        return () => window.removeEventListener('room-update', handler);
+        return () => {
+            window.removeEventListener('room-update', localHandler);
+            window.removeEventListener('storage', storageHandler);
+        };
     },
 
     // Requests & Chat Methods
@@ -190,12 +210,24 @@ export const mockDB = {
     },
 
     subscribeToChat: (studentId, teacherId, callback) => {
-        const handler = (e) => {
+        const localHandler = (e) => {
             if (e.detail.studentId === studentId && e.detail.teacherId === teacherId) {
                 callback(mockDB.getMessages(studentId, teacherId));
             }
         };
-        window.addEventListener('chat-update', handler);
-        return () => window.removeEventListener('chat-update', handler);
+        window.addEventListener('chat-update', localHandler);
+
+        const storageHandler = (e) => {
+            if (e.key === 'topchess_messages' && e.newValue) {
+                // When messages change effectively, re-fetch specifically for this chat
+                callback(mockDB.getMessages(studentId, teacherId));
+            }
+        };
+        window.addEventListener('storage', storageHandler);
+
+        return () => {
+            window.removeEventListener('chat-update', localHandler);
+            window.removeEventListener('storage', storageHandler);
+        };
     }
 };

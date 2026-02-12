@@ -17,8 +17,10 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   /* Subtle luxurious gradient */
   background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 80%);
-  overflow: hidden;
-  /* Prevent body scroll, handle in components */
+  overflow-x: hidden;
+  /* Prevent horizontal scroll */
+  overflow-y: auto;
+  /* Allow vertical scroll */
 }
 
 /* Selection Color */

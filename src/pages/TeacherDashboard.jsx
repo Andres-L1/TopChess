@@ -169,6 +169,53 @@ const TeacherDashboard = () => {
                                 </div>
                             </div>
                         </section>
+
+                        {/* My Students Section - NEW */}
+                        <section>
+                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-gold rounded-full"></span>
+                                Mis Alumnos Activos
+                            </h2>
+                            {requests.filter(r => r.status === 'approved').length === 0 ? (
+                                <div className="bg-dark-panel rounded-xl p-8 text-center border border-white/5 border-dashed text-text-muted italic">
+                                    No tienes alumnos activos aún.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {requests.filter(r => r.status === 'approved').map(req => (
+                                        <div key={req.studentId} className="bg-dark-panel p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row justify-between items-center hover:border-gold/30 transition-all gap-4">
+                                            <div className="flex items-center gap-4 w-full sm:w-auto">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+                                                    ST
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-white text-sm">Estudiante {req.studentId}</div>
+                                                    <div className="text-[10px] text-green-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                        <CheckCircle size={10} /> Activo
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2 w-full sm:w-auto">
+                                                <button
+                                                    onClick={() => navigate(`/chat/${req.studentId}`)} // In MVP chat ID is likely student ID or shared ID
+                                                    className="flex-1 sm:flex-none px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 transition-colors flex items-center justify-center gap-2 text-xs font-bold"
+                                                >
+                                                    <LogOut size={14} className="rotate-180" /> {/* Chat Icon */}
+                                                    Chat
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/room/${currentUserId}`)}
+                                                    className="flex-1 sm:flex-none px-3 py-1.5 bg-gold/10 hover:bg-gold hover:text-black text-gold border border-gold/30 rounded-lg transition-all flex items-center justify-center gap-2 text-xs font-bold"
+                                                >
+                                                    <CheckCircle size={14} />
+                                                    Clase
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
                     </div>
 
                     {/* Sidebar / News */}

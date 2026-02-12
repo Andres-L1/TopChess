@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Classroom from './pages/Classroom';
 import Chat from './pages/Chat';
 import TeacherDashboard from './pages/TeacherDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 
 // Mock Auth Context - simplified for MVP requirements
 export const AuthContext = React.createContext();
@@ -23,7 +24,9 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/chat/:teacherId" element={<Chat />} />
               <Route path="/room/:teacherId" element={<Classroom />} />
+              <Route path="/room/:teacherId" element={<Classroom />} />
               <Route path="/dashboard" element={<TeacherDashboard />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} />
             </Routes>
           </main>
         </div>
@@ -53,7 +56,10 @@ function Navbar() {
         {!isClassroom && (
           <div className="flex bg-[#161512] rounded-lg p-1 border border-[#302e2b]">
             <button
-              onClick={() => setUserRole('student')}
+              onClick={() => {
+                setUserRole('student');
+                navigate('/student-dashboard');
+              }}
               className={`px-4 py-1 rounded-md text-sm transition-all ${userRole === 'student' ? 'bg-[#363431] text-white shadow-sm' : 'text-[#666] hover:text-[#999]'}`}
             >
               Soy Alumno
