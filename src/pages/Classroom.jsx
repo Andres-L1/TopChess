@@ -9,13 +9,22 @@ import '@livekit/components-styles';
 
 import ChessRules from '../components/ChessRules';
 import Logo from '../components/Logo';
-import { MessageSquare, Mic, BookOpen, LogOut, ChevronRight } from 'lucide-react';
+import MoveHistory from '../components/MoveHistory';
+import CapturedPieces from '../components/CapturedPieces';
+import { MessageSquare, Mic, BookOpen, LogOut, ChevronRight, ScrollText } from 'lucide-react';
 
 const Classroom = () => {
     const { teacherId } = useParams();
     const { userRole, currentUserId } = React.useContext(AuthContext);
     const [token, setToken] = useState("");
-    const [activeTab, setActiveTab] = useState('audio'); // 'audio', 'chat', 'rules'
+    const [activeTab, setActiveTab] = useState('game'); // Default to Game tab
+    const [gameState, setGameState] = useState({
+        fen: 'start',
+        history: [],
+        turn: 'w',
+        isGameOver: false,
+        orientation: 'white'
+    });
 
     const navigate = useNavigate();
 
@@ -30,6 +39,10 @@ const Classroom = () => {
         }
         setToken("ey_MOCK_TOKEN_FOR_MVP_PURPOSES_ONLY_ey");
     }, [userRole, currentUserId, teacherId, navigate]);
+
+    const handleGameStateChange = (newState) => {
+        setGameState(prev => ({ ...prev, ...newState }));
+    };
 
     if (!token) return (
         <div className="flex flex-col items-center justify-center h-screen bg-dark-bg text-gold font-bold uppercase tracking-widest text-xs animate-pulse gap-4">
@@ -89,7 +102,7 @@ const Classroom = () => {
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent opacity-20 pointer-events-none"></div>
 
                     <div className="w-full h-full p-2 md:p-8 flex items-center justify-center z-10">
-                        <Board teacherId={teacherId} />
+                        <Board teacherId={teacherId} onGameStateChange={handleGameStateChange} />
                     </div>
                 </div>
 
@@ -98,13 +111,28 @@ const Classroom = () => {
 
                     {/* Tab Navigation */}
                     <div className="flex p-3 gap-2 bg-dark-bg/50 border-b border-white/5">
-                        <TabButton id="audio" icon={Mic} label="Audio" />
+                        <TabButton id="game" icon={ScrollText} label="Partida" />
                         <TabButton id="chat" icon={MessageSquare} label="Chat" />
+                        <TabButton id="audio" icon={Mic} label="Audio" />
                         <TabButton id="rules" icon={BookOpen} label="Reglas" />
                     </div>
 
                     {/* Content Area */}
                     <div className="flex-grow overflow-hidden bg-transparent relative">
+                        {activeTab === 'game' && (
+                            <div className="h-full flex flex-col p-4 gap-4 animate-fade-in">
+                                {/* Captured Pieces */}
+                                <div className="flex-none">
+                                    <h3 className="text-[10px] font-bold text-gold uppercase tracking-widest mb-2 opacity-80">Material</h3>
+                                    <CapturedPieces fen={gameState.fen} orientation={gameState.orientation} />
+                                </div>
+                                {/* Move History */}
+                                <div className="flex-grow overflow-hidden relative">
+                                    <MoveHistory moves={gameState.history} />
+                                </div>
+                            </div>
+                        )}
+
                         {activeTab === 'audio' && (
                             <div className="h-full flex flex-col justify-center items-center p-8 text-center animate-fade-in relative">
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.05)_0%,_transparent_70%)]"></div>

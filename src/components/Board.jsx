@@ -10,7 +10,7 @@ import { RotateCw, RotateCcw } from 'lucide-react';
 import useChessSound from '../hooks/useChessSound';
 import toast, { Toaster } from 'react-hot-toast';
 
-const Board = ({ teacherId }) => {
+const Board = ({ teacherId, onGameStateChange }) => {
     // Game Logic State
     const chessRef = useRef(new Chess());
 
@@ -20,6 +20,7 @@ const Board = ({ teacherId }) => {
     const [lastMove, setLastMove] = useState(null);
     const [pendingPromotion, setPendingPromotion] = useState(null);
     const [isGameOver, setIsGameOver] = useState(false);
+    const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [turn, setTurn] = useState('w');
 
     // Refs for Chessground
@@ -130,6 +131,8 @@ const Board = ({ teacherId }) => {
     const updateGameState = (chessInstance, moveArr) => {
         const newFen = chessInstance.fen();
         const newTurn = chessInstance.turn() === 'w' ? 'white' : 'black';
+        const history = chessInstance.history();
+        const pgn = chessInstance.pgn();
 
         setFen(newFen);
         setLastMove(moveArr);
@@ -137,6 +140,17 @@ const Board = ({ teacherId }) => {
 
         const gameOver = chessInstance.isGameOver();
         setIsGameOver(gameOver);
+        if (gameOver) setShowGameOverModal(true);
+
+        // Notify parent context of state change
+        if (onGameStateChange) {
+            onGameStateChange({
+                fen: newFen,
+                history: history,
+                turn: chessInstance.turn(),
+                isGameOver: gameOver
+            });
+        }
 
         if (gameOver) {
             play('gameEnd');
@@ -159,6 +173,8 @@ const Board = ({ teacherId }) => {
 
         mockDB.updateRoom(teacherId, {
             fen: newFen,
+            pgn: pgn, // Sync PGN for history restoration
+            history: history, // Sync history array for easy UI access
             lastMove: moveArr,
             orientation: orientation
         });
@@ -169,14 +185,32 @@ const Board = ({ teacherId }) => {
         const unsubscribe = mockDB.subscribeToRoom(teacherId, (data) => {
             if (data && data.fen) {
                 const currentFen = chessRef.current.fen();
+
+                // If remote FEN is different, we sync.
+                // We prefer loading PGN if available to keep history.
                 if (data.fen !== currentFen) {
                     try {
-                        chessRef.current.load(data.fen);
+                        if (data.pgn) {
+                            chessRef.current.loadPgn(data.pgn);
+                        } else {
+                            chessRef.current.load(data.fen);
+                        }
+
                         setFen(data.fen);
                         setLastMove(data.lastMove);
                         setTurn(chessRef.current.turn());
                         setIsGameOver(chessRef.current.isGameOver());
                         if (data.orientation) setOrientation(data.orientation);
+
+                        // Update parent UI state on sync too
+                        if (onGameStateChange) {
+                            onGameStateChange({
+                                fen: data.fen,
+                                history: data.history || chessRef.current.history(),
+                                turn: chessRef.current.turn(),
+                                isGameOver: chessRef.current.isGameOver()
+                            });
+                        }
 
                         if (apiRef.current) {
                             const side = chessRef.current.turn() === 'w' ? 'white' : 'black';
@@ -193,16 +227,26 @@ const Board = ({ teacherId }) => {
                             });
 
                             // Optional: Trigger sound on remote move detection if desired
-                            play('move');
+                            // Avoid double sound if local user moved
+                            // For now, let's play only if valid move detected and not local
+                            // play('move'); 
                         }
                     } catch (e) {
                         console.error("Remote sync error", e);
+                        // Fallback to FEN if PGN fails
+                        try {
+                            chessRef.current.load(data.fen);
+                            setFen(data.fen);
+                            if (apiRef.current) apiRef.current.set({ fen: data.fen });
+                        } catch (err) {
+                            console.error("Critical sync error", err);
+                        }
                     }
                 }
             }
         });
         return () => unsubscribe();
-    }, [teacherId, play]);
+    }, [teacherId, play, onGameStateChange]);
 
     const handlePromotionSelect = (type) => {
         if (!pendingPromotion) return;
@@ -295,7 +339,7 @@ const Board = ({ teacherId }) => {
                 )}
 
                 {/* Game Over Overlay */}
-                {isGameOver && (
+                {showGameOverModal && (
                     <div className="absolute inset-0 z-40 bg-dark-bg/85 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-500">
                         <div className="bg-dark-panel px-10 py-8 rounded-2xl border border-gold/20 text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
@@ -306,9 +350,15 @@ const Board = ({ teacherId }) => {
                                     chessRef.current.isDraw() ? 'Tablas' :
                                         chessRef.current.isStalemate() ? 'Ahogado' : 'Fin'}
                             </div>
-                            <button onClick={handleReset} className="px-8 py-3 bg-gold/10 text-gold border border-gold/30 rounded-lg font-bold hover:bg-gold hover:text-black transition-all uppercase text-xs tracking-widest shadow-lg hover:shadow-gold/20">
-                                Nueva Partida
-                            </button>
+
+                            <div className="flex gap-4 justify-center">
+                                <button onClick={() => setShowGameOverModal(false)} className="px-6 py-3 bg-white/5 text-gray-300 border border-white/10 rounded-lg font-bold hover:bg-white/10 hover:text-white transition-all uppercase text-xs tracking-widest">
+                                    Analizar
+                                </button>
+                                <button onClick={handleReset} className="px-6 py-3 bg-gold/10 text-gold border border-gold/30 rounded-lg font-bold hover:bg-gold hover:text-black transition-all uppercase text-xs tracking-widest shadow-lg hover:shadow-gold/20">
+                                    Nueva Partida
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
