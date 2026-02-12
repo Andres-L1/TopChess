@@ -1,129 +1,82 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockDB } from '../services/mockDatabase';
-import { User, Star, ArrowRight, Shield, Globe, Sparkles } from 'lucide-react';
-import Logo from '../components/Logo';
+import { Play, Sparkles, Users, Award, Zap } from 'lucide-react';
 import MatchWizard from '../components/MatchWizard';
-import MatchResult from '../components/MatchResult';
-import { findBestMatch } from '../utils/matchingAlgorithm';
 
 const Home = () => {
-    const [teachers, setTeachers] = useState([]);
-    const [showWizard, setShowWizard] = useState(false);
-    const [matchResult, setMatchResult] = useState(null);
     const navigate = useNavigate();
+    const [showWizard, setShowWizard] = useState(false);
 
-    useEffect(() => {
-        const data = mockDB.getTeachers();
-        setTeachers(data);
-    }, []);
-
-    const handleWizardComplete = (preferences) => {
-        setShowWizard(false);
-        const bestMatch = findBestMatch(teachers, preferences);
-        if (bestMatch) {
-            setMatchResult(bestMatch);
-        } else {
-            // Fallback if no match found (unlikely with our data)
-            alert("No se encontraron coincidencias exactas, pero explora nuestros profesores.");
-        }
-    };
+    const stats = [
+        { icon: <Users size={20} />, value: "2K+", label: "Alumnos" },
+        { icon: <Award size={20} />, value: "15+", label: "Grandes Maestros" },
+        { icon: <Zap size={20} />, value: "24h", label: "Respuesta media" }
+    ];
 
     return (
-        <div className="min-h-screen bg-dark-bg text-text-primary px-4 md:px-8 py-8 font-sans selection:bg-gold selection:text-black relative overflow-hidden">
-            {/* Background Ambience */}
-            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-dark-panel to-transparent opacity-80 pointer-events-none"></div>
-            <div className="absolute top-20 right-20 w-96 h-96 bg-gold/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="relative min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-6 overflow-hidden">
 
-            {/* Modals */}
-            {showWizard && (
-                <MatchWizard
-                    onComplete={handleWizardComplete}
-                    onCancel={() => setShowWizard(false)}
-                />
-            )}
+            {/* Background Decor */}
+            <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none animate-float" style={{ animationDelay: '0s' }}></div>
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-gold/5 rounded-full blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
 
-            {matchResult && (
-                <MatchResult
-                    teacher={matchResult}
-                    onClose={() => setMatchResult(null)}
-                />
-            )}
+            {!showWizard ? (
+                <div className="max-w-4xl w-full text-center z-10 space-y-12 animate-enter">
 
-            {/* Header */}
-            <header className="flex justify-between items-center mb-12 relative z-10 max-w-7xl mx-auto">
-                <div className="flex items-center gap-3 animate-fade-in">
-                    <Logo className="w-10 h-10 text-gold drop-shadow-md" />
-                    <h1 className="text-2xl font-bold tracking-tighter text-white">
-                        TOP<span className="text-gold font-light">CHESS</span>
-                    </h1>
+                    {/* Hero Text */}
+                    <div className="space-y-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-gold/20 text-gold/90 text-xs font-bold uppercase tracking-widest shadow-lg shadow-gold/5 mb-4 animate-float">
+                            <Sparkles size={14} /> La plataforma #1 de Ajedrez Premium
+                        </div>
+
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
+                            Domina el <span className="text-gradient-gold glow-text">Tablero</span>
+                        </h1>
+
+                        <p className="text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
+                            Conecta con Grandes Maestros de élite. Clases personalizadas, análisis profundos y una experiencia visual de otro nivel.
+                        </p>
+                    </div>
+
+                    {/* Main Action */}
+                    <div className="flex flex-col items-center gap-4">
+                        <button
+                            onClick={() => setShowWizard(true)}
+                            className="group relative px-10 py-5 bg-white text-black rounded-2xl font-black text-xl tracking-tight hover:scale-105 transition-all duration-300 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.5)] overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+                            <span className="relative flex items-center gap-3">
+                                ENCONTRAR MENTOR <Play size={24} fill="currentColor" />
+                            </span>
+                        </button>
+                        <p className="text-sm text-text-muted opacity-60">Sin compromiso • Cancelación gratuita</p>
+                    </div>
+
+                    {/* Social Proof / Stats */}
+                    <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8 border-t border-white/5">
+                        {stats.map((stat, i) => (
+                            <div key={i} className="flex flex-col items-center space-y-1 group">
+                                <div className="p-3 rounded-full bg-white/5 text-gold mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
+                                <span className="text-2xl font-bold text-white">{stat.value}</span>
+                                <span className="text-xs text-text-muted uppercase tracking-wider">{stat.label}</span>
+                            </div>
+                        ))}
+                    </div>
+
                 </div>
-                <div className="flex gap-4">
+            ) : (
+                <div className="w-full max-w-2xl animate-enter">
                     <button
-                        onClick={() => setShowWizard(true)}
-                        className="hidden md:flex items-center gap-2 px-6 py-2 bg-gold text-black rounded-full font-bold uppercase text-xs tracking-widest hover:bg-gold-hover transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_25px_rgba(212,175,55,0.5)] transform hover:-translate-y-0.5"
+                        onClick={() => setShowWizard(false)}
+                        className="mb-8 text-text-muted hover:text-white flex items-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors"
                     >
-                        <Sparkles size={16} />
-                        <span>Encontrar Match</span>
+                        ← Volver al inicio
                     </button>
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="flex items-center gap-2 px-6 py-2 bg-white/5 hover:bg-gold/10 text-white rounded-full transition-all border border-white/10 hover:border-gold/30 hover:shadow-[0_0_15px_rgba(212,175,55,0.2)] text-xs uppercase font-bold tracking-widest"
-                    >
-                        <User size={16} />
-                        <span>Área Profesores</span>
-                    </button>
-                </div>
-            </header>
-
-            {/* Hero Section - Centered & Premium */}
-            <div className="flex-grow flex flex-col items-center justify-center relative z-10 animate-fade-in text-center px-4">
-                <div className="mb-8 relative inline-block">
-                    {/* Glowing Orb effect behind crown */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gold/20 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="relative z-10 text-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">
-                        <Logo className="w-24 h-24 md:w-32 md:h-32 mx-auto" />
+                    <div className="glass-panel rounded-3xl p-1 overflow-hidden shadow-2xl">
+                        <MatchWizard onComplete={() => setShowWizard(false)} />
                     </div>
                 </div>
-
-                <h2 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter leading-tight text-white">
-                    Domina el <br className="md:hidden" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gold to-white animate-gradient-x">Tablero</span>
-                </h2>
-
-                <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-                    Conecta con Grandes Maestros de todo el mundo y eleva tu juego al siguiente nivel con clases personalizadas y análisis en tiempo real.
-                </p>
-
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-center w-full max-w-md mx-auto">
-                    <button
-                        onClick={() => setShowWizard(true)}
-                        className="w-full py-4 px-8 bg-gold text-black rounded-xl font-black uppercase tracking-widest hover:bg-white hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] flex items-center justify-center gap-3 text-sm md:text-base group"
-                    >
-                        <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
-                        <span>Encontrar mi Entrenador</span>
-                    </button>
-
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="w-full md:w-auto py-4 px-8 bg-white/5 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all flex items-center justify-center gap-3 text-sm md:text-base"
-                    >
-                        <User size={20} />
-                        <span>Soy Profesor</span>
-                    </button>
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-6 md:gap-12 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-text-muted mt-12 md:mt-16 opacity-60">
-                    <span className="flex items-center gap-2"><Shield size={16} className="text-gold" /> Calidad Verificada</span>
-                    <span className="flex items-center gap-2"><Globe size={16} className="text-gold" /> Clases Globales</span>
-                    <span className="flex items-center gap-2"><Star size={16} className="text-gold" /> Elo Garantizado</span>
-                </div>
-            </div>
-
-            {/* Footer Minimal */}
-            <footer className="mt-20 text-center border-t border-white/5 pt-8 pb-8 text-text-muted text-xs uppercase tracking-widest">
-                &copy; 2024 TopChess Academy. Excellence in Strategy.
-            </footer>
+            )}
         </div>
     );
 };

@@ -13,8 +13,10 @@ const StudentDashboard = () => {
     const [balance, setBalance] = useState(0);
 
     useEffect(() => {
-        // Init balance
-        setBalance(mockDB.getWallet(currentUserId).balance);
+        // Init balance safely
+        const wallet = mockDB.getWallet(currentUserId) || { balance: 0 };
+        setBalance(wallet.balance);
+
         // Fetch data
         const requests = mockDB.getRequestsForStudent(currentUserId);
 
@@ -34,11 +36,10 @@ const StudentDashboard = () => {
 
         // Force update on wallet change
         const walletHandler = () => {
-            // We just need to trigger a re-render, getting the balance directly in render or state
-            // For simplicity, let's just force update via state or just rely on render reading mockDB if we had a useWallet hook.
-            // Since we read mockDB directly in render (bad practice usually, but ok for mock), we need to trigger render.
-            // Let's add a dummy state or just fetch balance in useEffect and put in state.
-            setBalance(mockDB.getWallet(currentUserId).balance);
+            const updatedWallet = mockDB.getWallet(currentUserId);
+            if (updatedWallet) {
+                setBalance(updatedWallet.balance);
+            }
         };
         window.addEventListener('wallet-update', walletHandler);
         return () => window.removeEventListener('wallet-update', walletHandler);
