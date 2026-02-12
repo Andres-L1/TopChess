@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import { User, GraduationCap, LayoutDashboard } from 'lucide-react';
 import Home from './pages/Home';
 import Classroom from './pages/Classroom';
@@ -7,6 +7,7 @@ import Chat from './pages/Chat';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import Wallet from './pages/Wallet';
+import UserProfile from './pages/UserProfile';
 
 // Mock Auth Context - simplified for MVP requirements
 export const AuthContext = React.createContext();
@@ -50,6 +51,7 @@ function App() {
               <Route path="/dashboard" element={<PrivateRoute><TeacherDashboard /></PrivateRoute>} />
               <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
               <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
+              <Route path="/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
             </Routes>
           </main>
         </div>
@@ -105,6 +107,10 @@ function Navbar() {
             Panel
           </Link>
         )}
+
+        <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded bg-[#363431] hover:bg-[#403d39] text-[#bababa] hover:text-white transition-colors font-medium text-sm" title="Mi Perfil">
+          <User size={18} />
+        </Link>
       </div>
     </nav>
   );

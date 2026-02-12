@@ -404,5 +404,47 @@ export const mockDB = {
         bookings.push(newBooking);
         localStorage.setItem('topchess_bookings', JSON.stringify(bookings));
         return { success: true, booking: newBooking };
+    },
+
+    // User Profile System
+    getProfile: (userId) => {
+        // 1. Check Teachers
+        const teachers = mockDB.getTeachers();
+        const teacher = teachers.find(t => t.id === userId);
+        if (teacher) return teacher;
+
+        // 2. Check Students (topchess_users)
+        const users = JSON.parse(localStorage.getItem('topchess_users') || '{}');
+        if (users[userId]) return users[userId];
+
+        // 3. Return Default Student Profile
+        return {
+            id: userId,
+            name: userId === 'student1' ? 'Estudiante Demo' : `User ${userId}`,
+            elo: 1200,
+            image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
+            bio: "Estudiante de ajedrez apasionado.",
+            role: 'student'
+        };
+    },
+
+    updateProfile: (userId, data) => {
+        // 1. Check Teachers
+        const teachers = mockDB.getTeachers();
+        const teacherIndex = teachers.findIndex(t => t.id === userId);
+        if (teacherIndex !== -1) {
+            teachers[teacherIndex] = { ...teachers[teacherIndex], ...data };
+            localStorage.setItem(DB_KEYS.TEACHERS, JSON.stringify(teachers));
+            return teachers[teacherIndex];
+        }
+
+        // 2. Update/Create Student
+        const users = JSON.parse(localStorage.getItem('topchess_users') || '{}');
+        users[userId] = { ...(users[userId] || mockDB.getProfile(userId)), ...data };
+        localStorage.setItem('topchess_users', JSON.stringify(users));
+
+        // Dispatch event for UI updates
+        window.dispatchEvent(new CustomEvent('profile-update', { detail: { userId, profile: users[userId] } }));
+        return users[userId];
     }
 };
