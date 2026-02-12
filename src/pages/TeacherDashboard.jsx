@@ -13,13 +13,23 @@ const TeacherDashboard = () => {
 
     useEffect(() => {
         // Mock data loading
+        const wallet = mockDB.getWallet(currentUserId);
+
         setStats({
-            earnings: 1250,
-            students: 12,
-            hours: 45
+            earnings: wallet.balance,
+            students: 12, // Keep as mock for now or calculate from approved requests
+            hours: 45 // Keep as mock
         });
         const reqs = mockDB.getRequestsForTeacher(currentUserId);
         setRequests(reqs);
+
+        // Listen for wallet updates
+        const walletHandler = () => {
+            const updatedWallet = mockDB.getWallet(currentUserId);
+            setStats(prev => ({ ...prev, earnings: updatedWallet.balance }));
+        };
+        window.addEventListener('wallet-update', walletHandler);
+        return () => window.removeEventListener('wallet-update', walletHandler);
     }, [currentUserId]);
 
     const handleApprove = (studentId) => {
@@ -98,28 +108,45 @@ const TeacherDashboard = () => {
                     <div className="lg:col-span-2 space-y-8">
                         {/* Quick Actions & Status */}
                         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Upcoming Classes - NEW for Realism */}
+                            {/* Upcoming Classes - Dynamic Mock */}
                             <div className="bg-dark-panel p-6 rounded-2xl border border-white/5 border-l-4 border-l-gold shadow-lg">
                                 <h2 className="text-sm font-bold text-white mb-4 flex items-center justify-between">
                                     <span className="uppercase tracking-wider">Próxima Clase</span>
-                                    <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gold">En 15 min</span>
+                                    {requests.some(r => r.status === 'approved') && (
+                                        <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gold animate-pulse">En vivo</span>
+                                    )}
                                 </h2>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-yellow-600 flex items-center justify-center text-black font-bold text-lg shadow-lg">
-                                        JD
+
+                                {requests.some(r => r.status === 'approved') ? (
+                                    (() => {
+                                        const nextStudent = requests.find(r => r.status === 'approved');
+                                        return (
+                                            <>
+                                                <div className="flex items-center gap-4 mb-6">
+                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-yellow-600 flex items-center justify-center text-black font-bold text-lg shadow-lg">
+                                                        {nextStudent.studentId.substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-white text-lg">Estudiante {nextStudent.studentId}</div>
+                                                        <div className="text-xs text-text-muted">Clase Regular • 1500 ELO</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => navigate(`/room/${currentUserId}`)}
+                                                    className="w-full py-3 bg-gold text-black font-bold rounded-lg hover:bg-white transition-all shadow-lg shadow-gold/10 flex items-center justify-center gap-2"
+                                                >
+                                                    <span>Ir al Aula</span>
+                                                    <Logo className="w-4 h-4" />
+                                                </button>
+                                            </>
+                                        );
+                                    })()
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <p className="text-text-muted text-sm italic mb-2">No tienes clases programadas.</p>
+                                        <p className="text-[10px] text-gray-500">Acepta solicitudes para gestionar tu agenda.</p>
                                     </div>
-                                    <div>
-                                        <div className="font-bold text-white text-lg">Juan David</div>
-                                        <div className="text-xs text-text-muted">Defensa Siciliana • 1600 ELO</div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => navigate(`/room/${currentUserId}`)}
-                                    className="w-full py-3 bg-gold text-black font-bold rounded-lg hover:bg-white transition-all shadow-lg shadow-gold/10 flex items-center justify-center gap-2"
-                                >
-                                    <span>Iniciar Aula Virtual</span>
-                                    <Logo className="w-4 h-4" />
-                                </button>
+                                )}
                             </div>
 
                             {/* Requests Section - Refined */}

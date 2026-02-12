@@ -10,28 +10,43 @@ import StudentDashboard from './pages/StudentDashboard';
 // Mock Auth Context - simplified for MVP requirements
 export const AuthContext = React.createContext();
 
-function App() {
+// A simple AuthProvider for demonstration purposes, based on the userRole
+const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState('student'); // 'student' or 'teacher'
   const currentUserId = userRole === 'teacher' ? 'teacher1' : 'student1';
+  const isAuthenticated = true; // For now, always authenticated for demo purposes
 
   return (
-    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId }}>
+    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated } = React.useContext(AuthContext);
+  return isAuthenticated ? children : <Navigate to="/" />;
+};
+
+function App() {
+  return (
+    <AuthProvider>
       <Router basename="/TopChess">
         <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
           <Navbar />
           <main className="container mx-auto p-4">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/chat/:teacherId" element={<Chat />} />
-              <Route path="/room/:teacherId" element={<Classroom />} />
-              <Route path="/room/:teacherId" element={<Classroom />} />
-              <Route path="/dashboard" element={<TeacherDashboard />} />
-              <Route path="/student-dashboard" element={<StudentDashboard />} />
+              <Route path="/chat/:teacherId" element={<PrivateRoute><Chat /></PrivateRoute>} />
+              <Route path="/room/:teacherId" element={<PrivateRoute><Classroom /></PrivateRoute>} />
+              <Route path="/dashboard" element={<PrivateRoute><TeacherDashboard /></PrivateRoute>} />
+              <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
+              <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
             </Routes>
           </main>
         </div>
       </Router>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 }
 

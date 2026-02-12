@@ -229,5 +229,77 @@ export const mockDB = {
             window.removeEventListener('chat-update', localHandler);
             window.removeEventListener('storage', storageHandler);
         };
+    },
+
+    // Wallet & Payments System
+    getWallet: (userId) => {
+        const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
+        if (!wallets[userId]) {
+            wallets[userId] = { balance: 0, currency: 'EUR' };
+            localStorage.setItem('topchess_wallets', JSON.stringify(wallets));
+        }
+        return wallets[userId];
+    },
+
+    getTransactions: (userId) => {
+        const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        return txs.filter(tx => tx.fromId === userId || tx.toId === userId).sort((a, b) => b.timestamp - a.timestamp);
+    },
+
+    addFunds: (userId, amount) => {
+        const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
+        if (!wallets[userId]) wallets[userId] = { balance: 0, currency: 'EUR' };
+
+        wallets[userId].balance += amount;
+        localStorage.setItem('topchess_wallets', JSON.stringify(wallets));
+
+        // Log Transaction
+        const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        txs.push({
+            id: 'tx_' + Date.now(),
+            type: 'deposit',
+            fromId: 'system',
+            toId: userId,
+            amount: amount,
+            timestamp: Date.now(),
+            description: 'Recarga de Saldo'
+        });
+        localStorage.setItem('topchess_transactions', JSON.stringify(txs));
+
+        window.dispatchEvent(new Event('wallet-update'));
+        return wallets[userId];
+    },
+
+    processPayment: (fromId, toId, amount, description) => {
+        const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
+        if (!wallets[fromId]) wallets[fromId] = { balance: 0, currency: 'EUR' };
+        if (!wallets[toId]) wallets[toId] = { balance: 0, currency: 'EUR' };
+
+        if (wallets[fromId].balance < amount) {
+            return { success: false, error: 'Saldo insuficiente' };
+        }
+
+        // Deduct
+        wallets[fromId].balance -= amount;
+        // Add
+        wallets[toId].balance += amount;
+
+        localStorage.setItem('topchess_wallets', JSON.stringify(wallets));
+
+        // Log Transaction
+        const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        txs.push({
+            id: 'tx_' + Date.now(),
+            type: 'payment',
+            fromId: fromId,
+            toId: toId,
+            amount: amount,
+            timestamp: Date.now(),
+            description: description || 'Pago de servicio'
+        });
+        localStorage.setItem('topchess_transactions', JSON.stringify(txs));
+
+        window.dispatchEvent(new Event('wallet-update'));
+        return { success: true };
     }
 };

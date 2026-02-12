@@ -10,8 +10,11 @@ const StudentDashboard = () => {
     const navigate = useNavigate();
     const [myTeachers, setMyTeachers] = useState([]);
     const [pendingRequests, setPendingRequests] = useState([]);
+    const [balance, setBalance] = useState(0);
 
     useEffect(() => {
+        // Init balance
+        setBalance(mockDB.getWallet(currentUserId).balance);
         // Fetch data
         const requests = mockDB.getRequestsForStudent(currentUserId);
 
@@ -28,6 +31,17 @@ const StudentDashboard = () => {
 
         setMyTeachers(approved);
         setPendingRequests(pending);
+
+        // Force update on wallet change
+        const walletHandler = () => {
+            // We just need to trigger a re-render, getting the balance directly in render or state
+            // For simplicity, let's just force update via state or just rely on render reading mockDB if we had a useWallet hook.
+            // Since we read mockDB directly in render (bad practice usually, but ok for mock), we need to trigger render.
+            // Let's add a dummy state or just fetch balance in useEffect and put in state.
+            setBalance(mockDB.getWallet(currentUserId).balance);
+        };
+        window.addEventListener('wallet-update', walletHandler);
+        return () => window.removeEventListener('wallet-update', walletHandler);
     }, [currentUserId]);
 
     const handleLogout = () => {
@@ -43,6 +57,14 @@ const StudentDashboard = () => {
                     <Logo className="w-8 h-8 text-white" />
                     <h1 className="text-xl font-bold tracking-tight text-white">Panel de <span className="text-white">Estudiante</span></h1>
                 </div>
+                <button
+                    onClick={() => navigate('/wallet')}
+                    className="flex items-center gap-2 text-gold hover:text-white transition-colors text-xs uppercase font-bold tracking-wider mr-4"
+                >
+                    <div className="bg-gold/10 px-3 py-1 rounded-full border border-gold/20 flex items-center gap-2">
+                        <span>{balance.toFixed(2)} €</span>
+                    </div>
+                </button>
                 <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 text-text-muted hover:text-red-400 transition-colors text-xs uppercase font-bold tracking-wider"
