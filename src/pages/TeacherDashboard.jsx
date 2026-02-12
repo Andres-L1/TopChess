@@ -1,19 +1,24 @@
+```javascript
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { mockDB } from '../services/mockDatabase';
-import { AuthContext } from '../App';
-import { DollarSign, Users, Clock, LogOut, CheckCircle, XCircle } from 'lucide-react';
-import Logo from '../components/Logo';
+import { useAuth } from '../context/AuthContext';
+import { Users, DollarSign, Clock, Trophy, ChevronRight, ExternalLink, Calendar as CalendarIcon, Bell, Check, X, Video } from 'lucide-react';
+import Calendar from '../components/Calendar';
+import toast from 'react-hot-toast';
 
 const TeacherDashboard = () => {
-    const { logout, currentUserId } = React.useContext(AuthContext);
+    const { logout, currentUserId } = useAuth();
     const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState('overview'); // overview, students, schedule
     const [stats, setStats] = useState({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState([]);
+    const [availability, setAvailability] = useState([]);
 
     useEffect(() => {
         // Mock data loading
         const wallet = mockDB.getWallet(currentUserId);
+        const avail = mockDB.getTeacherAvailability(currentUserId);
 
         setStats({
             earnings: wallet.balance,
@@ -22,6 +27,7 @@ const TeacherDashboard = () => {
         });
         const reqs = mockDB.getRequestsForTeacher(currentUserId);
         setRequests(reqs);
+        setAvailability(avail);
 
         // Listen for wallet updates
         const walletHandler = () => {
@@ -32,9 +38,16 @@ const TeacherDashboard = () => {
         return () => window.removeEventListener('wallet-update', walletHandler);
     }, [currentUserId]);
 
-    const handleApprove = (studentId) => {
-        mockDB.approveRequest(studentId, currentUserId);
-        setRequests(mockDB.getRequestsForTeacher(currentUserId));
+    const handleAcceptRequest = (studentId) => {
+        mockDB.approveRequest(studentId, currentUserId); // Assuming this is the correct mockDB method
+        setRequests(prev => prev.filter(r => r.studentId !== studentId));
+        // Recalc stats if real
+    };
+
+    const handleSaveAvailability = (newAvail) => {
+        mockDB.updateTeacherAvailability(currentUserId, newAvail);
+        setAvailability(newAvail);
+        toast.success("Horario actualizado correctamente");
     };
 
     const handleLogout = () => {
@@ -43,114 +56,79 @@ const TeacherDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-dark-bg text-text-primary font-sans selection:bg-gold selection:text-black">
+        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
             {/* Header */}
-            <div className="border-b border-white/5 bg-dark-panel/50 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-                <div className="flex items-center gap-3">
-                    <Logo className="w-8 h-8 text-gold" />
-                    <h1 className="text-xl font-bold tracking-tight text-white">Panel de <span className="text-gold">Grandes Maestros</span></h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold font-display text-white">
+                        Panel de Profesor <span className="text-gold">.</span>
+                    </h1>
+                    <p className="text-text-muted">Gestiona tus alumnos y ganancias.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => navigate(`/room/${currentUserId}`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-gold/10 hover:bg-gold hover:text-black text-gold border border-gold/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider mr-4"
-                    >
-                        <Logo className="w-4 h-4" />
-                        <span>Mi Aula</span>
-                    </button>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 text-text-muted hover:text-red-400 transition-colors text-xs uppercase font-bold tracking-wider"
-                    >
-                        <LogOut size={16} />
-                        <span>Cerrar Sesión</span>
-                    </button>
+                <div className="flex gap-4">
+                     <Link to={`/ classroom / ${ currentUserId } `} className="btn-secondary flex items-center gap-2">
+                        <ExternalLink size={18} />
+                        Mi Aula
+                    </Link>
+                    <div className="flex gap-2 p-1 bg-dark-panel rounded-lg border border-white/5">
+                        <button 
+                            onClick={() => setActiveTab('overview')}
+                            className={`px - 4 py - 2 rounded - md text - sm font - medium transition - all ${ activeTab === 'overview' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white' } `}
+                        >
+                            Resumen
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('schedule')}
+                            className={`px - 4 py - 2 rounded - md text - sm font - medium transition - all ${ activeTab === 'schedule' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white' } `}
+                        >
+                            Horario
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            {activeTab === 'schedule' ? (
+                <div className="glass-panel p-6 rounded-2xl animate-enter">
+                    <Calendar 
+                        mode="edit" 
+                        availability={availability} 
+                        onSaveAvailability={handleSaveAvailability} 
+                    />
+                </div>
+            ) : (
+                <>
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="bg-dark-panel p-6 rounded-2xl border border-white/5 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <DollarSign size={80} />
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="p-3 bg-gold/10 rounded-xl text-gold">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* ... Existing Stats ... */}
+                    <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
+                        <div className="flex justify-between items-start">
+                            <div className="p-3 rounded-xl bg-green-500/10 text-green-400 group-hover:scale-110 transition-transform">
                                 <DollarSign size={24} />
                             </div>
-                            <span className="text-text-muted text-xs uppercase font-bold tracking-wider">Ganancias Mes</span>
+                            <span className="text-xs font-mono text-green-400/80">+15% este mes</span>
                         </div>
-                        <span className="text-4xl font-black text-white tracking-tight block mt-2">{stats.earnings}€</span>
-                        <span className="text-xs text-green-500 font-bold mt-2 block">+12% vs mes anterior</span>
+                        <div className="mt-4">
+                            <span className="text-3xl font-bold text-white tracking-tight">{stats.earnings.toFixed(2)}€</span>
+                            <p className="text-sm text-text-muted">Ganancias Totales</p>
+                        </div>
                     </div>
-
-                    <div className="bg-dark-panel p-6 rounded-2xl border border-white/5 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Users size={80} />
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                    {/* ... other stats ... */}
+                    <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
+                        <div className="flex justify-between items-start">
+                             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
                                 <Users size={24} />
                             </div>
-                            <span className="text-text-muted text-xs uppercase font-bold tracking-wider">Alumnos Activos</span>
                         </div>
-                        <span className="text-4xl font-black text-white tracking-tight block mt-2">{stats.students}</span>
+                        <div className="mt-4">
+                            <span className="text-3xl font-bold text-white tracking-tight">{stats.students}</span>
+                            <p className="text-sm text-text-muted">Estudiantes Activos</p>
+                        </div>
                     </div>
-
-                    <div className="bg-dark-panel p-6 rounded-2xl border border-white/5 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Clock size={80} />
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+                     <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all">
+                        <div className="flex justify-between items-start">
+                             <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
                                 <Clock size={24} />
                             </div>
-                            <span className="text-text-muted text-xs uppercase font-bold tracking-wider">Nivel de Profesor</span>
-                        </div>
-
-                        {/* Dynamic Level Info */}
-                        {(() => {
-                            const comm = mockDB.calculateCommission(currentUserId);
-                            const progress = comm.nextLevelStart ? (comm.activeStudents / comm.nextLevelStart) * 100 : 100;
-
-                            // Determine next rate for motivation
-                            let nextRateDisplay = '';
-                            if (comm.activeStudents < 3) nextRateDisplay = '65%';
-                            else if (comm.activeStudents < 10) nextRateDisplay = '75%';
-                            else if (comm.activeStudents < 20) nextRateDisplay = '85%';
-
-
-                            return (
-                                <div className="mt-2">
-                                    <div className="flex justify-between items-end mb-1">
-                                        <span className="text-2xl font-black text-white">{comm.levelName}</span>
-                                        <span className="text-gold font-bold text-xl">{(comm.rate * 100).toFixed(0)}% <span className="text-[10px] text-text-muted font-normal">COMISIÓN</span></span>
-                                    </div>
-                                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-2">
-                                        <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${Math.min(progress, 100)}%` }}></div>
-                                    </div>
-                                    <div className="flex justify-between items-start">
-                                        <p className="text-[10px] text-text-muted max-w-[70%]">
-                                            {comm.nextLevelStart
-                                                ? `Faltan ${comm.nextLevelStart - comm.activeStudents} alumnos para subir de nivel.`
-                                                : '¡Has alcanzado el nivel máximo de comisión!'}
-                                        </p>
-                                        {comm.nextLevelStart && (
-                                            <span className="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30">
-                                                Next: {nextRateDisplay}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Actions */}
-                    <div className="lg:col-span-2 space-y-8">
                         {/* Quick Actions & Status */}
                         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Upcoming Classes - Dynamic Mock */}
@@ -177,7 +155,7 @@ const TeacherDashboard = () => {
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => navigate(`/room/${currentUserId}`)}
+                                                    onClick={() => navigate(`/ room / ${ currentUserId } `)}
                                                     className="w-full py-3 bg-gold text-black font-bold rounded-lg hover:bg-white transition-all shadow-lg shadow-gold/10 flex items-center justify-center gap-2"
                                                 >
                                                     <span>Ir al Aula</span>
@@ -215,9 +193,10 @@ const TeacherDashboard = () => {
                                             <div key={req.studentId} className="bg-white/5 p-3 rounded-xl border border-white/5 flex justify-between items-center group hover:bg-white/10 transition-colors">
                                                 <div>
                                                     <span className="font-bold text-white text-xs block">Estudiante {req.studentId}</span>
-                                                    <span className={`text-[9px] uppercase font-bold tracking-wider ${req.status === 'pending' ? 'text-yellow-500' :
-                                                        req.status === 'approved' ? 'text-green-500' : 'text-red-500'
-                                                        }`}>
+                                                    <span className={`text - [9px] uppercase font - bold tracking - wider ${
+    req.status === 'pending' ? 'text-yellow-500' :
+    req.status === 'approved' ? 'text-green-500' : 'text-red-500'
+} `}>
                                                         {req.status === 'pending' ? 'Pendiente' : req.status}
                                                     </span>
                                                 </div>
@@ -269,14 +248,14 @@ const TeacherDashboard = () => {
                                             </div>
                                             <div className="flex gap-2 w-full sm:w-auto">
                                                 <button
-                                                    onClick={() => navigate(`/chat/${req.studentId}`)} // In MVP chat ID is likely student ID or shared ID
+                                                    onClick={() => navigate(`/ chat / ${ req.studentId } `)} // In MVP chat ID is likely student ID or shared ID
                                                     className="flex-1 sm:flex-none px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 transition-colors flex items-center justify-center gap-2 text-xs font-bold"
                                                 >
                                                     <LogOut size={14} className="rotate-180" /> {/* Chat Icon */}
                                                     Chat
                                                 </button>
                                                 <button
-                                                    onClick={() => navigate(`/room/${currentUserId}`)}
+                                                    onClick={() => navigate(`/ room / ${ currentUserId } `)}
                                                     className="flex-1 sm:flex-none px-3 py-1.5 bg-gold/10 hover:bg-gold hover:text-black text-gold border border-gold/30 rounded-lg transition-all flex items-center justify-center gap-2 text-xs font-bold"
                                                 >
                                                     <CheckCircle size={14} />

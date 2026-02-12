@@ -1,9 +1,12 @@
+```javascript
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Added Link
 import { mockDB } from '../services/mockDatabase';
-import { AuthContext } from '../App';
-import { LogOut, BookOpen, MessageSquare, Clock, Search, Shield, Award } from 'lucide-react';
+import { AuthContext } from '../App'; // Keep AuthContext for now, as useAuth is not explicitly requested
+import { LogOut, BookOpen, MessageSquare, Clock, Search, Shield, Award, Calendar as CalendarIcon, X, Trophy, Target, Video } from 'lucide-react'; // Added CalendarIcon, X, Trophy, Target, Video
 import Logo from '../components/Logo';
+import Calendar from '../components/Calendar'; // New import
+import toast from 'react-hot-toast'; // New import
 
 const StudentDashboard = () => {
     const { logout, currentUserId } = React.useContext(AuthContext);
@@ -11,6 +14,10 @@ const StudentDashboard = () => {
     const [myTeachers, setMyTeachers] = useState([]);
     const [pendingRequests, setPendingRequests] = useState([]);
     const [balance, setBalance] = useState(0);
+
+    // Booking Modal State
+    const [bookingTeacher, setBookingTeacher] = useState(null);
+    const [teacherAvailability, setTeacherAvailability] = useState([]);
 
     useEffect(() => {
         // Init balance safely
@@ -48,6 +55,31 @@ const StudentDashboard = () => {
     const handleLogout = () => {
         logout();
         navigate('/');
+    };
+
+    const openBookingModal = (teacher) => {
+        const avail = mockDB.getTeacherAvailability(teacher.id);
+        setTeacherAvailability(avail);
+        setBookingTeacher(teacher);
+    };
+
+    const handleSlotBook = (slot) => {
+        // Mock Booking Logic
+        // In real app, we need Date selection. Here we just say "Next Week: [Day] [Hour]"
+        const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        const dateStr = `Próximo ${ dayNames[slot.dayIndex] } `;
+        
+        toast.promise(
+            new Promise((resolve) => setTimeout(resolve, 1000)),
+            {
+                loading: 'Confirmando reserva...',
+                success: `Clase reservada para el ${ dateStr } a las ${ slot.hour } `,
+                error: 'Error al reservar',
+            }
+        ).then(() => {
+            mockDB.createBooking(currentUserId, bookingTeacher.id, `${ slot.dayIndex } -${ slot.hour } `, "2023-11-20");
+            setBookingTeacher(null);
+        });
     };
 
     return (
@@ -112,7 +144,7 @@ const StudentDashboard = () => {
                                         <div key={teacher.id} className="bg-dark-panel p-5 rounded-xl border border-white/5 hover:border-gold/30 transition-all group flex flex-col sm:flex-row justify-between items-center gap-4">
                                             <div className="flex items-center gap-4 w-full sm:w-auto">
                                                 <div className="relative">
-                                                    <div className="w-14 h-14 rounded-full bg-cover bg-center border-2 border-white/10" style={{ backgroundImage: `url(${teacher.image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400'})` }}></div>
+                                                    <div className="w-14 h-14 rounded-full bg-cover bg-center border-2 border-white/10" style={{ backgroundImage: `url(${ teacher.image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400' })` }}></div>
                                                     <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-dark-panel" title="En línea"></div>
                                                 </div>
                                                 <div>
@@ -126,18 +158,24 @@ const StudentDashboard = () => {
 
                                             <div className="flex gap-2 w-full sm:w-auto">
                                                 <button
-                                                    onClick={() => navigate(`/chat/${teacher.id}`)}
+                                                    onClick={() => navigate(`/ chat / ${ teacher.id } `)}
                                                     className="flex-1 sm:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
                                                 >
                                                     <MessageSquare size={16} />
                                                     Chat
                                                 </button>
                                                 <button
-                                                    onClick={() => navigate(`/room/${teacher.id}`)}
+                                                    onClick={() => navigate(`/ room / ${ teacher.id } `)}
                                                     className="flex-1 sm:flex-none px-4 py-2 bg-gold text-black rounded-lg hover:bg-white transition-colors shadow-lg shadow-gold/10 flex items-center justify-center gap-2 font-bold text-sm"
                                                 >
                                                     <BookOpen size={16} />
                                                     Aula
+                                                </button>
+                                                <button 
+                                                    onClick={() => openBookingModal(teacher)}
+                                                    className="flex-1 sm:flex-none px-4 py-2 bg-white/5 hover:bg-gold hover:text-black border border-white/10 text-white rounded-lg transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <CalendarIcon size={16} /> Agendar
                                                 </button>
                                             </div>
                                         </div>
@@ -160,7 +198,7 @@ const StudentDashboard = () => {
                                 <div className="space-y-3">
                                     {pendingRequests.map(req => (
                                         <div key={req.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5">
-                                            <div className="w-8 h-8 rounded-full bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${req.image})` }}></div>
+                                            <div className="w-8 h-8 rounded-full bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${ req.image })` }}></div>
                                             <div className="overflow-hidden">
                                                 <div className="text-sm font-bold text-white truncate">{req.name}</div>
                                                 <div className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider">Esperando aprobación</div>
