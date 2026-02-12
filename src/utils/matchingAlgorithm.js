@@ -4,51 +4,60 @@
 export const findBestMatch = (teachers, preferences) => {
     if (!teachers || teachers.length === 0) return null;
 
+    // Helper to ensure we have an array
+    const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+
     const scores = teachers.map(teacher => {
         let score = 0;
-        const tags = teacher.tags || [];
-        const style = teacher.teachingStyle || "";
+        const tags = (teacher.tags || []).map(t => t.toLowerCase());
+        const style = (teacher.teachingStyle || "").toLowerCase();
+        const desc = (teacher.description || "").toLowerCase();
 
         // 1. Level Matching
-        if (preferences.level === 'beginner') {
-            if (tags.includes('Beginner') || tags.includes('Kids')) score += 10;
-            if (teacher.elo < 2400) score += 5; // Lower ELO might be more approachable
-            if (tags.includes('Advanced')) score -= 5;
-        } else if (preferences.level === 'advanced') {
-            if (tags.includes('Advanced') || tags.includes('Master')) score += 10;
-            if (teacher.title === 'GM') score += 5;
-            if (tags.includes('Beginner')) score -= 5;
-        }
+        const levels = toArray(preferences.level);
+        levels.forEach(lvl => {
+            if (lvl === 'beginner') {
+                if (tags.includes('beginner') || tags.includes('kids')) score += 10;
+                if (teacher.elo < 2200) score += 5; // Lower ELO might be more approachable
+            } else if (lvl === 'intermediate') {
+                if (teacher.elo >= 1500 && teacher.elo <= 2200) score += 10;
+            } else if (lvl === 'advanced') {
+                if (tags.includes('advanced') || tags.includes('master')) score += 10;
+                if (teacher.title === 'GM' || teacher.title === 'IM') score += 10;
+            }
+        });
 
         // 2. Goal Matching
-        switch (preferences.goal) {
-            case 'tactics':
-                if (tags.includes('Tactics') || tags.includes('Attack')) score += 15;
-                break;
-            case 'openings':
-                if (tags.includes('Openings') || tags.includes('Opening Prep')) score += 15;
-                break;
-            case 'endgame':
-                if (tags.includes('Endgame')) score += 15;
-                break;
-            case 'strategy':
-                if (tags.includes('Strategy') || tags.includes('Positional')) score += 15;
-                break;
-            case 'psychology':
-                if (tags.includes('Psychology')) score += 15;
-                break;
-            default:
-                break;
-        }
+        const goals = toArray(preferences.goal);
+        goals.forEach(goal => {
+            const keywords = {
+                tactics: ['tactics', 'táctica', 'attack', 'cálculo', 'combinaciones'],
+                openings: ['openings', 'aperturas', 'repertorio'],
+                endgame: ['endgame', 'finales', 'técnica'],
+                strategy: ['strategy', 'estrategia', 'posicional'],
+                psychology: ['psychology', 'psicología', 'mental']
+            };
 
-        // 3. Style Matching (Text Analysis fallback)
-        if (preferences.style === 'analytical') {
-            if (style.toLowerCase().includes('analítica') || style.toLowerCase().includes('profunda')) score += 8;
-        } else if (preferences.style === 'dynamic') {
-            if (style.toLowerCase().includes('dinámico') || style.toLowerCase().includes('divertido')) score += 8;
-        } else if (preferences.style === 'patient') {
-            if (style.toLowerCase().includes('paciente') || style.toLowerCase().includes('paso a paso')) score += 8;
-        }
+            const targetWords = keywords[goal] || [goal];
+            if (targetWords.some(w => tags.some(t => t.includes(w)) || desc.includes(w))) {
+                score += 15;
+            }
+        });
+
+        // 3. Style Matching
+        const styles = toArray(preferences.style);
+        styles.forEach(s => {
+            const styleKeywords = {
+                analytical: ['analítica', 'profunda', 'estudio'],
+                dynamic: ['dinámico', 'divertido', 'práctica'],
+                patient: ['paciente', 'comprensivo', 'paso a paso']
+            };
+
+            const targetStyles = styleKeywords[s] || [s];
+            if (targetStyles.some(w => style.includes(w) || desc.includes(w))) {
+                score += 8;
+            }
+        });
 
         return { ...teacher, matchScore: score };
     });

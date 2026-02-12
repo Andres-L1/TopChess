@@ -76,86 +76,48 @@ const Home = () => {
                 </div>
             </header>
 
-            {/* Hero Section */}
-            <div className="text-center mb-16 relative z-10 animate-fade-in">
-                <h2 className="text-4xl md:text-5xl font-black mb-4 tracking-tight leading-tight">
-                    Domina el Tablero <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-200 to-gold drop-shadow-sm">con Grandes Maestros</span>
+            {/* Hero Section - Centered & Premium */}
+            <div className="flex-grow flex flex-col items-center justify-center relative z-10 animate-fade-in text-center px-4">
+                <div className="mb-8 relative inline-block">
+                    {/* Glowing Orb effect behind crown */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gold/20 rounded-full blur-3xl animate-pulse"></div>
+                    <div className="relative z-10 text-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">
+                        <Logo className="w-24 h-24 md:w-32 md:h-32 mx-auto" />
+                    </div>
+                </div>
+
+                <h2 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter leading-tight text-white">
+                    Domina el <br className="md:hidden" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gold to-white animate-gradient-x">Tablero</span>
                 </h2>
 
-                {/* Mobile Match Button */}
-                <button
-                    onClick={() => setShowWizard(true)}
-                    className="md:hidden mt-6 w-full max-w-xs mx-auto py-4 bg-gold text-black rounded-xl font-black uppercase tracking-widest hover:bg-gold-hover transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-2"
-                >
-                    <Sparkles size={18} />
-                    <span>Encontrar mi Profesor Ideal</span>
-                </button>
+                <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+                    Conecta con Grandes Maestros de todo el mundo y eleva tu juego al siguiente nivel con clases personalizadas y análisis en tiempo real.
+                </p>
 
-                <div className="flex justify-center gap-8 text-xs font-bold uppercase tracking-widest text-text-muted mt-8 md:mt-6">
-                    <span className="flex items-center gap-2"><Shield size={14} className="text-gold" /> Calidad Garantizada</span>
-                    <span className="flex items-center gap-2"><Globe size={14} className="text-gold" /> Clases Globales</span>
-                    <span className="flex items-center gap-2"><Star size={14} className="text-gold" /> Top Rated</span>
-                </div>
-            </div>
-
-            {/* Teacher Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto relative z-10 text-left">
-                {teachers.map((teacher, index) => (
-                    <div
-                        key={teacher.id}
-                        className="group bg-dark-panel border border-white/5 rounded-2xl p-6 hover:border-gold/30 transition-all duration-300 hover:shadow-2xl hover:shadow-gold/5 flex flex-col relative overflow-hidden"
-                        style={{ animationDelay: `${index * 100}ms` }}
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-center w-full max-w-md mx-auto">
+                    <button
+                        onClick={() => setShowWizard(true)}
+                        className="w-full py-4 px-8 bg-gold text-black rounded-xl font-black uppercase tracking-widest hover:bg-white hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] flex items-center justify-center gap-3 text-sm md:text-base group"
                     >
-                        {/* Card Glow Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
+                        <span>Encontrar mi Entrenador</span>
+                    </button>
 
-                        <div className="flex justify-between items-start mb-4 relative z-10">
-                            <div>
-                                <h3 className="text-xl font-bold text-white group-hover:text-gold transition-colors">{teacher.name}</h3>
-                                <div className="flex items-center gap-1 text-gold text-xs mt-1">
-                                    <Star size={12} fill="currentColor" />
-                                    <span className="font-bold">{teacher.rating}</span>
-                                    {/* <span className="text-text-muted font-light ml-1">({teacher.reviews} reseñas)</span> - Removed if not in mock data yet */}
-                                </div>
-                            </div>
-                            <span className="bg-gold/10 text-gold text-[10px] font-black px-2 py-1 rounded border border-gold/20 uppercase tracking-wider">
-                                {teacher.title}
-                            </span>
-                        </div>
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="w-full md:w-auto py-4 px-8 bg-white/5 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all flex items-center justify-center gap-3 text-sm md:text-base"
+                    >
+                        <User size={20} />
+                        <span>Soy Profesor</span>
+                    </button>
+                </div>
 
-                        <p className="text-sm text-text-secondary leading-relaxed mb-6 flex-grow font-light border-l-2 border-white/10 pl-3">
-                            {teacher.description || teacher.bio}
-                        </p>
-
-                        {/* Teacher Tags */}
-                        <div className="flex gap-1 flex-wrap mb-4 relative z-10">
-                            {teacher.tags && teacher.tags.slice(0, 3).map(tag => (
-                                <span key={tag} className="text-[9px] uppercase font-bold text-text-muted bg-white/5 px-2 py-0.5 rounded border border-white/5">
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-
-                        <div className="mt-auto relative z-10">
-                            <div className="flex justify-between items-center mb-4 p-3 bg-black/20 rounded-lg border border-white/5 custom-scrollbar">
-                                <span className="text-[10px] uppercase text-text-muted font-bold tracking-wider">Tarifa Mensual</span>
-                                <div className="text-right">
-                                    <span className="block text-lg font-bold text-white">59€</span>
-                                    <span className="block text-[10px] text-text-muted">$39 USD (América)</span>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => navigate(`/chat/${teacher.id}`)}
-                                className="w-full py-3 bg-white text-black font-bold rounded-lg hover:bg-gold hover:text-black transition-all flex items-center justify-center gap-2 transform group-hover:translate-y-[-2px] shadow-lg"
-                            >
-                                <span>Contactar Profesor</span>
-                                <ArrowRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                <div className="flex flex-wrap justify-center gap-6 md:gap-12 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-text-muted mt-12 md:mt-16 opacity-60">
+                    <span className="flex items-center gap-2"><Shield size={16} className="text-gold" /> Calidad Verificada</span>
+                    <span className="flex items-center gap-2"><Globe size={16} className="text-gold" /> Clases Globales</span>
+                    <span className="flex items-center gap-2"><Star size={16} className="text-gold" /> Elo Garantizado</span>
+                </div>
             </div>
 
             {/* Footer Minimal */}

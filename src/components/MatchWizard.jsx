@@ -39,7 +39,14 @@ const MatchWizard = ({ onComplete, onCancel }) => {
 
     const handleSelect = (value) => {
         const stepId = STEPS[currentStep].id;
-        setAnswers(prev => ({ ...prev, [stepId]: value }));
+        setAnswers(prev => {
+            const current = prev[stepId] || [];
+            if (current.includes(value)) {
+                return { ...prev, [stepId]: current.filter(v => v !== value) };
+            } else {
+                return { ...prev, [stepId]: [...current, value] };
+            }
+        });
     };
 
     const handleNext = () => {
@@ -59,7 +66,7 @@ const MatchWizard = ({ onComplete, onCancel }) => {
     };
 
     const step = STEPS[currentStep];
-    const canIsNext = answers[step.id];
+    const canIsNext = answers[step.id] && answers[step.id].length > 0;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-bg/95 backdrop-blur-md p-4 animate-fade-in">
@@ -88,34 +95,37 @@ const MatchWizard = ({ onComplete, onCancel }) => {
                     </div>
 
                     <div className="flex-1 space-y-3 overflow-y-auto mb-8 pr-2 custom-scrollbar">
-                        {step.options.map((opt) => (
-                            <button
-                                key={opt.value}
-                                onClick={() => handleSelect(opt.value)}
-                                className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden
-                                    ${answers[step.id] === opt.value
-                                        ? 'bg-gold/10 border-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-                                        : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'
-                                    }
+                        {step.options.map((opt) => {
+                            const isSelected = answers[step.id]?.includes(opt.value);
+                            return (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => handleSelect(opt.value)}
+                                    className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden
+                                    ${isSelected
+                                            ? 'bg-gold/10 border-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                                            : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'
+                                        }
                                 `}
-                            >
-                                <div className="relative z-10 flex justify-between items-center">
-                                    <div>
-                                        <div className={`font-bold text-lg mb-1 ${answers[step.id] === opt.value ? 'text-gold' : 'text-white'}`}>
-                                            {opt.label}
+                                >
+                                    <div className="relative z-10 flex justify-between items-center">
+                                        <div>
+                                            <div className={`font-bold text-lg mb-1 ${isSelected ? 'text-gold' : 'text-white'}`}>
+                                                {opt.label}
+                                            </div>
+                                            <div className="text-sm text-text-secondary font-light">
+                                                {opt.desc}
+                                            </div>
                                         </div>
-                                        <div className="text-sm text-text-secondary font-light">
-                                            {opt.desc}
-                                        </div>
+                                        {isSelected && (
+                                            <div className="w-6 h-6 rounded-full bg-gold flex items-center justify-center text-black shadow-lg">
+                                                <Check size={14} strokeWidth={3} />
+                                            </div>
+                                        )}
                                     </div>
-                                    {answers[step.id] === opt.value && (
-                                        <div className="w-6 h-6 rounded-full bg-gold flex items-center justify-center text-black shadow-lg">
-                                            <Check size={14} strokeWidth={3} />
-                                        </div>
-                                    )}
-                                </div>
-                            </button>
-                        ))}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <div className="flex justify-between items-center pt-4 border-t border-white/5">

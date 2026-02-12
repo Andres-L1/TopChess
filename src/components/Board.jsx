@@ -304,16 +304,27 @@ const Board = ({ teacherId, onGameStateChange }) => {
                     {isGameOver && <span className="text-[10px] text-gold font-bold ml-1 animate-pulse">FIN</span>}
                 </div>
 
-                <div className="flex gap-1">
-                    <button onClick={toggleOrientation} className="p-2 hover:bg-white/5 rounded text-text-muted hover:text-text-primary transition-all" title="Girar">
-                        <RotateCw size={14} />
+                {/* Controls moved to floating */}
+            </div>
+
+            {/* Floating Game Controls (Absolute relative to main container) */}
+            <div className="absolute top-20 right-4 z-50 flex flex-col gap-2">
+                <button
+                    onClick={toggleOrientation}
+                    className="p-3 bg-dark-panel/90 text-white rounded-full shadow-xl hover:scale-110 hover:bg-gold hover:text-black transition-all border border-white/10 backdrop-blur-sm"
+                    title="Girar Tablero"
+                >
+                    <RotateCw size={20} />
+                </button>
+                {(userRole === 'teacher' || !gameActive) && (
+                    <button
+                        onClick={handleReset}
+                        className="p-3 bg-dark-panel/90 text-red-500 rounded-full shadow-xl hover:scale-110 hover:bg-red-500 hover:text-white transition-all border border-white/10 backdrop-blur-sm"
+                        title="Reiniciar Partida"
+                    >
+                        <RotateCcw size={20} />
                     </button>
-                    {userRole === 'teacher' && (
-                        <button onClick={handleReset} className="p-2 hover:bg-red-500/10 rounded text-red-400 hover:text-red-300 transition-all border border-transparent hover:border-red-500/20" title="Reiniciar">
-                            <RotateCcw size={14} />
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
 
             {/* Board Container with Gold Shadow */}

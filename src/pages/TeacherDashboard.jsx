@@ -96,68 +96,76 @@ const TeacherDashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Actions */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Requests Section */}
-                        <section>
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-gold rounded-full"></span>
-                                Solicitudes Pendientes
-                            </h2>
-
-                            {requests.length === 0 ? (
-                                <div className="bg-dark-panel rounded-xl p-8 text-center border border-white/5 border-dashed">
-                                    <p className="text-text-muted italic">No hay solicitudes nuevas.</p>
+                        {/* Quick Actions & Status */}
+                        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Upcoming Classes - NEW for Realism */}
+                            <div className="bg-dark-panel p-6 rounded-2xl border border-white/5 border-l-4 border-l-gold shadow-lg">
+                                <h2 className="text-sm font-bold text-white mb-4 flex items-center justify-between">
+                                    <span className="uppercase tracking-wider">Próxima Clase</span>
+                                    <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gold">En 15 min</span>
+                                </h2>
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-yellow-600 flex items-center justify-center text-black font-bold text-lg shadow-lg">
+                                        JD
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-white text-lg">Juan David</div>
+                                        <div className="text-xs text-text-muted">Defensa Siciliana • 1600 ELO</div>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {requests.map(req => (
-                                        <div key={req.studentId} className="bg-dark-panel p-4 rounded-xl border border-white/5 flex justify-between items-center hover:border-gold/30 transition-colors">
-                                            <div>
-                                                <span className="font-bold text-white block mb-1">Estudiante {req.studentId}</span>
-                                                <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider ${req.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                        req.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                                                    }`}>
-                                                    {req.status === 'pending' ? 'Pendiente' : req.status}
-                                                </span>
-                                            </div>
-                                            {req.status === 'pending' && (
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleApprove(req.studentId)}
-                                                        className="p-2 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg transition-colors"
-                                                        title="Aprobar"
-                                                    >
-                                                        <CheckCircle size={18} />
-                                                    </button>
-                                                    <button className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors" title="Rechazar">
-                                                        <XCircle size={18} />
-                                                    </button>
-                                                </div>
-                                            )}
+                                <button
+                                    onClick={() => navigate(`/room/${currentUserId}`)}
+                                    className="w-full py-3 bg-gold text-black font-bold rounded-lg hover:bg-white transition-all shadow-lg shadow-gold/10 flex items-center justify-center gap-2"
+                                >
+                                    <span>Iniciar Aula Virtual</span>
+                                    <Logo className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Requests Section - Refined */}
+                            <div className="bg-dark-panel p-6 rounded-2xl border border-white/5">
+                                <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                    <span className="uppercase tracking-wider">Solicitudes</span>
+                                    {requests.filter(r => r.status === 'pending').length > 0 && (
+                                        <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                                            {requests.filter(r => r.status === 'pending').length}
+                                        </span>
+                                    )}
+                                </h2>
+
+                                <div className="space-y-3 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                                    {requests.length === 0 ? (
+                                        <div className="text-center py-4 opacity-50 text-xs italic">
+                                            No hay solicitudes pendientes.
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
-                        {/* Quick Access */}
-                        <section>
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-gold rounded-full"></span>
-                                Accesos Rápidos
-                            </h2>
-                            <div className="bg-gradient-to-r from-dark-panel to-bg-panel p-6 rounded-2xl border border-white/5 flex justify-between items-center relative overflow-hidden">
-                                <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translates-y-10">
-                                    <Logo className="w-48 h-48 text-white" />
-                                </div>
-                                <div className="relative z-10">
-                                    <h3 className="text-xl font-bold text-white mb-1">Mi Aula Virtual</h3>
-                                    <p className="text-text-muted text-sm mb-4">Gestiona tu espacio de enseñanza en tiempo real.</p>
-                                    <button
-                                        onClick={() => navigate(`/room/${currentUserId}`)}
-                                        className="px-6 py-2 bg-gold text-black font-bold rounded-lg hover:bg-white transition-colors shadow-lg shadow-gold/10"
-                                    >
-                                        Entrar al Aula
-                                    </button>
+                                    ) : (
+                                        requests.map(req => (
+                                            <div key={req.studentId} className="bg-white/5 p-3 rounded-xl border border-white/5 flex justify-between items-center group hover:bg-white/10 transition-colors">
+                                                <div>
+                                                    <span className="font-bold text-white text-xs block">Estudiante {req.studentId}</span>
+                                                    <span className={`text-[9px] uppercase font-bold tracking-wider ${req.status === 'pending' ? 'text-yellow-500' :
+                                                        req.status === 'approved' ? 'text-green-500' : 'text-red-500'
+                                                        }`}>
+                                                        {req.status === 'pending' ? 'Pendiente' : req.status}
+                                                    </span>
+                                                </div>
+                                                {req.status === 'pending' && (
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleApprove(req.studentId)}
+                                                            className="p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg transition-colors"
+                                                            title="Aprobar"
+                                                        >
+                                                            <CheckCircle size={14} />
+                                                        </button>
+                                                        <button className="p-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-lg transition-colors" title="Rechazar">
+                                                            <XCircle size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </section>

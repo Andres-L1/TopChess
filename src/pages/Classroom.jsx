@@ -18,6 +18,7 @@ const Classroom = () => {
     const { userRole, currentUserId } = React.useContext(AuthContext);
     const [token, setToken] = useState("");
     const [activeTab, setActiveTab] = useState('game'); // Default to Game tab
+    const [isSidePanelOpen, setIsSidePanelOpen] = useState(true); // Zen mode toggle
     const [gameState, setGameState] = useState({
         fen: 'start',
         history: [],
@@ -106,8 +107,19 @@ const Classroom = () => {
                     </div>
                 </div>
 
-                {/* RIGHT PANEL - Glassmorphism */}
-                <div className="flex-none h-[35vh] md:h-auto md:w-[400px] bg-dark-panel/95 backdrop-blur-xl flex flex-col border-t md:border-t-0 border-white/5 relative z-20 shadow-2xl">
+                {/* RIGHT PANEL - Glassmorphism, Collapsible */}
+                <div className={`flex-none bg-dark-panel/95 backdrop-blur-xl flex flex-col border-t md:border-t-0 md:border-l border-white/5 relative z-20 shadow-2xl transition-all duration-300 ease-in-out
+                    ${isSidePanelOpen ? 'h-[35vh] md:h-auto md:w-[400px]' : 'h-0 md:h-auto md:w-0 overflow-hidden'}
+                `}>
+
+                    {/* Toggle Button (Absolute on left of panel if desktop, top if mobile) */}
+                    <button
+                        onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
+                        className="absolute md:left-0 md:-translate-x-full top-4 bg-dark-panel border border-white/5 border-r-0 text-gold p-2 rounded-l-lg shadow-lg z-50 hover:bg-white/5 transition-colors"
+                        title={isSidePanelOpen ? "Modo Zen" : "Mostrar Herramientas"}
+                    >
+                        {isSidePanelOpen ? <ChevronRight size={20} /> : <div className="animate-pulse"><MessageSquare size={20} /></div>}
+                    </button>
 
                     {/* Tab Navigation */}
                     <div className="flex p-3 gap-2 bg-dark-bg/50 border-b border-white/5">
