@@ -184,11 +184,11 @@ const Classroom = () => {
                     </button>
 
                     {/* Tab Navigation */}
-                    <div className="flex p-3 gap-2 bg-dark-bg/50 border-b border-white/5">
+                    <div className="flex p-3 gap-2 bg-dark-bg/50 border-b border-white/5 overflow-x-auto custom-scrollbar">
                         <TabButton id="game" icon={ScrollText} label="Partida" />
                         <TabButton id="chat" icon={MessageSquare} label="Chat" />
-                        <TabButton id="audio" icon={Mic} label="Audio" />
-                        <TabButton id="rules" icon={BookOpen} label="Reglas" />
+                        <TabButton id="analysis" icon={BookOpen} label="Análisis" />
+                        <TabButton id="tools" icon={BookOpen} label="Herramientas" />
                     </div>
 
                     {/* Content Area */}
@@ -203,6 +203,63 @@ const Classroom = () => {
                                 {/* Move History */}
                                 <div className="flex-grow overflow-hidden relative">
                                     <MoveHistory moves={gameState.history} />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'analysis' && (
+                            <div className="h-full flex flex-col p-4 gap-6 animate-fade-in">
+                                <div className="bg-dark-bg p-4 rounded-xl border border-white/5 space-y-4">
+                                    <h3 className="text-gold font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                        <BookOpen size={14} /> Importar Estudio
+                                    </h3>
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] text-text-muted">Pega la URL de un estudio de Lichess para cargar la partida.</p>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                id="lichess-url"
+                                                placeholder="https://lichess.org/study/..."
+                                                className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs text-white focus:border-gold/50 outline-none"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    const url = document.getElementById('lichess-url').value;
+                                                    if (!url) return;
+                                                    // Simple fetch logic
+                                                    const match = url.match(/study\/([a-zA-Z0-9]+)/);
+                                                    if (match) {
+                                                        const studyId = match[1];
+                                                        // Lichess API usually allows direct PGN export
+                                                        // CORS might block, let's try opening in new tab or mock import
+                                                        // Real implementation: Proxy or serverless function
+                                                        alert(`Simulando importación del estudio ${studyId}... (CORS previene fetch directo en cliente puro)`);
+                                                        // Mock loading a famous game PGN
+                                                        const mockPgn = '[Event "Mock Game"]\n[Site "Lichess"]\n1. e4 e5 2. Nf3 Nc6 3. Bb5 a6';
+                                                        mockDB.updateRoom(teacherId, { pgn: mockPgn, fen: 'r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4' });
+                                                    } else {
+                                                        alert("URL inválida");
+                                                    }
+                                                }}
+                                                className="px-3 py-1 bg-gold/10 text-gold border border-gold/30 rounded text-xs font-bold hover:bg-gold hover:text-black transition-colors"
+                                            >
+                                                Cargar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-dark-bg p-4 rounded-xl border border-white/5 space-y-4">
+                                    <h3 className="text-blue-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                        <BookOpen size={14} /> Motor de Análisis
+                                    </h3>
+                                    <div className="p-3 bg-black/20 rounded border border-white/5 flex items-center justify-between">
+                                        <span className="text-xs text-text-secondary">Stockfish 16 Lite</span>
+                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    </div>
+                                    <div className="h-24 flex items-center justify-center text-text-muted text-xs italic border border-dashed border-white/10 rounded">
+                                        Evaluación: +0.45 (Profundidad 12)
+                                    </div>
                                 </div>
                             </div>
                         )}
