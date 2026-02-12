@@ -6,6 +6,7 @@ import Classroom from './pages/Classroom';
 import Chat from './pages/Chat';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
+import Wallet from './pages/Wallet';
 
 // Mock Auth Context - simplified for MVP requirements
 export const AuthContext = React.createContext();
