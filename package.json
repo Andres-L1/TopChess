@@ -1,0 +1,43 @@
+{
+  "name": "ajedreztopchess",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://Andres-L1.github.io/TopChess",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "@livekit/components-react": "^2.9.19",
+    "@livekit/components-styles": "^1.2.0",
+    "chess.js": "^1.4.0",
+    "chessground": "^7.6.12",
+    "firebase": "^12.9.0",
+    "gh-pages": "^6.3.0",
+    "livekit-client": "^2.17.1",
+    "lucide-react": "^0.563.0",
+    "react": "^19.2.0",
+    "react-chessground": "^1.5.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.24",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.4.14"
+  }
+}
