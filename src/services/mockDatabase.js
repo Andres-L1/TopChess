@@ -173,6 +173,11 @@ export const mockDB = {
         return requests.filter(r => r.teacherId === teacherId && r.status === 'pending');
     },
 
+    getRequestsForStudent: (studentId) => {
+        const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        return requests.filter(r => r.studentId === studentId);
+    },
+
     updateRequestStatus: (studentId, teacherId, status) => {
         const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
         const index = requests.findIndex(r => r.studentId === studentId && r.teacherId === teacherId);
