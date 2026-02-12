@@ -303,7 +303,7 @@ const Board = ({ teacherId, onGameStateChange }) => {
                 >
                     <RotateCw size={18} />
                 </button>
-                {(userRole === 'teacher' || !gameActive) && (
+                {(userRole === 'teacher' || isGameOver) && (
                     <button
                         onClick={handleReset}
                         className="p-3 bg-dark-panel/90 text-red-500 rounded-xl shadow-xl hover:scale-110 hover:bg-red-500 hover:text-white transition-all border border-white/10 backdrop-blur-sm"
