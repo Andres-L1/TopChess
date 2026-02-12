@@ -97,13 +97,47 @@ const Classroom = () => {
             {/* Main Content Areas */}
             <div className="flex-grow flex flex-col md:flex-row overflow-hidden relative">
 
-                {/* BOARD AREA */}
-                <div className="flex-grow flex flex-col items-center justify-center bg-[#0a0a0a] relative md:border-r border-white/5">
-                    {/* Subtle Radial Gradient Background */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent opacity-20 pointer-events-none"></div>
+                {/* BOARD AREA - Cockpit Style */}
+                <div className="flex-grow flex flex-col items-center justify-center bg-[#0a0a0a] relative md:border-r border-white/5 p-4">
+                    {/* Background Grid/Effects */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 to-transparent opacity-40 pointer-events-none"></div>
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
 
-                    <div className="w-full h-full p-2 md:p-8 flex items-center justify-center z-10">
-                        <Board teacherId={teacherId} onGameStateChange={handleGameStateChange} />
+                    <div className="flex flex-col gap-2 w-full max-w-[min(100%,calc(100vh-140px))] aspect-[3/4] md:aspect-auto md:h-full justify-center relative z-10">
+
+                        {/* Top Player (Opponent/Teacher) */}
+                        <div className="flex items-center justify-between px-2 text-text-secondary">
+                            <div className="flex items-center gap-3 bg-dark-panel/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center">
+                                    <span className="text-gold font-bold text-xs">{teacherId?.substring(0, 2).toUpperCase()}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-white tracking-wide">GM {teacherId}</span>
+                                    <span className="text-[10px] text-gold/80 font-mono">2850 ELO</span>
+                                </div>
+                            </div>
+                            <div className="text-xs font-mono text-white/50 bg-black/30 px-3 py-1 rounded">10:00</div>
+                        </div>
+
+                        {/* Chess Board Container */}
+                        <div className="relative group shadow-2xl shadow-black/50 rounded-lg">
+                            <Board teacherId={teacherId} onGameStateChange={handleGameStateChange} />
+                        </div>
+
+                        {/* Bottom Player (You) */}
+                        <div className="flex items-center justify-between px-2 text-text-secondary mt-1">
+                            <div className="flex items-center gap-3 bg-dark-panel/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 flex items-center justify-center">
+                                    <span className="text-green-500 font-bold text-xs">{currentUserId?.substring(0, 2).toUpperCase()}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-white tracking-wide">{currentUserId || 'Tú'}</span>
+                                    <span className="text-[10px] text-green-400/80 font-mono">1500 ELO</span>
+                                </div>
+                            </div>
+                            <div className="text-xs font-mono text-white bg-black/30 px-3 py-1 rounded border-b-2 border-green-500/50">09:45</div>
+                        </div>
+
                     </div>
                 </div>
 

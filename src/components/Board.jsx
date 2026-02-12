@@ -285,7 +285,7 @@ const Board = ({ teacherId, onGameStateChange }) => {
     };
 
     return (
-        <div className="w-full h-full flex flex-col items-center p-2 relative select-none">
+        <div className="w-full h-full flex flex-col items-center justify-center relative select-none">
             <Toaster position="top-center" toastOptions={{
                 style: {
                     background: '#1A1A1A',
@@ -294,41 +294,28 @@ const Board = ({ teacherId, onGameStateChange }) => {
                 }
             }} />
 
-            {/* Control Bar - Glassmorphism & Gold */}
-            <div className="w-full max-w-[min(100%,calc(100vh-280px))] mb-3 flex justify-between items-center bg-dark-panel/90 p-2 rounded-lg border border-white/5 shadow-lg backdrop-blur-sm">
-                <div className="flex items-center gap-3 pl-2">
-                    <div className={`w-2.5 h-2.5 rounded-full shadow-inner ${turn === 'w' ? 'bg-[#EAEAEA] border border-white/20' : 'bg-[#111] border border-white/10'}`}></div>
-                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-text-secondary">
-                        {turn === 'w' ? 'Blancas' : 'Negras'}
-                    </span>
-                    {isGameOver && <span className="text-[10px] text-gold font-bold ml-1 animate-pulse">FIN</span>}
-                </div>
-
-                {/* Controls moved to floating */}
-            </div>
-
-            {/* Floating Game Controls (Absolute relative to main container) */}
-            <div className="absolute top-20 right-4 z-50 flex flex-col gap-2">
+            {/* Floating Game Controls (Absolute relative to board container) */}
+            <div className="absolute top-4 -right-16 z-50 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <button
                     onClick={toggleOrientation}
-                    className="p-3 bg-dark-panel/90 text-white rounded-full shadow-xl hover:scale-110 hover:bg-gold hover:text-black transition-all border border-white/10 backdrop-blur-sm"
+                    className="p-3 bg-dark-panel/90 text-white rounded-xl shadow-xl hover:scale-110 hover:bg-gold hover:text-black transition-all border border-white/10 backdrop-blur-sm tooltip-left"
                     title="Girar Tablero"
                 >
-                    <RotateCw size={20} />
+                    <RotateCw size={18} />
                 </button>
                 {(userRole === 'teacher' || !gameActive) && (
                     <button
                         onClick={handleReset}
-                        className="p-3 bg-dark-panel/90 text-red-500 rounded-full shadow-xl hover:scale-110 hover:bg-red-500 hover:text-white transition-all border border-white/10 backdrop-blur-sm"
+                        className="p-3 bg-dark-panel/90 text-red-500 rounded-xl shadow-xl hover:scale-110 hover:bg-red-500 hover:text-white transition-all border border-white/10 backdrop-blur-sm"
                         title="Reiniciar Partida"
                     >
-                        <RotateCcw size={20} />
+                        <RotateCcw size={18} />
                     </button>
                 )}
             </div>
 
             {/* Board Container with Gold Shadow */}
-            <div className="w-full h-auto max-w-[min(100%,calc(100vh-320px))] aspect-square relative shadow-2xl border border-white/10 rounded-lg bg-[#111] overflow-hidden group">
+            <div className="w-full aspect-square relative shadow-2xl border-[4px] border-[#1a1a1a] rounded-sm bg-[#111] overflow-hidden">
                 {/* Gold Glow behind board */}
                 <div className="absolute -inset-1 bg-gradient-to-br from-gold/10 to-transparent opacity-20 blur-sm rounded-lg pointer-events-none"></div>
 
@@ -373,12 +360,6 @@ const Board = ({ teacherId, onGameStateChange }) => {
                         </div>
                     </div>
                 )}
-            </div>
-
-            {/* Minimal Status Footer */}
-            <div className="w-full max-w-[min(100%,calc(100vh-320px))] mt-3 flex justify-between text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted opacity-60">
-                <span>{userRole === 'teacher' ? 'Modo Profesor' : 'Modo Alumno'}</span>
-                <span className={isGameOver ? "text-gold" : ""}>{isGameOver ? 'Finalizado' : 'En Juego'}</span>
             </div>
         </div>
     );
