@@ -1,0 +1,33 @@
+import { useCallback } from 'react';
+
+// Simple beep sounds using Web Audio API or Audio objects would be ideal, 
+// using stock Lichess-like sounds if available. 
+// For this MVP, we will use short reliable .mp3 URLs or Base64.
+// Here we use a few standard open-source sound effects commonly used in chess apps.
+
+const SOUNDS = {
+    move: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/move-self.mp3'),
+    capture: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/capture.mp3'),
+    check: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/move-check.mp3'),
+    castle: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/castle.mp3'),
+    promote: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/promote.mp3'),
+    gameEnd: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/game-end.mp3'),
+};
+
+const useChessSound = () => {
+    const play = useCallback((event) => {
+        try {
+            const sound = SOUNDS[event];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(err => console.error("Audio play failed", err));
+            }
+        } catch (error) {
+            console.error("Audio error", error);
+        }
+    }, []);
+
+    return { play };
+};
+
+export default useChessSound;

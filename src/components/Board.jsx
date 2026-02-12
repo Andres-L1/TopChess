@@ -1,144 +1,326 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import Chessground from 'react-chessground';
+import React, { useEffect, useState, useRef } from 'react';
 import { Chess } from 'chess.js';
+import { Chessground as NativeChessground } from 'chessground';
 import 'chessground/assets/chessground.base.css';
-import 'chessground/assets/chessground.brown.css'; // Board theme
-import { rtdb } from '../firebase';
-import { ref, onValue, set } from 'firebase/database';
+import 'chessground/assets/chessground.brown.css';
+import 'chessground/assets/chessground.cburnett.css';
+import { mockDB } from '../services/mockDatabase';
 import { AuthContext } from '../App';
+import { RotateCw, RotateCcw } from 'lucide-react';
+import useChessSound from '../hooks/useChessSound';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Board = ({ teacherId }) => {
-    const [chess, setChess] = useState(new Chess());
-    const [fen, setFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    const [lastMove, setLastMove] = useState(null);
+    // Game Logic State
+    const chessRef = useRef(new Chess());
+
+    // We keep some state for UI reactivity
+    const [fen, setFen] = useState(chessRef.current.fen());
     const [orientation, setOrientation] = useState("white");
-    const { userRole, currentUserId } = React.useContext(AuthContext);
+    const [lastMove, setLastMove] = useState(null);
+    const [pendingPromotion, setPendingPromotion] = useState(null);
+    const [isGameOver, setIsGameOver] = useState(false);
+    const [turn, setTurn] = useState('w');
 
-    // Use a ref to prevent loop updates if local match
-    const isUpdatingFromFirebase = useRef(false);
+    // Refs for Chessground
+    const boardRef = useRef(null);
+    const apiRef = useRef(null);
+    const { userRole } = React.useContext(AuthContext);
+    const { play } = useChessSound();
 
+    // Helper: Calculate Dests
+    const getDests = (inputChess) => {
+        const d = new Map();
+        const moves = inputChess.moves({ verbose: true });
+        moves.forEach(m => {
+            if (!d.has(m.from)) d.set(m.from, []);
+            d.get(m.from).push(m.to);
+        });
+        return d;
+    };
+
+    // 1. Initialize Chessground (Native)
     useEffect(() => {
-        // 1. Listen to Firebase changes
-        const roomRef = ref(rtdb, `rooms/${teacherId}`);
+        if (!boardRef.current) return;
 
-        // Initial sync
-        const unsubscribe = onValue(roomRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // If data exists, update local state
-                isUpdatingFromFirebase.current = true;
-                const newChess = new Chess(data.fen);
-                setChess(newChess);
-                setFen(data.fen);
-                if (data.lastMove) setLastMove(data.lastMove);
-                if (data.orientation) setOrientation(data.orientation);
-                isUpdatingFromFirebase.current = false;
+        const config = {
+            fen: fen,
+            orientation: orientation,
+            viewOnly: false,
+            turnColor: 'white',
+            check: false,
+            highlight: { lastMove: true, check: true },
+            animation: { enabled: true, duration: 250 },
+            movable: {
+                free: false,
+                color: 'white',
+                dests: getDests(chessRef.current),
+                showDests: true,
+            },
+            draggable: {
+                enabled: true,
+                showGhost: true,
+            },
+            selectable: { enabled: true },
+            drawable: { enabled: true, visible: true },
+            events: {
+                move: (orig, dest) => handleUserMove(orig, dest)
+            }
+        };
+
+        const api = NativeChessground(boardRef.current, config);
+        apiRef.current = api;
+
+        // Force resize
+        const resizeObserver = new ResizeObserver(() => {
+            if (apiRef.current) apiRef.current.redrawAll();
+        });
+        resizeObserver.observe(boardRef.current);
+
+        return () => {
+            api.destroy();
+            resizeObserver.disconnect();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // 2. Handle User Moves
+    const handleUserMove = (orig, dest) => {
+        const chess = chessRef.current;
+
+        // Promotion check
+        const piece = chess.get(orig);
+        const isPromotion = piece && piece.type === 'p' &&
+            ((piece.color === 'w' && dest[1] === '8') || (piece.color === 'b' && dest[1] === '1'));
+
+        if (isPromotion) {
+            setPendingPromotion({ from: orig, to: dest });
+            return;
+        }
+
+        try {
+            const move = chess.move({ from: orig, to: dest });
+            if (move) {
+                if (move.captured) play('capture');
+                else if (move.flags.includes('c') || move.flags.includes('k')) play('castle'); // Castling check
+                else play('move');
+
+                if (chess.inCheck()) {
+                    play('check');
+                    toast("¡Jaque!", { icon: '⚠️', style: { borderRadius: '10px', background: '#333', color: '#fff' } });
+                }
+
+                updateGameState(chess, [orig, dest]);
             } else {
-                // If no data, initialize room if I am the teacher
-                if (userRole === 'teacher' && currentUserId === teacherId) {
-                    const initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-                    set(roomRef, {
-                        fen: initialFen,
-                        lastMove: null,
-                        orientation: 'white'
-                    });
+                snapback();
+            }
+        } catch (e) {
+            console.log("Invalid move caught", e);
+            snapback();
+            toast.error("Movimiento inválido.");
+        }
+    };
+
+    const snapback = () => {
+        if (apiRef.current) {
+            apiRef.current.set({ fen: chessRef.current.fen() });
+        }
+    };
+
+    const updateGameState = (chessInstance, moveArr) => {
+        const newFen = chessInstance.fen();
+        const newTurn = chessInstance.turn() === 'w' ? 'white' : 'black';
+
+        setFen(newFen);
+        setLastMove(moveArr);
+        setTurn(chessInstance.turn());
+
+        const gameOver = chessInstance.isGameOver();
+        setIsGameOver(gameOver);
+
+        if (gameOver) {
+            play('gameEnd');
+            if (chessInstance.isCheckmate()) toast.success("¡Jaque Mate!", { duration: 5000, icon: '👑' });
+            else if (chessInstance.isDraw()) toast("Tablas.", { icon: '🤝' });
+        }
+
+        if (apiRef.current) {
+            apiRef.current.set({
+                fen: newFen,
+                turnColor: newTurn,
+                check: chessInstance.inCheck(),
+                lastMove: moveArr,
+                movable: {
+                    color: newTurn,
+                    dests: getDests(chessInstance)
+                }
+            });
+        }
+
+        mockDB.updateRoom(teacherId, {
+            fen: newFen,
+            lastMove: moveArr,
+            orientation: orientation
+        });
+    };
+
+    // 3. Sync from DB
+    useEffect(() => {
+        const unsubscribe = mockDB.subscribeToRoom(teacherId, (data) => {
+            if (data && data.fen) {
+                const currentFen = chessRef.current.fen();
+                if (data.fen !== currentFen) {
+                    try {
+                        chessRef.current.load(data.fen);
+                        setFen(data.fen);
+                        setLastMove(data.lastMove);
+                        setTurn(chessRef.current.turn());
+                        setIsGameOver(chessRef.current.isGameOver());
+                        if (data.orientation) setOrientation(data.orientation);
+
+                        if (apiRef.current) {
+                            const side = chessRef.current.turn() === 'w' ? 'white' : 'black';
+                            apiRef.current.set({
+                                fen: data.fen,
+                                lastMove: data.lastMove,
+                                orientation: data.orientation || orientation,
+                                turnColor: side,
+                                check: chessRef.current.inCheck(),
+                                movable: {
+                                    color: side,
+                                    dests: getDests(chessRef.current)
+                                }
+                            });
+
+                            // Optional: Trigger sound on remote move detection if desired
+                            play('move');
+                        }
+                    } catch (e) {
+                        console.error("Remote sync error", e);
+                    }
                 }
             }
         });
-
         return () => unsubscribe();
-    }, [teacherId, userRole, currentUserId]);
+    }, [teacherId, play]);
 
-    const onMove = useCallback((from, to) => {
-        // 2. Validate move with chess.js
-        // We clone the chess instance to avoid mutation issues
-        const validMove = chess.move({ from, to, promotion: 'q' });
-
-        if (validMove) {
-            // 3. Update local state
-            const newFen = chess.fen();
-            setFen(newFen);
-            setLastMove([from, to]);
-
-            // 4. Send to Firebase ONLY if I am the teacher (or allowed to move)
-            // Logic: Teacher moves update DB. Student moves... maybe local only? 
-            // User Logic: "Si el profesor mueve... el alumno tiene un useEffect... y su tablero se actualiza solo."
-            // Implies students watch. But maybe students can try moves? 
-            // For this MVP, let's say only Teacher updates the global state.
-            if (userRole === 'teacher' && currentUserId === teacherId) {
-                set(ref(rtdb, `rooms/${teacherId}`), {
-                    fen: newFen,
-                    lastMove: [from, to],
-                    orientation: orientation
-                });
+    const handlePromotionSelect = (type) => {
+        if (!pendingPromotion) return;
+        const chess = chessRef.current;
+        try {
+            const move = chess.move({
+                from: pendingPromotion.from,
+                to: pendingPromotion.to,
+                promotion: type
+            });
+            if (move) {
+                play('promote');
+                updateGameState(chess, [pendingPromotion.from, pendingPromotion.to]);
             } else {
-                // If student moves, we might want to revert if not allowed? 
-                // For now, let's allow "analysis" but it pulls back when Firebase updates.
-                // Or strictly, if student moves, it's local only until next sync.
+                snapback();
             }
-        } else {
-            // Invalid move, chessground might need a reset or just not update
-            // React-chessground usually handles this if we don't update FEN
-            // But we need to reset the internal state of chess instance?
-            // Actually, if move failed, chess instance didn't change (because .move() returns null).
-            // But chessground might have moved the piece visually.
-            // Forces re-render to snap back
-            console.log("Invalid move");
-            setTimeout(() => setFen(chess.fen()), 100);
+        } catch (e) {
+            snapback();
         }
-    }, [chess, teacherId, userRole, currentUserId, orientation]);
+        setPendingPromotion(null);
+    };
 
-    const config = {
-        fen: fen,
-        orientation: orientation,
-        viewOnly: false, // Students might want to move pieces for analysis? 
-        // Or true if strict. "Lista de tarjetas... entrar a clase".
-        // Let's keep it interactive but not syncing for students.
-        turnColor: chess.turn() === 'w' ? 'white' : 'black',
-        lastMove: lastMove,
-        highlight: {
-            lastMove: true,
-            check: true
-        },
-        animation: { enabled: true, duration: 200 },
-        movable: {
-            free: false,
-            color: 'both', // Allow moving both sides for analysis/teaching
-            dests: toDests(chess),
-            showDests: true,
-        },
-        draggable: {
-            enabled: true
-        },
-        selectable: {
-            enabled: true
-        },
-        events: {
-            move: onMove
+    const toggleOrientation = () => {
+        const newO = orientation === 'white' ? 'black' : 'white';
+        setOrientation(newO);
+        if (apiRef.current) apiRef.current.set({ orientation: newO });
+        mockDB.updateRoom(teacherId, { orientation: newO });
+    };
+
+    const handleReset = () => {
+        if (confirm("¿Reiniciar partida?")) {
+            chessRef.current.reset();
+            updateGameState(chessRef.current, null);
+            toast("Tablero reiniciado", { icon: '🔄' });
         }
     };
 
     return (
-        <div className="w-full h-full flex justify-center items-center bg-[#262421] rounded-lg p-1 shadow-2xl">
-            <div style={{ width: '100%', height: '100%', minHeight: '500px' }}>
-                <Chessground
-                    width="100%"
-                    height="100%"
-                    config={config}
-                />
+        <div className="w-full h-full flex flex-col items-center p-2 relative select-none">
+            <Toaster position="top-center" toastOptions={{
+                style: {
+                    background: '#1A1A1A',
+                    color: '#EAEAEA',
+                    border: '1px solid #333',
+                }
+            }} />
+
+            {/* Control Bar - Glassmorphism & Gold */}
+            <div className="w-full max-w-[min(100%,calc(100vh-280px))] mb-3 flex justify-between items-center bg-dark-panel/90 p-2 rounded-lg border border-white/5 shadow-lg backdrop-blur-sm">
+                <div className="flex items-center gap-3 pl-2">
+                    <div className={`w-2.5 h-2.5 rounded-full shadow-inner ${turn === 'w' ? 'bg-[#EAEAEA] border border-white/20' : 'bg-[#111] border border-white/10'}`}></div>
+                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-text-secondary">
+                        {turn === 'w' ? 'Blancas' : 'Negras'}
+                    </span>
+                    {isGameOver && <span className="text-[10px] text-gold font-bold ml-1 animate-pulse">FIN</span>}
+                </div>
+
+                <div className="flex gap-1">
+                    <button onClick={toggleOrientation} className="p-2 hover:bg-white/5 rounded text-text-muted hover:text-text-primary transition-all" title="Girar">
+                        <RotateCw size={14} />
+                    </button>
+                    {userRole === 'teacher' && (
+                        <button onClick={handleReset} className="p-2 hover:bg-red-500/10 rounded text-red-400 hover:text-red-300 transition-all border border-transparent hover:border-red-500/20" title="Reiniciar">
+                            <RotateCcw size={14} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Board Container with Gold Shadow */}
+            <div className="w-full h-auto max-w-[min(100%,calc(100vh-320px))] aspect-square relative shadow-2xl border border-white/10 rounded-lg bg-[#111] overflow-hidden group">
+                {/* Gold Glow behind board */}
+                <div className="absolute -inset-1 bg-gradient-to-br from-gold/10 to-transparent opacity-20 blur-sm rounded-lg pointer-events-none"></div>
+
+                <div ref={boardRef} className="w-full h-full relative z-10" />
+
+                {/* Promotion Overlay */}
+                {pendingPromotion && (
+                    <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm animate-fade-in">
+                        <div className="bg-dark-panel p-4 rounded-xl border border-gold/30 flex gap-4 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
+                            {['q', 'r', 'b', 'n'].map(p => (
+                                <button key={p} onClick={() => handlePromotionSelect(p)} className="w-14 h-14 bg-dark-bg hover:bg-gold/10 rounded-lg flex items-center justify-center text-4xl border border-white/10 hover:border-gold/50 transition-all hover:scale-105 active:scale-95 group">
+                                    <span className={`drop-shadow-lg ${turn === 'w' ? 'text-white' : 'text-gray-400 group-hover:text-gold'}`}>
+                                        {p === 'q' ? '♕' : p === 'r' ? '♖' : p === 'b' ? '♗' : '♘'}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Game Over Overlay */}
+                {isGameOver && (
+                    <div className="absolute inset-0 z-40 bg-dark-bg/85 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-500">
+                        <div className="bg-dark-panel px-10 py-8 rounded-2xl border border-gold/20 text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
+
+                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Partida Finalizada</h3>
+                            <div className="text-gold font-bold text-xl uppercase tracking-[0.2em] mb-6 drop-shadow-sm">
+                                {chessRef.current.isCheckmate() ? 'Jaque Mate' :
+                                    chessRef.current.isDraw() ? 'Tablas' :
+                                        chessRef.current.isStalemate() ? 'Ahogado' : 'Fin'}
+                            </div>
+                            <button onClick={handleReset} className="px-8 py-3 bg-gold/10 text-gold border border-gold/30 rounded-lg font-bold hover:bg-gold hover:text-black transition-all uppercase text-xs tracking-widest shadow-lg hover:shadow-gold/20">
+                                Nueva Partida
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Minimal Status Footer */}
+            <div className="w-full max-w-[min(100%,calc(100vh-320px))] mt-3 flex justify-between text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted opacity-60">
+                <span>{userRole === 'teacher' ? 'Modo Profesor' : 'Modo Alumno'}</span>
+                <span className={isGameOver ? "text-gold" : ""}>{isGameOver ? 'Finalizado' : 'En Juego'}</span>
             </div>
         </div>
     );
 };
-
-// Helper to calculate legal moves for Chessground
-function toDests(chess) {
-    const dests = new Map();
-    chess.SQUARES.forEach(s => {
-        const ms = chess.moves({ square: s, verbose: true });
-        if (ms.length) dests.set(s, ms.map(m => m.to));
-    });
-    return dests;
-}
 
 export default Board;
