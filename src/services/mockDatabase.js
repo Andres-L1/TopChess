@@ -270,6 +270,44 @@ export const mockDB = {
         return wallets[userId];
     },
 
+    calculateCommission: (teacherId) => {
+        // Logic: active students count determines rate
+        const reqs = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        const activeStudents = reqs.filter(r => r.teacherId === teacherId && r.status === 'approved').length;
+
+        // Tiers
+        // Level 1: 0-2 -> 50%
+        // Level 2: 3-9 -> 65%
+        // Level 3: 10-19 -> 75%
+        // Level 4: 20+ -> 85%
+
+        let rate = 0.50;
+        let levelName = 'Novato';
+        let nextLevelStart = 3;
+
+        if (activeStudents >= 20) {
+            rate = 0.85;
+            levelName = 'Gran Maestro';
+            nextLevelStart = null; // Max level
+        } else if (activeStudents >= 10) {
+            rate = 0.75;
+            levelName = 'Avanzado';
+            nextLevelStart = 20;
+        } else if (activeStudents >= 3) {
+            rate = 0.65;
+            levelName = 'Intermedio';
+            nextLevelStart = 10;
+        }
+
+        return {
+            rate,
+            levelName,
+            activeStudents,
+            nextLevelStart,
+            platformFee: (1 - rate)
+        };
+    },
+
     processPayment: (fromId, toId, amount, description) => {
         const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
         if (!wallets[fromId]) wallets[fromId] = { balance: 0, currency: 'EUR' };
@@ -279,24 +317,46 @@ export const mockDB = {
             return { success: false, error: 'Saldo insuficiente' };
         }
 
-        // Deduct
-        wallets[fromId].balance -= amount;
-        // Add
-        wallets[toId].balance += amount;
+        // Calculate Commission
+        const commInfo = mockDB.calculateCommission(toId); // toId is Teacher
+        const studentCut = amount;
+        const teacherNet = amount * commInfo.rate;
+        const platformCut = amount * commInfo.platformFee;
 
+        // Deduct from Student
+        wallets[fromId].balance -= studentCut;
+        // Add to Teacher (Net)
+        wallets[toId].balance += teacherNet;
+
+        // Save
         localStorage.setItem('topchess_wallets', JSON.stringify(wallets));
 
-        // Log Transaction
+        // Log Transactions
         const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        const now = Date.now();
+
+        // Tx for Student
         txs.push({
-            id: 'tx_' + Date.now(),
-            type: 'payment',
+            id: 'tx_out_' + now + '_' + fromId, // Ensure unique ID
+            type: 'payment_sent', // new type for clarity
             fromId: fromId,
             toId: toId,
-            amount: amount,
-            timestamp: Date.now(),
-            description: description || 'Pago de servicio'
+            amount: -studentCut, // Store as negative for logic or just use type
+            timestamp: now,
+            description: description
         });
+
+        // Tx for Teacher
+        txs.push({
+            id: 'tx_in_' + now + '_' + toId, // Ensure unique ID
+            type: 'payment_received',
+            fromId: fromId,
+            toId: toId,
+            amount: teacherNet,
+            timestamp: now,
+            description: `${description} (Comisión ${(commInfo.platformFee * 100).toFixed(0)}% aplicada)`
+        });
+
         localStorage.setItem('topchess_transactions', JSON.stringify(txs));
 
         window.dispatchEvent(new Event('wallet-update'));

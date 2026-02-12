@@ -97,9 +97,36 @@ const TeacherDashboard = () => {
                             <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
                                 <Clock size={24} />
                             </div>
-                            <span className="text-text-muted text-xs uppercase font-bold tracking-wider">Horas Impartidas</span>
+                            <span className="text-text-muted text-xs uppercase font-bold tracking-wider">Nivel de Profesor</span>
                         </div>
-                        <span className="text-4xl font-black text-white tracking-tight block mt-2">{stats.hours}h</span>
+
+                        {/* Dynamic Level Info */}
+                        {(() => {
+                            const comm = mockDB.calculateCommission(currentUserId);
+                            const percent = comm.nextLevelStart
+                                ? ((comm.activeStudents - (comm.nextLevelStart > 10 ? 10 : comm.nextLevelStart > 3 ? 3 : 0)) / (comm.nextLevelStart - (comm.nextLevelStart > 10 ? 10 : comm.nextLevelStart > 3 ? 3 : 0))) * 100
+                                : 100;
+                            // Simplified progress logic for display:
+                            // Just active / target
+                            const progress = comm.nextLevelStart ? (comm.activeStudents / comm.nextLevelStart) * 100 : 100;
+
+                            return (
+                                <div className="mt-2">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="text-2xl font-black text-white">{comm.levelName}</span>
+                                        <span className="text-gold font-bold text-xl">{(comm.rate * 100).toFixed(0)}%</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-1">
+                                        <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${Math.min(progress, 100)}%` }}></div>
+                                    </div>
+                                    <p className="text-[10px] text-text-muted">
+                                        {comm.nextLevelStart
+                                            ? `Faltan ${comm.nextLevelStart - comm.activeStudents} alumnos para el siguiente nivel.`
+                                            : '¡Nivel Máximo alcanzado!'}
+                                    </p>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
 

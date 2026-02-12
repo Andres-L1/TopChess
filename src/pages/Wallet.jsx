@@ -87,30 +87,29 @@ const Wallet = () => {
                         </div>
                     ) : (
                         <div className="divide-y divide-white/5">
-                            {transactions.map(tx => (
-                                <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' :
-                                                tx.type === 'payment' && tx.toId === currentUserId ? 'bg-green-500/10 text-green-500' :
-                                                    'bg-red-500/10 text-red-500'
-                                            }`}>
-                                            {tx.type === 'deposit' ? <ArrowDownLeft size={18} /> :
-                                                tx.type === 'payment' && tx.toId === currentUserId ? <ArrowDownLeft size={18} /> :
+                            {transactions.map(tx => {
+                                const isPositive = tx.type === 'deposit' || tx.type === 'payment_received';
+                                return (
+                                    <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isPositive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                                                }`}>
+                                                {isPositive ? <ArrowDownLeft size={18} /> :
                                                     <ArrowUpRight size={18} />}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-white text-sm">{tx.description}</div>
+                                                <div className="text-xs text-[#8b8982]">{new Date(tx.timestamp).toLocaleDateString()} • {new Date(tx.timestamp).toLocaleTimeString()}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="font-bold text-white text-sm">{tx.description}</div>
-                                            <div className="text-xs text-[#8b8982]">{new Date(tx.timestamp).toLocaleDateString()} • {new Date(tx.timestamp).toLocaleTimeString()}</div>
-                                        </div>
+                                        <span className={`font-mono font-bold ${isPositive ? 'text-green-500' : 'text-white'
+                                            }`}>
+                                            {isPositive ? '+' : ''}
+                                            {Math.abs(tx.amount).toFixed(2)} EUR
+                                        </span>
                                     </div>
-                                    <span className={`font-mono font-bold ${tx.type === 'deposit' || (tx.type === 'payment' && tx.toId === currentUserId)
-                                            ? 'text-green-500' : 'text-white'
-                                        }`}>
-                                        {tx.type === 'deposit' || (tx.type === 'payment' && tx.toId === currentUserId) ? '+' : '-'}
-                                        {tx.amount.toFixed(2)} EUR
-                                    </span>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
                 </div>

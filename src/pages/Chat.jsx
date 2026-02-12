@@ -110,13 +110,14 @@ const Chat = () => {
     };
 
     const handlePayment = () => {
-        const result = mockDB.processPayment(currentUserId, targetId, parseInt(payAmount), `Clase con ${targetProfile.name}`);
+        const month = new Date().toLocaleString('es-ES', { month: 'long' });
+        const result = mockDB.processPayment(currentUserId, targetId, parseInt(payAmount), `Suscripción Mensual: ${month}`);
         if (result.success) {
             alert("Pago realizado con éxito!");
             setShowPayModal(false);
             // Send system message
             if (userRole === 'student') {
-                mockDB.sendMessage(currentUserId, targetId, `💰 He enviado un pago de ${payAmount}€`, 'student');
+                mockDB.sendMessage(currentUserId, targetId, `💰 He pagado la mensualidad de ${month} (${payAmount}€)`, 'student');
             }
         } else {
             alert("Error: " + result.error);
@@ -143,7 +144,7 @@ const Chat = () => {
                             onClick={() => setShowPayModal(true)}
                             className="bg-[#D4AF37]/20 hover:bg-[#D4AF37]/40 text-[#D4AF37] border border-[#D4AF37]/50 px-3 py-2 rounded font-bold flex items-center gap-2 text-xs transition-colors mr-2"
                         >
-                            <DollarSign size={14} /> Pagar Clase
+                            <DollarSign size={14} /> Pagar Mensualidad
                         </button>
                     )}
 
@@ -220,8 +221,8 @@ const Chat = () => {
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#262421] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
                         <div className="p-5 border-b border-white/5">
-                            <h3 className="text-lg font-bold text-white">Enviar Pago</h3>
-                            <p className="text-xs text-[#8b8982]">Estás pagando a {targetProfile.name}</p>
+                            <h3 className="text-lg font-bold text-white">Pagar Mensualidad</h3>
+                            <p className="text-xs text-[#8b8982]">Suscripción con {targetProfile.name}</p>
                         </div>
                         <div className="p-6">
                             <label className="block text-xs font-bold text-[#8b8982] uppercase mb-2">Cantidad</label>
