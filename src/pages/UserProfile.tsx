@@ -5,7 +5,7 @@ import { User, Save, Camera, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const UserProfile = () => {
-    const { currentUserId } = useAuth();
+    const { currentUserId } = useAuth()!;
     const [profile, setProfile] = useState({ name: '', bio: '', image: '', elo: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ const UserProfile = () => {
         setLoading(false);
     }, [currentUserId]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setProfile(prev => ({ ...prev, [name]: value }));
     };

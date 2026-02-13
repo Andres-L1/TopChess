@@ -1,0 +1,35 @@
+{
+    "welcome": "Bienvenido a TopChess",
+    "find_mentor": "ENCONTRAR MENTOR",
+    "premium_platform": "La plataforma #1 de Ajedrez Premium",
+    "hero_title": "Domina el Tablero",
+    "hero_subtitle": "Conecta con Grandes Maestros de élite. Clases personalizadas, análisis profundos y una experiencia visual de otro nivel.",
+    "no_commitment": "Sin compromiso • Cancelación gratuita",
+    "stats": {
+        "students": "Alumnos",
+        "grandmasters": "Grandes Maestros",
+        "response_time": "Respuesta media"
+    },
+    "nav": {
+        "student_mode": "Soy Alumno",
+        "teacher_mode": "Soy Profesor",
+        "panel": "Panel",
+        "profile": "Mi Perfil",
+        "classroom": "Aula",
+        "exit": "Salir"
+    },
+    "dashboard": {
+        "title": "Panel de Profesor",
+        "subtitle": "Gestiona tus alumnos y ganancias.",
+        "my_classroom": "Mi Aula",
+        "overview": "Resumen",
+        "schedule": "Horario",
+        "total_earnings": "Ganancias Totales",
+        "active_students": "Estudiantes Activos",
+        "classes_given": "Clases Impartidas",
+        "pending_requests": "Solicitudes Pendientes",
+        "quick_access": "Acceso Rápido",
+        "enter_classroom": "Entrar al Aula",
+        "next_class": "Próxima Clase"
+    }
+}

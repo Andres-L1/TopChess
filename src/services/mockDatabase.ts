@@ -1,46 +1,7 @@
+import { Teacher, Request, Message, RoomData, WalletData, Transaction, Profile, Booking } from '../types/index';
 
 // Seed Data
-const INITIAL_TEACHERS = [
-    {
-        id: "teacher1",
-        name: "GM Ana Smith",
-        elo: 2450,
-        price: 35,
-        classesGiven: 42,
-        earnings: 1250.50,
-        description: "Especialista en defensa siciliana y finales.",
-        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
-        tags: ['Strategy', 'Endgame', 'Advanced'],
-        teachingStyle: 'Analítica y paciente. Me enfoco en la comprensión profunda de los finales y estructuras de peones.',
-        curriculum: '1. Dominio de la Defensa Siciliana. 2. Finales de Torres teóricos. 3. Planificación estratégica en medio juego.'
-    },
-    {
-        id: "teacher2",
-        name: "IM Carlos Ruiz",
-        elo: 2310,
-        price: 25,
-        classesGiven: 18,
-        earnings: 450.00,
-        description: "Entrenador táctico para jugadores de club.",
-        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
-        tags: ['Tactics', 'Beginner', 'Kids'],
-        teachingStyle: 'Dinámico y divertido. Ideal para niños y principiantes que quieren mejorar su visión táctica rápidamente.',
-        curriculum: '1. Patrones tácticos básicos. 2. Aperturas agresivas para blancas. 3. Cómo evitar errores graves.'
-    },
-    {
-        id: "teacher3",
-        name: "WGM Sarah Polgar",
-        elo: 2505,
-        price: 50,
-        classesGiven: 156,
-        earnings: 7800.00,
-        description: "Ex-campeona mundial juvenil. Clases avanzadas.",
-        image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
-        tags: ['Opening Prep', 'Psychology', 'Master'],
-        teachingStyle: 'Rigurosa y competitiva. Preparación profesional para torneos y psicología deportiva.',
-        curriculum: '1. Repertorio de Gran Maestro. 2. Psicología en la competición. 3. Cálculo complejo.'
-    }
-];
+const INITIAL_TEACHERS: Teacher[] = [];
 
 const DB_KEYS = {
     TEACHERS: 'topchess_teachers',
@@ -56,45 +17,22 @@ export const mockDB = {
         if (!localStorage.getItem(DB_KEYS.ROOMS)) {
             localStorage.setItem(DB_KEYS.ROOMS, JSON.stringify({}));
         }
-
-        // Ensure at least one active connection for the demo user
-        if (!localStorage.getItem('topchess_requests')) {
-            const demoRequest = [{
-                id: 'req_demo_1',
-                studentId: 'student1',
-                teacherId: 'teacher1', // GM Ana Smith
-                status: 'approved',
-                timestamp: Date.now()
-            }];
-            localStorage.setItem('topchess_requests', JSON.stringify(demoRequest));
-
-            // Also seed a welcome message
-            const demoMsg = [{
-                id: 'msg_demo_1',
-                studentId: 'student1',
-                teacherId: 'teacher1',
-                text: '¡Hola! Bienvenido a TopChess. Tu aula está lista.',
-                sender: 'teacher',
-                timestamp: Date.now()
-            }];
-            localStorage.setItem('topchess_messages', JSON.stringify(demoMsg));
-        }
     },
 
     // Teacher Methods
-    getTeachers: () => {
+    getTeachers: (): Teacher[] => {
         const data = localStorage.getItem(DB_KEYS.TEACHERS);
         return data ? JSON.parse(data) : INITIAL_TEACHERS;
     },
 
-    getTeacherById: (id) => {
+    getTeacherById: (id: string): Teacher | null => {
         const teachers = mockDB.getTeachers();
-        return teachers.find(t => t.id === id) || null;
+        return teachers.find((t) => t.id === id) || null;
     },
 
-    updateTeacher: (id, updates) => {
+    updateTeacher: (id: string, updates: Partial<Teacher>): Teacher | null => {
         const teachers = mockDB.getTeachers();
-        const index = teachers.findIndex(t => t.id === id);
+        const index = teachers.findIndex((t) => t.id === id);
         if (index !== -1) {
             teachers[index] = { ...teachers[index], ...updates };
             localStorage.setItem(DB_KEYS.TEACHERS, JSON.stringify(teachers));
@@ -104,35 +42,33 @@ export const mockDB = {
     },
 
     // Room Methods (Board State)
-    getRoom: (teacherId) => {
+    getRoom: (teacherId: string): RoomData | null => {
         const rooms = JSON.parse(localStorage.getItem(DB_KEYS.ROOMS) || '{}');
         return rooms[teacherId] || null;
     },
 
-    updateRoom: (teacherId, data) => {
+    updateRoom: (teacherId: string, data: Partial<RoomData>) => {
         const rooms = JSON.parse(localStorage.getItem(DB_KEYS.ROOMS) || '{}');
         rooms[teacherId] = { ...rooms[teacherId], ...data };
         localStorage.setItem(DB_KEYS.ROOMS, JSON.stringify(rooms));
 
-        // Dispatch explicit event for cross-component updates if needed, 
-        // essentially mocking realtime subscription updates (within same tab)
+        // Dispatch explicit event for cross-component updates if needed
         window.dispatchEvent(new CustomEvent('room-update', {
             detail: { teacherId, data: rooms[teacherId] }
         }));
     },
 
-    // Subscribe to room changes (Mocking onValue with CROSS-TAB support)
-    subscribeToRoom: (teacherId, callback) => {
-        // 1. Same-tab updates (via CustomEvent)
-        const localHandler = (e) => {
-            if (e.detail.teacherId === teacherId) {
-                callback(e.detail.data);
+    // Subscribe to room changes
+    subscribeToRoom: (teacherId: string, callback: (data: RoomData) => void) => {
+        const localHandler = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail.teacherId === teacherId) {
+                callback(customEvent.detail.data);
             }
         };
         window.addEventListener('room-update', localHandler);
 
-        // 2. Cross-tab updates (via storage event)
-        const storageHandler = (e) => {
+        const storageHandler = (e: StorageEvent) => {
             if (e.key === DB_KEYS.ROOMS && e.newValue) {
                 try {
                     const rooms = JSON.parse(e.newValue);
@@ -147,7 +83,6 @@ export const mockDB = {
         };
         window.addEventListener('storage', storageHandler);
 
-        // Initial call
         const currentData = mockDB.getRoom(teacherId);
         if (currentData) callback(currentData);
 
@@ -158,20 +93,20 @@ export const mockDB = {
     },
 
     // Requests & Chat Methods
-    createRequest: (studentId, teacherId, initialMessage) => {
-        const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
-        const existing = requests.find(r => r.studentId === studentId && r.teacherId === teacherId);
+    createRequest: (studentId: string, teacherId: string, initialMessage: string): Request => {
+        const requests: Request[] = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        const existing = requests.find((r) => r.studentId === studentId && r.teacherId === teacherId);
 
         if (existing) {
             mockDB.sendMessage(studentId, teacherId, initialMessage, 'student');
             return existing;
         }
 
-        const newRequest = {
+        const newRequest: Request = {
             id: Date.now().toString(),
             studentId,
             teacherId,
-            status: 'pending', // 'approved', 'rejected'
+            status: 'pending',
             timestamp: Date.now()
         };
 
@@ -185,25 +120,25 @@ export const mockDB = {
         return newRequest;
     },
 
-    getRequestStatus: (studentId, teacherId) => {
-        const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
-        const req = requests.find(r => r.studentId === studentId && r.teacherId === teacherId);
+    getRequestStatus: (studentId: string, teacherId: string): Request['status'] | null => {
+        const requests: Request[] = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        const req = requests.find((r) => r.studentId === studentId && r.teacherId === teacherId);
         return req ? req.status : null;
     },
 
-    getRequestsForTeacher: (teacherId) => {
-        const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
-        return requests.filter(r => r.teacherId === teacherId && r.status === 'pending');
+    getRequestsForTeacher: (teacherId: string): Request[] => {
+        const requests: Request[] = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        return requests.filter((r) => r.teacherId === teacherId && r.status === 'pending');
     },
 
-    getRequestsForStudent: (studentId) => {
-        const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
-        return requests.filter(r => r.studentId === studentId);
+    getRequestsForStudent: (studentId: string): Request[] => {
+        const requests: Request[] = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        return requests.filter((r) => r.studentId === studentId);
     },
 
-    updateRequestStatus: (studentId, teacherId, status) => {
-        const requests = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
-        const index = requests.findIndex(r => r.studentId === studentId && r.teacherId === teacherId);
+    updateRequestStatus: (studentId: string, teacherId: string, status: Request['status']): boolean => {
+        const requests: Request[] = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        const index = requests.findIndex((r) => r.studentId === studentId && r.teacherId === teacherId);
         if (index !== -1) {
             requests[index].status = status;
             localStorage.setItem('topchess_requests', JSON.stringify(requests));
@@ -213,9 +148,9 @@ export const mockDB = {
     },
 
     // Messages
-    sendMessage: (studentId, teacherId, text, senderRole) => {
-        const messages = JSON.parse(localStorage.getItem('topchess_messages') || '[]');
-        const newMessage = {
+    sendMessage: (studentId: string, teacherId: string, text: string, senderRole: 'student' | 'teacher') => {
+        const messages: Message[] = JSON.parse(localStorage.getItem('topchess_messages') || '[]');
+        const newMessage: Message = {
             id: Date.now().toString() + Math.random(),
             studentId,
             teacherId,
@@ -231,23 +166,23 @@ export const mockDB = {
         }));
     },
 
-    getMessages: (studentId, teacherId) => {
-        const messages = JSON.parse(localStorage.getItem('topchess_messages') || '[]');
-        return messages.filter(m => m.studentId === studentId && m.teacherId === teacherId)
+    getMessages: (studentId: string, teacherId: string): Message[] => {
+        const messages: Message[] = JSON.parse(localStorage.getItem('topchess_messages') || '[]');
+        return messages.filter((m) => m.studentId === studentId && m.teacherId === teacherId)
             .sort((a, b) => a.timestamp - b.timestamp);
     },
 
-    subscribeToChat: (studentId, teacherId, callback) => {
-        const localHandler = (e) => {
-            if (e.detail.studentId === studentId && e.detail.teacherId === teacherId) {
+    subscribeToChat: (studentId: string, teacherId: string, callback: (msgs: Message[]) => void) => {
+        const localHandler = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail.studentId === studentId && customEvent.detail.teacherId === teacherId) {
                 callback(mockDB.getMessages(studentId, teacherId));
             }
         };
         window.addEventListener('chat-update', localHandler);
 
-        const storageHandler = (e) => {
+        const storageHandler = (e: StorageEvent) => {
             if (e.key === 'topchess_messages' && e.newValue) {
-                // When messages change effectively, re-fetch specifically for this chat
                 callback(mockDB.getMessages(studentId, teacherId));
             }
         };
@@ -260,7 +195,7 @@ export const mockDB = {
     },
 
     // Wallet & Payments System
-    getWallet: (userId) => {
+    getWallet: (userId: string): WalletData => {
         const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
         if (!wallets[userId]) {
             wallets[userId] = { balance: 0, currency: 'EUR' };
@@ -269,12 +204,12 @@ export const mockDB = {
         return wallets[userId];
     },
 
-    getTransactions: (userId) => {
-        const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
-        return txs.filter(tx => tx.fromId === userId || tx.toId === userId).sort((a, b) => b.timestamp - a.timestamp);
+    getTransactions: (userId: string): Transaction[] => {
+        const txs: Transaction[] = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        return txs.filter((tx) => tx.fromId === userId || tx.toId === userId).sort((a, b) => b.timestamp - a.timestamp);
     },
 
-    addFunds: (userId, amount) => {
+    addFunds: (userId: string, amount: number): WalletData => {
         const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
         if (!wallets[userId]) wallets[userId] = { balance: 0, currency: 'EUR' };
 
@@ -282,7 +217,7 @@ export const mockDB = {
         localStorage.setItem('topchess_wallets', JSON.stringify(wallets));
 
         // Log Transaction
-        const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        const txs: Transaction[] = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
         txs.push({
             id: 'tx_' + Date.now(),
             type: 'deposit',
@@ -298,25 +233,18 @@ export const mockDB = {
         return wallets[userId];
     },
 
-    calculateCommission: (teacherId) => {
-        // Logic: active students count determines rate
-        const reqs = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
-        const activeStudents = reqs.filter(r => r.teacherId === teacherId && r.status === 'approved').length;
-
-        // Tiers
-        // Level 1: 0-2 -> 50%
-        // Level 2: 3-9 -> 65%
-        // Level 3: 10-19 -> 75%
-        // Level 4: 20+ -> 85%
+    calculateCommission: (teacherId: string) => {
+        const reqs: Request[] = JSON.parse(localStorage.getItem('topchess_requests') || '[]');
+        const activeStudents = reqs.filter((r) => r.teacherId === teacherId && r.status === 'approved').length;
 
         let rate = 0.50;
         let levelName = 'Novato';
-        let nextLevelStart = 3;
+        let nextLevelStart: number | null = 3;
 
         if (activeStudents >= 20) {
             rate = 0.85;
             levelName = 'Gran Maestro';
-            nextLevelStart = null; // Max level
+            nextLevelStart = null;
         } else if (activeStudents >= 10) {
             rate = 0.75;
             levelName = 'Avanzado';
@@ -336,7 +264,7 @@ export const mockDB = {
         };
     },
 
-    processPayment: (fromId, toId, amount, description) => {
+    processPayment: (fromId: string, toId: string, amount: number, description: string): { success: boolean; error?: string } => {
         const wallets = JSON.parse(localStorage.getItem('topchess_wallets') || '{}');
         if (!wallets[fromId]) wallets[fromId] = { balance: 0, currency: 'EUR' };
         if (!wallets[toId]) wallets[toId] = { balance: 0, currency: 'EUR' };
@@ -345,38 +273,30 @@ export const mockDB = {
             return { success: false, error: 'Saldo insuficiente' };
         }
 
-        // Calculate Commission
-        const commInfo = mockDB.calculateCommission(toId); // toId is Teacher
+        const commInfo = mockDB.calculateCommission(toId);
         const studentCut = amount;
         const teacherNet = amount * commInfo.rate;
-        const platformCut = amount * commInfo.platformFee;
 
-        // Deduct from Student
         wallets[fromId].balance -= studentCut;
-        // Add to Teacher (Net)
         wallets[toId].balance += teacherNet;
 
-        // Save
         localStorage.setItem('topchess_wallets', JSON.stringify(wallets));
 
-        // Log Transactions
-        const txs = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
+        const txs: Transaction[] = JSON.parse(localStorage.getItem('topchess_transactions') || '[]');
         const now = Date.now();
 
-        // Tx for Student
         txs.push({
-            id: 'tx_out_' + now + '_' + fromId, // Ensure unique ID
-            type: 'payment_sent', // new type for clarity
+            id: 'tx_out_' + now + '_' + fromId,
+            type: 'payment_sent',
             fromId: fromId,
             toId: toId,
-            amount: -studentCut, // Store as negative for logic or just use type
+            amount: -studentCut,
             timestamp: now,
             description: description
         });
 
-        // Tx for Teacher
         txs.push({
-            id: 'tx_in_' + now + '_' + toId, // Ensure unique ID
+            id: 'tx_in_' + now + '_' + toId,
             type: 'payment_received',
             fromId: fromId,
             toId: toId,
@@ -392,35 +312,33 @@ export const mockDB = {
     },
 
     // Scheduling System
-    getTeacherAvailability: (teacherId) => {
+    getTeacherAvailability: (teacherId: string): string[] => {
         const avail = JSON.parse(localStorage.getItem('topchess_availability') || '{}');
-        return avail[teacherId] || []; // Array of slot IDs e.g. "Mon-10:00"
+        return avail[teacherId] || [];
     },
 
-    updateTeacherAvailability: (teacherId, slots) => {
+    updateTeacherAvailability: (teacherId: string, slots: string[]) => {
         const avail = JSON.parse(localStorage.getItem('topchess_availability') || '{}');
         avail[teacherId] = slots;
         localStorage.setItem('topchess_availability', JSON.stringify(avail));
     },
 
-    getBookings: () => {
+    getBookings: (): Booking[] => {
         return JSON.parse(localStorage.getItem('topchess_bookings') || '[]');
     },
 
-    createBooking: (studentId, teacherId, slotId, dateIso) => {
-        // Simple booking logic
+    createBooking: (studentId: string, teacherId: string, slotId: string, dateIso: string) => {
         const bookings = mockDB.getBookings();
-        // Check collision
-        if (bookings.find(b => b.teacherId === teacherId && b.slotId === slotId && b.date === dateIso && b.status !== 'cancelled')) {
+        if (bookings.find((b: any) => b.teacherId === teacherId && b.slotId === slotId && b.date === dateIso && b.status !== 'cancelled')) {
             return { success: false, error: 'Horario ya reservado' };
         }
 
-        const newBooking = {
+        const newBooking: Booking = {
             id: 'bk_' + Date.now(),
             studentId,
             teacherId,
-            slotId, // e.g. "10:00"
-            date: dateIso, // e.g. "2023-11-20"
+            slotId,
+            date: dateIso,
             status: 'confirmed',
             timestamp: Date.now()
         };
@@ -430,43 +348,49 @@ export const mockDB = {
     },
 
     // User Profile System
-    getProfile: (userId) => {
-        // 1. Check Teachers
+    getProfile: (userId: string): Profile => {
         const teachers = mockDB.getTeachers();
-        const teacher = teachers.find(t => t.id === userId);
-        if (teacher) return teacher;
+        const teacher = teachers.find((t) => t.id === userId);
+        if (teacher) {
+            return {
+                name: teacher.name,
+                bio: teacher.description,
+                image: teacher.image,
+                elo: teacher.elo
+            };
+        }
 
-        // 2. Check Students (topchess_users)
         const users = JSON.parse(localStorage.getItem('topchess_users') || '{}');
         if (users[userId]) return users[userId];
 
-        // 3. Return Default Student Profile
         return {
-            id: userId,
             name: userId === 'student1' ? 'Estudiante Demo' : `User ${userId}`,
             elo: 1200,
             image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
-            bio: "Estudiante de ajedrez apasionado.",
-            role: 'student'
+            bio: "Estudiante de ajedrez apasionado."
         };
     },
 
-    updateProfile: (userId, data) => {
-        // 1. Check Teachers
+    updateProfile: (userId: string, data: Partial<Profile>) => {
         const teachers = mockDB.getTeachers();
-        const teacherIndex = teachers.findIndex(t => t.id === userId);
+        const teacherIndex = teachers.findIndex((t) => t.id === userId);
         if (teacherIndex !== -1) {
-            teachers[teacherIndex] = { ...teachers[teacherIndex], ...data };
+            // Partial mapping back to Teacher (simple fields only)
+            const updates: Partial<Teacher> = {};
+            if (data.name) updates.name = data.name;
+            if (data.bio) updates.description = data.bio;
+            if (data.image) updates.image = data.image;
+            if (data.elo) updates.elo = data.elo;
+
+            teachers[teacherIndex] = { ...teachers[teacherIndex], ...updates };
             localStorage.setItem(DB_KEYS.TEACHERS, JSON.stringify(teachers));
             return teachers[teacherIndex];
         }
 
-        // 2. Update/Create Student
         const users = JSON.parse(localStorage.getItem('topchess_users') || '{}');
         users[userId] = { ...(users[userId] || mockDB.getProfile(userId)), ...data };
         localStorage.setItem('topchess_users', JSON.stringify(users));
 
-        // Dispatch event for UI updates
         window.dispatchEvent(new CustomEvent('profile-update', { detail: { userId, profile: users[userId] } }));
         return users[userId];
     }

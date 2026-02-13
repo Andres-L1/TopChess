@@ -1,0 +1,35 @@
+{
+    "welcome": "Welcome to TopChess",
+    "find_mentor": "FIND MENTOR",
+    "premium_platform": "The #1 Premium Chess Platform",
+    "hero_title": "Master the Board",
+    "hero_subtitle": "Connect with elite Grandmasters. Personalized lessons, deep analysis, and a next-level visual experience.",
+    "no_commitment": "No commitment • Free cancellation",
+    "stats": {
+        "students": "Students",
+        "grandmasters": "Grandmasters",
+        "response_time": "Avg Response"
+    },
+    "nav": {
+        "student_mode": "I'm a Student",
+        "teacher_mode": "I'm a Teacher",
+        "panel": "Dashboard",
+        "profile": "My Profile",
+        "classroom": "Classroom",
+        "exit": "Exit"
+    },
+    "dashboard": {
+        "title": "Teacher Dashboard",
+        "subtitle": "Manage your students and earnings.",
+        "my_classroom": "My Classroom",
+        "overview": "Overview",
+        "schedule": "Schedule",
+        "total_earnings": "Total Earnings",
+        "active_students": "Active Students",
+        "classes_given": "Classes Given",
+        "pending_requests": "Pending Requests",
+        "quick_access": "Quick Access",
+        "enter_classroom": "Enter Classroom",
+        "next_class": "Next Class"
+    }
+}

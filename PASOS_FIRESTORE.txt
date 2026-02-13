@@ -1,0 +1,20 @@
+¡Exacto! Esa es la opción correcta: **Firestore Database**.
+
+Sigue estos pasos en esa pantalla:
+1.  Haz clic en **"Crear base de datos"**.
+2.  Selecciona el **Modo de producción** ("Start in production mode").
+3.  Deja la ubicación por defecto (ej. `europe-west` o `nam5`).
+4.  Haz clic en **Habilitar**.
+
+Una vez creada, ve a la pestaña **Reglas** (Rules) que aparece arriba y asegúrate de que permitan la lectura y escritura. Deberían verse así (o cámbialas a esto temporalmente):
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+¡Avísame cuando esté listo y recarga tu aplicación!

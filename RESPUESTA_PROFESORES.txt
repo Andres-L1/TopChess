@@ -1,0 +1,11 @@
+Entiendo tu punto totalmente.
+
+Lo que ocurre es que **técnicamente**, la aplicación (el código en tu navegador) necesita permiso para "leer" la lista de todos los profesores disponibles para poder **seleccionar uno aleatoriamente** y asignártelo.
+
+Si bloqueamos la lectura (`read: if false`), la app no podría consultar quién está disponible y el botón de "Buscar Profesor" fallaría siempre.
+
+Es decir: los humanos **no vemos la lista**, pero la máquina **necesita consultarla** por debajo.
+
+Por cierto, he detectado que el botón de "Buscar Profesor" aún estaba usando datos falsos de prueba (mock). Voy a conectarlo ahora mismo a la base de datos real para que te empareje con profesores de verdad y cree la solicitud correctamente.
+
+¿Procedo con este ajuste para que el emparejamiento sea 100% real?

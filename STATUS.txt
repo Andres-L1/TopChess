@@ -1,0 +1,9 @@
+¡Genial! Has configurado correctamente Firestore.
+
+Por favor, sigue estos pasos finales:
+1. Vuelve a tu aplicación y recarga la página (F5).
+2. Intenta iniciar sesión nuevamente.
+3. El error "client is offline" debería haber desaparecido.
+4. Si eres un usuario nuevo, deberías ser redirigido automáticamente a la selección de rol (Estudiante/Profesor).
+
+¿Funciona todo correctamente ahora?

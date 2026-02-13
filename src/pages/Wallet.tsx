@@ -1,38 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockDB } from '../services/mockDatabase';
-import { AuthContext } from '../App';
+import { firebaseService } from '../services/firebaseService';
+import { useAuth } from '../App';
 import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, Clock, CreditCard } from 'lucide-react';
 import Logo from '../components/Logo';
+import { Transaction } from '../types/index';
+import toast from 'react-hot-toast';
 
-const Wallet = () => {
-    const { currentUserId, userRole } = React.useContext(AuthContext);
+interface WalletData {
+    balance: number;
+    currency: string;
+}
+
+const Wallet: React.FC = () => {
+    const { currentUserId, userRole } = useAuth();
     const navigate = useNavigate();
-    const [wallet, setWallet] = useState({ balance: 0, currency: 'EUR' });
-    const [transactions, setTransactions] = useState([]);
+    const [wallet, setWallet] = useState<WalletData>({ balance: 0, currency: 'EUR' });
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [depositAmount, setDepositAmount] = useState(50);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const loadData = () => {
-        setWallet(mockDB.getWallet(currentUserId));
-        setTransactions(mockDB.getTransactions(currentUserId));
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const walletData = await firebaseService.getWallet(currentUserId);
+            const txs = await firebaseService.getTransactions(currentUserId);
+            setWallet(walletData);
+            setTransactions(txs);
+        } catch (error) {
+            console.error("Error loading wallet data", error);
+            toast.error("Error al cargar datos del monedero");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
-        loadData();
-
-        const handler = () => loadData();
-        window.addEventListener('wallet-update', handler);
-        return () => window.removeEventListener('wallet-update', handler);
+        if (currentUserId) {
+            loadData();
+        }
     }, [currentUserId]);
 
-    const handleDeposit = () => {
-        mockDB.addFunds(currentUserId, parseInt(depositAmount));
-        setShowDepositModal(false);
+    const handleDeposit = async () => {
+        try {
+            await firebaseService.addFunds(currentUserId, Number(depositAmount));
+            setShowDepositModal(false);
+            toast.success(`Recarga de ${depositAmount}€ completada`);
+            loadData(); // Refresh
+        } catch (error) {
+            console.error("Error depositing funds", error);
+            toast.error("Error en la recarga");
+        }
     };
 
     return (
-        <div className="min-h-screen bg-[#161512] text-[#e0e0d1] font-sans selection:bg-[#D4AF37] selection:text-black">
+        <div className="min-h-screen bg-[#161512] text-[#e0e0d1] font-sans selection:bg-[#D4AF37] selection:text-black pb-20">
             {/* Header */}
             <div className="border-b border-white/5 bg-[#262421]/50 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(-1)}>
@@ -41,7 +64,7 @@ const Wallet = () => {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-6 py-10">
+            <div className="max-w-4xl mx-auto px-6 py-10 animate-fade-in">
 
                 {/* Balance Card */}
                 <div className="bg-gradient-to-br from-[#262421] to-[#1a1917] p-8 rounded-3xl border border-white/5 shadow-2xl mb-10 relative overflow-hidden">
@@ -52,7 +75,9 @@ const Wallet = () => {
                     <div className="relative z-10">
                         <h2 className="text-[#8b8982] uppercase text-xs font-bold tracking-widest mb-2">Saldo Disponible</h2>
                         <div className="flex items-baseline gap-2 mb-6">
-                            <span className="text-6xl font-black text-white tracking-tight">{wallet.balance.toFixed(2)}</span>
+                            <span className="text-6xl font-black text-white tracking-tight">
+                                {isLoading ? "..." : wallet.balance.toFixed(2)}
+                            </span>
                             <span className="text-xl text-[#D4AF37] font-bold">{wallet.currency}</span>
                         </div>
 
@@ -81,7 +106,9 @@ const Wallet = () => {
                 </h3>
 
                 <div className="bg-[#262421]/50 rounded-2xl border border-white/5 overflow-hidden">
-                    {transactions.length === 0 ? (
+                    {isLoading ? (
+                        <div className="p-10 text-center text-[#8b8982]">Cargando transacciones...</div>
+                    ) : transactions.length === 0 ? (
                         <div className="p-10 text-center text-[#8b8982] italic">
                             No hay transacciones recientes.
                         </div>
@@ -105,7 +132,7 @@ const Wallet = () => {
                                         <span className={`font-mono font-bold ${isPositive ? 'text-green-500' : 'text-white'
                                             }`}>
                                             {isPositive ? '+' : ''}
-                                            {Math.abs(tx.amount).toFixed(2)} EUR
+                                            {Math.abs(tx.amount).toFixed(2)} {wallet.currency}
                                         </span>
                                     </div>
                                 )
@@ -118,7 +145,7 @@ const Wallet = () => {
             {/* Deposit Modal */}
             {showDepositModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#262421] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+                    <div className="bg-[#262421] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-enter">
                         <div className="p-6 border-b border-white/5">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 <CreditCard size={20} className="text-[#D4AF37]" />
@@ -133,7 +160,7 @@ const Wallet = () => {
                                         <button
                                             key={amt}
                                             onClick={() => setDepositAmount(amt)}
-                                            className={`py-2 rounded-lg font-bold border ${amount === amt ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}
+                                            className={`py-2 rounded-lg font-bold border transition-all ${depositAmount === amt ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-transparent text-white border-white/20 hover:border-white/50'}`}
                                         >
                                             {amt}€
                                         </button>
@@ -144,7 +171,7 @@ const Wallet = () => {
                                     <input
                                         type="number"
                                         value={depositAmount}
-                                        onChange={(e) => setDepositAmount(e.target.value)}
+                                        onChange={(e) => setDepositAmount(Number(e.target.value))}
                                         className="w-full bg-[#1a1917] border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:outline-none focus:border-[#D4AF37] font-bold text-lg"
                                     />
                                 </div>

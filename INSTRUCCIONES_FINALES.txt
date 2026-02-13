@@ -1,0 +1,10 @@
+He hecho un ajuste extra de seguridad (`App.tsx`): ahora el rol por defecto de un usuario es "nulo".
+
+Esto obliga al sistema a comprobar siempre si tienes un perfil completo. Si no lo tienes, te enviará a la pantalla de selección.
+
+Como ya activaste la base de datos (Firestore):
+1. Recarga la página web (Control + F5 para asegurar que cargas la nueva versión).
+2. Si habías iniciado sesión antes, puede que necesites Cerrar Sesión y volver a entrar.
+3. Ahora debería aparecer la pantalla "Quiero Aprender" / "Quiero Enseñar" sin errores.
+
+¡Pruébalo y dime si ya va perfecto! 🚀

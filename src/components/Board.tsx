@@ -1,51 +1,95 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Chess } from 'chess.js';
+import { Chess, Move } from 'chess.js';
 import { Chessground as NativeChessground } from 'chessground';
+import { Api } from 'chessground/api';
+import { Config } from 'chessground/config';
+import { Key } from 'chessground/types';
+import { DrawShape } from 'chessground/draw';
 import 'chessground/assets/chessground.base.css';
 import 'chessground/assets/chessground.brown.css';
 import 'chessground/assets/chessground.cburnett.css';
-import { mockDB } from '../services/mockDatabase';
-import { AuthContext } from '../App';
+import { firebaseService } from '../services/firebaseService';
+import { useAuth } from '../App';
 import { RotateCw, RotateCcw } from 'lucide-react';
 import useChessSound from '../hooks/useChessSound';
 import toast, { Toaster } from 'react-hot-toast';
+import { RoomData, GameState } from '../types/index';
 
-const Board = ({ teacherId, onGameStateChange }) => {
+interface BoardProps {
+    teacherId: string;
+    onGameStateChange?: (state: GameState) => void;
+}
+
+const Board: React.FC<BoardProps> = ({ teacherId, onGameStateChange }) => {
     // Game Logic State
     const chessRef = useRef(new Chess());
 
     // We keep some state for UI reactivity
     const [fen, setFen] = useState(chessRef.current.fen());
-    const [orientation, setOrientation] = useState("white");
-    const [lastMove, setLastMove] = useState(null);
-    const [pendingPromotion, setPendingPromotion] = useState(null);
+    const [orientation, setOrientation] = useState<"white" | "black">("white");
+    const [lastMove, setLastMove] = useState<[Key, Key] | null>(null);
+    const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string; color: string } | null>(null);
     const [isGameOver, setIsGameOver] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
-    const [turn, setTurn] = useState('w');
-    const [shapes, setShapes] = useState([]); // New: Shape sync
+    const [turn, setTurn] = useState<'w' | 'b'>('w');
+    const [shapes, setShapes] = useState<DrawShape[]>([]);
 
     // Refs for Chessground
-    const boardRef = useRef(null);
-    const apiRef = useRef(null);
-    const { userRole } = React.useContext(AuthContext);
+    const boardRef = useRef<HTMLDivElement>(null);
+    const apiRef = useRef<Api | null>(null);
+    const { userRole } = useAuth();
     const { play } = useChessSound();
 
     // Helper: Calculate Dests
-    const getDests = (inputChess) => {
+    const getDests = (inputChess: Chess) => {
         const d = new Map();
         const moves = inputChess.moves({ verbose: true });
-        moves.forEach(m => {
+        moves.forEach((m: Move) => {
             if (!d.has(m.from)) d.set(m.from, []);
             d.get(m.from).push(m.to);
         });
         return d;
     };
 
+    const snapback = () => {
+        apiRef.current?.set({ fen: chessRef.current.fen() });
+    };
+
+    const handleUserMove = (orig: Key, dest: Key) => {
+        const chess = chessRef.current;
+
+        // Check for promotion
+        const moves = chess.moves({ verbose: true });
+        const isPromotion = moves.find((m: Move) => m.from === orig && m.to === dest && m.promotion);
+
+        if (isPromotion) {
+            setPendingPromotion({
+                from: orig,
+                to: dest,
+                color: isPromotion.color
+            });
+            return;
+        }
+
+        try {
+            const move = chess.move({ from: orig, to: dest });
+            if (move) {
+                if (move.captured) play('capture');
+                else play('move');
+                updateGameState(chess, [orig, dest]);
+            } else {
+                snapback();
+            }
+        } catch (e) {
+            snapback();
+        }
+    };
+
     // 1. Initialize Chessground (Native)
     useEffect(() => {
         if (!boardRef.current) return;
 
-        const config = {
+        const config: Config = {
             fen: fen,
             orientation: orientation,
             viewOnly: false,
@@ -67,11 +111,11 @@ const Board = ({ teacherId, onGameStateChange }) => {
             drawable: {
                 enabled: true,
                 visible: true,
-                autoShapes: shapes, // Sync shapes on init
+                autoShapes: shapes,
                 onChange: (newShapes) => {
                     setShapes(newShapes);
                     // Sync shapes to DB immediately
-                    mockDB.updateRoom(teacherId, { shapes: newShapes });
+                    firebaseService.updateRoom(teacherId, { shapes: newShapes });
                 }
             },
             events: {
@@ -95,23 +139,16 @@ const Board = ({ teacherId, onGameStateChange }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ... (handleUserMove remains same)
 
-    // ... (snapback remains same)
-
-    const updateGameState = (chessInstance, moveArr) => {
+    const updateGameState = async (chessInstance: Chess, moveArr: [Key, Key] | null) => {
         const newFen = chessInstance.fen();
-        const newTurn = chessInstance.turn() === 'w' ? 'white' : 'black';
+        const newTurnColor = chessInstance.turn() === 'w' ? 'white' : 'black';
         const history = chessInstance.history();
         const pgn = chessInstance.pgn();
 
         setFen(newFen);
         setLastMove(moveArr);
         setTurn(chessInstance.turn());
-
-        // Clear shapes on move? Usually yes in standard play, but in analysis maybe not.
-        // For now, let's keep them unless manually cleared to allow discussing the move.
-        // Actually, standard behavior is clear shapes on move.
         setShapes([]);
 
         const gameOver = chessInstance.isGameOver();
@@ -124,7 +161,8 @@ const Board = ({ teacherId, onGameStateChange }) => {
                 fen: newFen,
                 history: history,
                 turn: chessInstance.turn(),
-                isGameOver: gameOver
+                isGameOver: gameOver,
+                orientation: orientation
             });
         }
 
@@ -137,46 +175,41 @@ const Board = ({ teacherId, onGameStateChange }) => {
         if (apiRef.current) {
             apiRef.current.set({
                 fen: newFen,
-                turnColor: newTurn,
+                turnColor: newTurnColor as 'white' | 'black',
                 check: chessInstance.inCheck(),
-                lastMove: moveArr,
-                drawable: { shapes: [] }, // Clear shapes visual
+                lastMove: moveArr || undefined,
+                drawable: { shapes: [] },
                 movable: {
-                    color: newTurn,
+                    color: newTurnColor as 'white' | 'black',
                     dests: getDests(chessInstance)
                 }
             });
         }
 
-        mockDB.updateRoom(teacherId, {
+        await firebaseService.updateRoom(teacherId, {
             fen: newFen,
             pgn: pgn,
             history: history,
-            lastMove: moveArr,
+            lastMove: moveArr || undefined,
             orientation: orientation,
-            shapes: [] // Clear synced shapes
+            shapes: []
         });
     };
 
     // 3. Sync from DB
     useEffect(() => {
-        const unsubscribe = mockDB.subscribeToRoom(teacherId, (data) => {
+        const unsubscribe = firebaseService.subscribeToRoom(teacherId, (data: RoomData) => {
             if (data) {
-                // Sync Shapes independent of FEN if possible (for drawing while thinking)
-                // But usually data comes as a blob.
-
                 if (data.shapes && JSON.stringify(data.shapes) !== JSON.stringify(shapes)) {
                     setShapes(data.shapes);
                     if (apiRef.current) {
-                        apiRef.current.set({ drawable: { shapes: data.shapes } }); // Use setShapes or autoShapes? 
-                        // In chessground, to update shapes: api.setAutoShapes(shapes) or api.set({ drawable: { shapes } })
+                        apiRef.current.set({ drawable: { shapes: data.shapes } });
                     }
                 }
 
                 if (data.fen) {
                     const currentFen = chessRef.current.fen();
 
-                    // If remote FEN is different, we sync.
                     if (data.fen !== currentFen) {
                         try {
                             if (data.pgn) {
@@ -186,20 +219,18 @@ const Board = ({ teacherId, onGameStateChange }) => {
                             }
 
                             setFen(data.fen);
-                            setLastMove(data.lastMove);
+                            setLastMove(data.lastMove as [Key, Key] || null);
                             setTurn(chessRef.current.turn());
                             setIsGameOver(chessRef.current.isGameOver());
                             if (data.orientation) setOrientation(data.orientation);
 
-                            // Shapes are handled above separately or cleared if new move
-
-                            // Update parent UI state on sync too
                             if (onGameStateChange) {
                                 onGameStateChange({
                                     fen: data.fen,
                                     history: data.history || chessRef.current.history(),
                                     turn: chessRef.current.turn(),
-                                    isGameOver: chessRef.current.isGameOver()
+                                    isGameOver: chessRef.current.isGameOver(),
+                                    orientation: data.orientation || orientation
                                 });
                             }
 
@@ -207,7 +238,7 @@ const Board = ({ teacherId, onGameStateChange }) => {
                                 const side = chessRef.current.turn() === 'w' ? 'white' : 'black';
                                 apiRef.current.set({
                                     fen: data.fen,
-                                    lastMove: data.lastMove,
+                                    lastMove: data.lastMove as [Key, Key] || undefined,
                                     orientation: data.orientation || orientation,
                                     turnColor: side,
                                     check: chessRef.current.inCheck(),
@@ -219,7 +250,6 @@ const Board = ({ teacherId, onGameStateChange }) => {
                             }
                         } catch (e) {
                             console.error("Remote sync error", e);
-                            // Fallback
                             try {
                                 chessRef.current.load(data.fen);
                                 setFen(data.fen);
@@ -232,9 +262,10 @@ const Board = ({ teacherId, onGameStateChange }) => {
         });
         return () => unsubscribe();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [teacherId, play, onGameStateChange]); // Checked deps
+    }, [teacherId, play, onGameStateChange]);
 
-    const handlePromotionSelect = (type) => {
+
+    const handlePromotionSelect = (type: string) => {
         if (!pendingPromotion) return;
         const chess = chessRef.current;
         try {
@@ -245,7 +276,7 @@ const Board = ({ teacherId, onGameStateChange }) => {
             });
             if (move) {
                 play('promote');
-                updateGameState(chess, [pendingPromotion.from, pendingPromotion.to]);
+                updateGameState(chess, [pendingPromotion.from as Key, pendingPromotion.to as Key]);
             } else {
                 snapback();
             }
@@ -259,13 +290,13 @@ const Board = ({ teacherId, onGameStateChange }) => {
         const newO = orientation === 'white' ? 'black' : 'white';
         setOrientation(newO);
         if (apiRef.current) apiRef.current.set({ orientation: newO });
-        mockDB.updateRoom(teacherId, { orientation: newO });
+        firebaseService.updateRoom(teacherId, { orientation: newO });
     };
 
-    const handleReset = () => {
+    const handleReset = async () => {
         if (confirm("¿Reiniciar partida?")) {
             chessRef.current.reset();
-            updateGameState(chessRef.current, null);
+            await updateGameState(chessRef.current, null);
             toast("Tablero reiniciado", { icon: '🔄' });
         }
     };
@@ -280,7 +311,6 @@ const Board = ({ teacherId, onGameStateChange }) => {
                 }
             }} />
 
-            {/* Floating Game Controls (Absolute relative to board container) */}
             <div className="absolute top-4 -right-16 z-50 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <button
                     onClick={toggleOrientation}
@@ -300,14 +330,11 @@ const Board = ({ teacherId, onGameStateChange }) => {
                 )}
             </div>
 
-            {/* Board Container with Gold Shadow */}
             <div className="w-full aspect-square relative shadow-2xl border-[4px] border-[#1a1a1a] rounded-sm bg-[#111] overflow-hidden">
-                {/* Gold Glow behind board */}
                 <div className="absolute -inset-1 bg-gradient-to-br from-gold/10 to-transparent opacity-20 blur-sm rounded-lg pointer-events-none"></div>
 
                 <div ref={boardRef} className="w-full h-full relative z-10" />
 
-                {/* Promotion Overlay */}
                 {pendingPromotion && (
                     <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm animate-fade-in">
                         <div className="bg-dark-panel p-4 rounded-xl border border-gold/30 flex gap-4 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
@@ -322,7 +349,6 @@ const Board = ({ teacherId, onGameStateChange }) => {
                     </div>
                 )}
 
-                {/* Game Over Overlay */}
                 {showGameOverModal && (
                     <div className="absolute inset-0 z-40 bg-dark-bg/85 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-500">
                         <div className="bg-dark-panel px-10 py-8 rounded-2xl border border-gold/20 text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">

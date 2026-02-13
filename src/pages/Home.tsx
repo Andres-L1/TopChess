@@ -1,49 +1,84 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Sparkles, Users, Award, Zap } from 'lucide-react';
-import MatchWizard from '../components/MatchWizard';
+import FindMentorWizard from '../components/FindMentorWizard';
 
-import { mockDB } from '../services/mockDatabase';
+import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { Teacher, Request } from '../types/index';
 
 const Home = () => {
     const navigate = useNavigate();
     const { currentUserId } = useAuth();
+    const { t } = useTranslation();
     const [showWizard, setShowWizard] = useState(false);
-    const [matchResult, setMatchResult] = useState(null);
+    const [matchResult, setMatchResult] = useState<Teacher | null>(null);
+    const [isMatching, setIsMatching] = useState(false);
 
-    const handleWizardComplete = (answers) => {
-        // Mock matching algorithm: just pick a random teacher for now
-        // In real app: match tags in 'answers' with teacher.tags
-        const teachers = mockDB.getTeachers();
-        const randomTeacher = teachers[Math.floor(Math.random() * teachers.length)];
+    const handleWizardComplete = async (answers: any) => {
+        setIsMatching(true);
+        try {
+            // Real matching algorithm:
+            // 1. Fetch available teachers
+            const allTeachers = await firebaseService.getTeachers();
 
-        setMatchResult(randomTeacher);
+            if (allTeachers.length === 0) {
+                toast.error("No hay profesores disponibles en este momento");
+                setShowWizard(false);
+                return;
+            }
 
-        // Simulate "Thinking" delay
-        toast.success("¡Hemos encontrado tu mentor ideal!");
+            // 2. Filter by style or elo if possible, or just pick best fit
+            // Simple logic: priority to style match
+            let matched = allTeachers.find(t => t.teachingStyle === answers.style);
+
+            // If no style match, pick random but with similar ELO expectations
+            if (!matched) {
+                matched = allTeachers[Math.floor(Math.random() * allTeachers.length)];
+            }
+
+            setMatchResult(matched);
+            toast.success("¡Hemos encontrado tu mentor ideal!");
+        } catch (error) {
+            console.error("Matching error:", error);
+            toast.error("Error al buscar mentores");
+        } finally {
+            setIsMatching(false);
+        }
     };
 
-    const confirmMatch = () => {
-        if (!matchResult) return;
+    const confirmMatch = async () => {
+        if (!matchResult || !currentUserId) {
+            if (!currentUserId) toast.error("Por favor, inicia sesión");
+            return;
+        }
 
-        // Auto-create request
-        // For demo purposes, we can even AUTO-APPROVE to show the room immediately?
-        // Let's stick to standard flow: Create Request -> Go to Chat
+        try {
+            const requestId = `req_${Date.now()}_${currentUserId.substring(0, 5)}`;
+            const req: Request = {
+                id: requestId,
+                studentId: currentUserId,
+                teacherId: matchResult.id,
+                status: 'pending',
+                timestamp: Date.now(),
+                message: "Hola, me gustaría empezar mis clases contigo."
+            };
 
-        const req = mockDB.createRequest(currentUserId, matchResult.id, "Hola, me gustaría tomar clases contigo.");
-
-        // Optional: Auto-approve for demo smoothness if user is 'student1'
-        // mockDB.updateRequestStatus(currentUserId, matchResult.id, 'approved'); 
-
-        navigate(`/chat/${matchResult.id}`);
+            await firebaseService.createRequest(req);
+            toast.success("Solicitud enviada. ¡Ve al chat!");
+            navigate(`/chat/${matchResult.id}`);
+        } catch (error) {
+            console.error("Error sending request:", error);
+            toast.error("Error al conectar con el mentor");
+        }
     };
 
     const stats = [
-        { icon: <Users size={20} />, value: "2K+", label: "Alumnos" },
-        { icon: <Award size={20} />, value: "15+", label: "Grandes Maestros" },
-        { icon: <Zap size={20} />, value: "24h", label: "Respuesta media" }
+        { icon: <Users size={20} />, value: "2K+", label: t('stats.students') },
+        { icon: <Award size={20} />, value: "15+", label: t('stats.grandmasters') },
+        { icon: <Zap size={20} />, value: "24h", label: t('stats.response_time') }
     ];
 
     return (
@@ -59,15 +94,15 @@ const Home = () => {
                     {/* Hero Text */}
                     <div className="space-y-6">
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-gold/20 text-gold/90 text-xs font-bold uppercase tracking-widest shadow-lg shadow-gold/5 mb-4 animate-float">
-                            <Sparkles size={14} /> La plataforma #1 de Ajedrez Premium
+                            <Sparkles size={14} /> {t('premium_platform')}
                         </div>
 
                         <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
-                            Domina el <span className="text-gradient-gold glow-text">Tablero</span>
+                            {t('hero_title')}
                         </h1>
 
                         <p className="text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
-                            Conecta con Grandes Maestros de élite. Clases personalizadas, análisis profundos y una experiencia visual de otro nivel.
+                            {t('hero_subtitle')}
                         </p>
                     </div>
 
@@ -76,13 +111,14 @@ const Home = () => {
                         <button
                             onClick={() => setShowWizard(true)}
                             className="group relative px-10 py-5 bg-white text-black rounded-2xl font-black text-xl tracking-tight hover:scale-105 transition-all duration-300 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.5)] overflow-hidden"
+                            aria-label={t('find_mentor')}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
                             <span className="relative flex items-center gap-3">
-                                ENCONTRAR MENTOR <Play size={24} fill="currentColor" />
+                                {t('find_mentor')} <Play size={24} fill="currentColor" />
                             </span>
                         </button>
-                        <p className="text-sm text-text-muted opacity-60">Sin compromiso • Cancelación gratuita</p>
+                        <p className="text-sm text-text-muted opacity-60">{t('no_commitment')}</p>
                     </div>
 
                     {/* Social Proof / Stats */}
@@ -116,7 +152,7 @@ const Home = () => {
                                 <h3 className="text-lg font-bold text-white">{matchResult.name}</h3>
                                 <p className="text-gold font-mono text-sm">ELO {matchResult.elo}</p>
                                 <div className="flex gap-1 mt-1">
-                                    {matchResult.tags.slice(0, 2).map(t => (
+                                    {matchResult.tags?.slice(0, 2).map((t: string) => (
                                         <span key={t} className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-text-secondary">{t}</span>
                                     ))}
                                 </div>
@@ -127,7 +163,7 @@ const Home = () => {
                             <button onClick={() => setMatchResult(null)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-muted hover:text-white hover:bg-white/5 transition-colors font-bold text-sm">
                                 Volver
                             </button>
-                            <button onClick={confirmMatch} className="flex-1 py-3 rounded-xl bg-gold text-black hover:bg-gold-hover font-bold text-sm shadow-lg hover:shadow-gold/20 transition-all">
+                            <button onClick={confirmMatch} className="flex-1 py-3 rounded-xl bg-gold text-black hover:bg-gold-hover font-bold text-sm shadow-lg hover:shadow-gold/20 transition-all text-center">
                                 Conectar
                             </button>
                         </div>
@@ -142,7 +178,15 @@ const Home = () => {
                         ← Volver al inicio
                     </button>
                     <div className="glass-panel rounded-3xl p-1 overflow-hidden shadow-2xl">
-                        <MatchWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />
+                        {isMatching ? (
+                            <div className="h-[500px] flex flex-col items-center justify-center p-12 text-center space-y-6">
+                                <div className="w-20 h-20 border-4 border-gold/10 border-t-gold rounded-full animate-spin"></div>
+                                <h3 className="text-xl font-bold text-white">Buscando tu mentor ideal...</h3>
+                                <p className="text-text-muted italic">Analizando perfiles y estilos de enseñanza</p>
+                            </div>
+                        ) : (
+                            <FindMentorWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />
+                        )}
                     </div>
                 </div>
             )}

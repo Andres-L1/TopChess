@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, Check } from 'lucide-react';
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const HOURS = [
@@ -7,7 +7,23 @@ const HOURS = [
     "16:00", "17:00", "18:00", "19:00", "20:00"
 ];
 
-const Calendar = ({ mode = 'view', availability = [], bookings = [], onSlotClick, onSaveAvailability }) => {
+import { Booking } from '../types/index';
+
+interface CalendarProps {
+    mode?: 'view' | 'edit' | 'read-only';
+    availability?: string[];
+    bookings?: Booking[];
+    onSlotClick?: (slot: { dayIndex: number; hour: string }) => void;
+    onSaveAvailability?: (availability: string[]) => void;
+}
+
+const Calendar: React.FC<CalendarProps> = ({
+    mode = 'view',
+    availability = [],
+    bookings = [],
+    onSlotClick,
+    onSaveAvailability
+}) => {
     // Mode: 'edit' (Teacher sets slots) | 'view' (Student books slots) | 'read-only'
 
     // For MVP we just show a generic "Weekly Template" for availability editing,
@@ -15,14 +31,13 @@ const Calendar = ({ mode = 'view', availability = [], bookings = [], onSlotClick
     // To keep it simple: Teacher sets "Weekly Recursive Availability".
     // Student sees next 7 days based on that template.
 
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [localAvailability, setLocalAvailability] = useState(availability);
+    const [localAvailability, setLocalAvailability] = useState<string[]>(availability);
 
     useEffect(() => {
         setLocalAvailability(availability);
     }, [availability]);
 
-    const handleSlotClick = (dayIndex, hour) => {
+    const handleSlotClick = (dayIndex: number, hour: string) => {
         if (mode === 'edit') {
             // Toggle slot in recursive weekly template
             const slotId = `${dayIndex}-${hour}`;
@@ -31,22 +46,19 @@ const Calendar = ({ mode = 'view', availability = [], bookings = [], onSlotClick
                 : [...localAvailability, slotId];
 
             setLocalAvailability(newAvail);
-            if (onSaveAvailability) onSaveAvailability(newAvail); // Auto-save or wait for button? let's auto-save parent
+            if (onSaveAvailability) onSaveAvailability(newAvail);
         } else if (mode === 'view') {
             // Initiate Booking
-            // In view mode, we need real dates. 
-            // Let's assume the grid shows "Upcoming Week".
-            // Implementation detail: User selects a slot to book.
             if (onSlotClick) onSlotClick({ dayIndex, hour });
         }
     };
 
-    const isSlotAvailable = (dayIndex, hour) => {
+    const isSlotAvailable = (dayIndex: number, hour: string) => {
         const slotId = `${dayIndex}-${hour}`;
         return localAvailability.includes(slotId);
     };
 
-    const isSlotBooked = (dayIndex, hour) => {
+    const isSlotBooked = (dayIndex: number, hour: string) => {
         // Check against real bookings if necessary
         // For MVP, if teacher is blocked, we just show it.
         return false;

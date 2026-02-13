@@ -45,7 +45,7 @@ const MoveHistory = ({ moves = [] }) => {
                         ))}
                         {pairs.length === 0 && (
                             <tr>
-                                <td colSpan="3" className="text-center py-8 text-text-muted text-xs italic">
+                                <td colSpan={3} className="text-center py-8 text-text-muted text-xs italic">
                                     Partida lista para comenzar...
                                 </td>
                             </tr>
