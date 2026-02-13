@@ -56,6 +56,29 @@ export const mockDB = {
         if (!localStorage.getItem(DB_KEYS.ROOMS)) {
             localStorage.setItem(DB_KEYS.ROOMS, JSON.stringify({}));
         }
+
+        // Ensure at least one active connection for the demo user
+        if (!localStorage.getItem('topchess_requests')) {
+            const demoRequest = [{
+                id: 'req_demo_1',
+                studentId: 'student1',
+                teacherId: 'teacher1', // GM Ana Smith
+                status: 'approved',
+                timestamp: Date.now()
+            }];
+            localStorage.setItem('topchess_requests', JSON.stringify(demoRequest));
+
+            // Also seed a welcome message
+            const demoMsg = [{
+                id: 'msg_demo_1',
+                studentId: 'student1',
+                teacherId: 'teacher1',
+                text: '¡Hola! Bienvenido a TopChess. Tu aula está lista.',
+                sender: 'teacher',
+                timestamp: Date.now()
+            }];
+            localStorage.setItem('topchess_messages', JSON.stringify(demoMsg));
+        }
     },
 
     // Teacher Methods

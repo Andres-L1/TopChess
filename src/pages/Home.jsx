@@ -3,9 +3,42 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Sparkles, Users, Award, Zap } from 'lucide-react';
 import MatchWizard from '../components/MatchWizard';
 
+import { mockDB } from '../services/mockDatabase';
+import { useAuth } from '../App';
+import toast from 'react-hot-toast';
+
 const Home = () => {
     const navigate = useNavigate();
+    const { currentUserId } = useAuth();
     const [showWizard, setShowWizard] = useState(false);
+    const [matchResult, setMatchResult] = useState(null);
+
+    const handleWizardComplete = (answers) => {
+        // Mock matching algorithm: just pick a random teacher for now
+        // In real app: match tags in 'answers' with teacher.tags
+        const teachers = mockDB.getTeachers();
+        const randomTeacher = teachers[Math.floor(Math.random() * teachers.length)];
+
+        setMatchResult(randomTeacher);
+
+        // Simulate "Thinking" delay
+        toast.success("¡Hemos encontrado tu mentor ideal!");
+    };
+
+    const confirmMatch = () => {
+        if (!matchResult) return;
+
+        // Auto-create request
+        // For demo purposes, we can even AUTO-APPROVE to show the room immediately?
+        // Let's stick to standard flow: Create Request -> Go to Chat
+
+        const req = mockDB.createRequest(currentUserId, matchResult.id, "Hola, me gustaría tomar clases contigo.");
+
+        // Optional: Auto-approve for demo smoothness if user is 'student1'
+        // mockDB.updateRequestStatus(currentUserId, matchResult.id, 'approved'); 
+
+        navigate(`/chat/${matchResult.id}`);
+    };
 
     const stats = [
         { icon: <Users size={20} />, value: "2K+", label: "Alumnos" },
@@ -20,7 +53,7 @@ const Home = () => {
             <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none animate-float" style={{ animationDelay: '0s' }}></div>
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-gold/5 rounded-full blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
 
-            {!showWizard ? (
+            {!showWizard && !matchResult ? (
                 <div className="max-w-4xl w-full text-center z-10 space-y-12 animate-enter">
 
                     {/* Hero Text */}
@@ -64,6 +97,42 @@ const Home = () => {
                     </div>
 
                 </div>
+            ) : matchResult ? (
+                // MATCH RESULT VIEW
+                <div className="max-w-md w-full animate-enter z-20">
+                    <div className="glass-panel p-8 rounded-3xl text-center space-y-6 border border-gold/30 shadow-[0_0_50px_rgba(212,175,55,0.1)]">
+                        <div className="inline-block p-4 rounded-full bg-gold/10 border border-gold/30 mb-2">
+                            <Award size={48} className="text-gold" />
+                        </div>
+
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-2">¡Match Encontrado!</h2>
+                            <p className="text-text-muted">Basado en tus objetivos, te recomendamos a:</p>
+                        </div>
+
+                        <div className="bg-black/30 p-4 rounded-xl border border-white/10 flex items-center gap-4 text-left hover:border-gold/30 transition-colors cursor-pointer" onClick={confirmMatch}>
+                            <img src={matchResult.image} alt={matchResult.name} className="w-16 h-16 rounded-full object-cover border-2 border-gold/50" />
+                            <div>
+                                <h3 className="text-lg font-bold text-white">{matchResult.name}</h3>
+                                <p className="text-gold font-mono text-sm">ELO {matchResult.elo}</p>
+                                <div className="flex gap-1 mt-1">
+                                    {matchResult.tags.slice(0, 2).map(t => (
+                                        <span key={t} className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-text-secondary">{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                            <button onClick={() => setMatchResult(null)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-muted hover:text-white hover:bg-white/5 transition-colors font-bold text-sm">
+                                Volver
+                            </button>
+                            <button onClick={confirmMatch} className="flex-1 py-3 rounded-xl bg-gold text-black hover:bg-gold-hover font-bold text-sm shadow-lg hover:shadow-gold/20 transition-all">
+                                Conectar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             ) : (
                 <div className="w-full max-w-2xl animate-enter relative z-20">
                     <button
@@ -73,7 +142,7 @@ const Home = () => {
                         ← Volver al inicio
                     </button>
                     <div className="glass-panel rounded-3xl p-1 overflow-hidden shadow-2xl">
-                        <MatchWizard onComplete={() => setShowWizard(false)} />
+                        <MatchWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />
                     </div>
                 </div>
             )}
