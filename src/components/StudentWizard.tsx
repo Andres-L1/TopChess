@@ -61,6 +61,8 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
                     role: 'student' as const,
                     photoURL: currentUser?.photoURL || '',
                     createdAt: Date.now(),
+                    walletBalance: 0,
+                    currency: 'EUR',
                     elo: answers['level'] === 'beginner' ? 600 : answers['level'] === 'intermediate' ? 1200 : 1600,
                     learningGoals: [answers['goals']], // Wrap in array as type expects array
                     preferredStyle: answers['style']

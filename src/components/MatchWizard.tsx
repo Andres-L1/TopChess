@@ -92,7 +92,9 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
                         name: currentUser?.displayName || 'Profesor',
                         role: 'teacher' as const,
                         photoURL: currentUser?.photoURL || '',
-                        createdAt: Date.now()
+                        createdAt: Date.now(),
+                        walletBalance: 0,
+                        currency: 'EUR'
                     };
                     await firebaseService.createUser(newUser);
                 }
