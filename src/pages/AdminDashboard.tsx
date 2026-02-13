@@ -3,6 +3,7 @@ import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { AppUser, Teacher, Transaction } from '../types/index';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
     Users, GraduationCap, Calendar, Shield, Search,
     CheckCircle, Ban, DollarSign, Activity, FileText,
@@ -13,6 +14,7 @@ import toast from 'react-hot-toast';
 const AdminDashboard = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [stats, setStats] = useState({ users: 0, teachers: 0, requests: 0, revenue: 0 });
     const [users, setUsers] = useState<AppUser[]>([]);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -35,7 +37,7 @@ const AdminDashboard = () => {
             setTransactions(transData.sort((a, b) => b.timestamp - a.timestamp));
         } catch (error) {
             console.error("Error fetching admin data:", error);
-            toast.error("Error cargando datos de administración");
+            toast.error(t('admin.messages.load_error'));
         } finally {
             setLoading(false);
         }
@@ -52,10 +54,10 @@ const AdminDashboard = () => {
     const handleVerifyTeacher = async (teacherId: string, currentStatus: boolean) => {
         try {
             await firebaseService.verifyTeacher(teacherId, !currentStatus);
-            toast.success(currentStatus ? "Verificación removida" : "Profesor verificado");
+            toast.success(currentStatus ? t('admin.messages.verif_removed') : t('admin.messages.verif_added'));
             fetchData();
         } catch (error) {
-            toast.error("Error al actualizar verificación");
+            toast.error(t('admin.messages.verif_error'));
         }
     };
 
@@ -63,10 +65,10 @@ const AdminDashboard = () => {
         const isBanned = currentStatus === 'banned';
         try {
             await firebaseService.banUser(userId, !isBanned);
-            toast.success(isBanned ? "Usuario desbloqueado" : "Usuario baneado");
+            toast.success(isBanned ? t('admin.messages.user_unbanned') : t('admin.messages.user_banned'));
             fetchData();
         } catch (error) {
-            toast.error("Error al actualizar estado");
+            toast.error(t('admin.messages.status_error'));
         }
     };
 
@@ -82,7 +84,7 @@ const AdminDashboard = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#161512] flex items-center justify-center text-gold font-bold uppercase tracking-widest text-xs animate-pulse">
-                Iniciando Panel de Control Central...
+                {t('admin.loading')}
             </div>
         );
     }
@@ -96,14 +98,14 @@ const AdminDashboard = () => {
                     <div>
                         <h1 className="text-3xl font-black flex items-center gap-3 tracking-tighter">
                             <Shield className="text-gold h-10 w-10 drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]" />
-                            SISTEMA <span className="text-gold font-light">ADMIN</span>
+                            {t('admin.title')}
                         </h1>
-                        <p className="text-[#8b8982] text-sm uppercase tracking-widest font-bold opacity-60">Centro de Operaciones TopChess</p>
+                        <p className="text-[#8b8982] text-sm uppercase tracking-widest font-bold opacity-60">{t('admin.subtitle')}</p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="bg-[#262421] px-4 py-2 rounded-xl border border-[#302e2b] flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></div>
-                            <span className="text-xs font-mono text-[#8b8982]">ESTADO: ONLINE</span>
+                            <span className="text-xs font-mono text-[#8b8982]">{t('admin.status_online')}</span>
                         </div>
                     </div>
                 </div>
@@ -112,25 +114,25 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <StatCard
                         icon={Users}
-                        label="Usuarios"
+                        label={t('admin.stats.users')}
                         value={stats.users}
                         color="blue"
                     />
                     <StatCard
                         icon={GraduationCap}
-                        label="Mentores"
+                        label={t('admin.stats.mentors')}
                         value={stats.teachers}
                         color="gold"
                     />
                     <StatCard
                         icon={Calendar}
-                        label="Solicitudes"
+                        label={t('admin.stats.requests')}
                         value={stats.requests}
                         color="purple"
                     />
                     <StatCard
                         icon={DollarSign}
-                        label="Ingresos Plataforma"
+                        label={t('admin.stats.revenue')}
                         value={`${stats.revenue.toFixed(2)}€`}
                         color="green"
                     />
@@ -138,24 +140,24 @@ const AdminDashboard = () => {
 
                 {/* Tabs Navigation */}
                 <div className="flex p-1 bg-[#262421] rounded-2xl border border-[#302e2b] w-fit mx-auto md:mx-0">
-                    <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Usuarios" />
-                    <TabButton active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon={GraduationCap} label="Profesores" />
-                    <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={FileText} label="Transacciones" />
+                    <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label={t('admin.tabs.users')} />
+                    <TabButton active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon={GraduationCap} label={t('admin.tabs.teachers')} />
+                    <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={FileText} label={t('admin.tabs.transactions')} />
                 </div>
 
                 {/* Content Area */}
                 <div className="glass-panel rounded-2xl overflow-hidden border border-white/5 shadow-2xl animate-fade-in">
                     <div className="p-6 border-b border-[#302e2b] flex flex-col md:flex-row justify-between items-center gap-4 bg-white/5">
                         <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                            {activeTab === 'users' && <><Users size={20} className="text-blue-400" /> Directorio de Usuarios</>}
-                            {activeTab === 'teachers' && <><GraduationCap size={20} className="text-gold" /> Gestión de Mentores</>}
-                            {activeTab === 'payments' && <><DollarSign size={20} className="text-green-400" /> Registro de Pagos</>}
+                            {activeTab === 'users' && <><Users size={20} className="text-blue-400" /> {t('admin.titles.users')}</>}
+                            {activeTab === 'teachers' && <><GraduationCap size={20} className="text-gold" /> {t('admin.titles.teachers')}</>}
+                            {activeTab === 'payments' && <><DollarSign size={20} className="text-green-400" /> {t('admin.titles.payments')}</>}
                         </h2>
                         <div className="relative w-full md:w-80">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#666]" size={16} />
                             <input
                                 type="text"
-                                placeholder="Filtrar registros..."
+                                placeholder={t('admin.filter')}
                                 className="w-full bg-[#161512] border border-[#302e2b] rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-gold/50 transition-all placeholder:text-[#444]"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -168,11 +170,11 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">Identidad</th>
-                                        <th className="p-4">Rol</th>
-                                        <th className="p-4">Cartera</th>
-                                        <th className="p-4">Estado</th>
-                                        <th className="p-4 text-right">Mantenimiento</th>
+                                        <th className="p-4">{t('admin.table.identity')}</th>
+                                        <th className="p-4">{t('admin.table.role')}</th>
+                                        <th className="p-4">{t('admin.table.wallet')}</th>
+                                        <th className="p-4">{t('admin.table.status')}</th>
+                                        <th className="p-4 text-right">{t('admin.table.maintenance')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#302e2b]">
@@ -207,7 +209,7 @@ const AdminDashboard = () => {
                                             </td>
                                             <td className="p-4">
                                                 <span className={`text-[10px] font-bold ${user.status === 'banned' ? 'text-red-500' : 'text-green-500'}`}>
-                                                    {user.status === 'banned' ? 'BLOQUEADO' : 'ACTIVO'}
+                                                    {user.status === 'banned' ? t('admin.status.banned') : t('admin.status.active')}
                                                 </span>
                                             </td>
                                             <td className="p-4 text-right">
@@ -229,11 +231,11 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">Mentor</th>
-                                        <th className="p-4">Región</th>
-                                        <th className="p-4">Precio/Com</th>
-                                        <th className="p-4">Clases/Ganancias</th>
-                                        <th className="p-4 text-right">Verificación</th>
+                                        <th className="p-4">{t('admin.table.mentor')}</th>
+                                        <th className="p-4">{t('admin.table.region')}</th>
+                                        <th className="p-4">{t('admin.table.price_com')}</th>
+                                        <th className="p-4">{t('admin.table.classes_earnings')}</th>
+                                        <th className="p-4 text-right">{t('admin.table.verification')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#302e2b]">
@@ -269,7 +271,7 @@ const AdminDashboard = () => {
                                                     onClick={() => handleVerifyTeacher(teacher.id, teacher.isVerified || false)}
                                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all border ${teacher.isVerified ? 'bg-gold text-black border-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-gold/50 hover:text-gold'}`}
                                                 >
-                                                    {teacher.isVerified ? 'VERIFICADO' : 'PENDIENTE'}
+                                                    {teacher.isVerified ? t('admin.status.verified') : t('admin.status.pending')}
                                                 </button>
                                             </td>
                                         </tr>
@@ -282,11 +284,11 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">Tipo</th>
-                                        <th className="p-4">Concepto</th>
-                                        <th className="p-4">Importe</th>
-                                        <th className="p-4">Fecha/Hora</th>
-                                        <th className="p-4">Participantes</th>
+                                        <th className="p-4">{t('admin.table.type')}</th>
+                                        <th className="p-4">{t('admin.table.concept')}</th>
+                                        <th className="p-4">{t('admin.table.amount')}</th>
+                                        <th className="p-4">{t('admin.table.date_time')}</th>
+                                        <th className="p-4">{t('admin.table.participants')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#302e2b]">
@@ -359,3 +361,4 @@ const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
 );
 
 export default AdminDashboard;
+

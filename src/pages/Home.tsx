@@ -1,13 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Sparkles, Users, Award, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import FindMentorWizard from '../components/FindMentorWizard';
+import PremiumButton from '../components/PremiumButton';
 
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Teacher, Request } from '../types/index';
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.2,
+            delayChildren: 0.3
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.8,
+            ease: [0.22, 1, 0.36, 1] as any
+        }
+    }
+};
 
 const Home = () => {
     const navigate = useNavigate();
@@ -20,8 +45,6 @@ const Home = () => {
     const handleWizardComplete = async (answers: any) => {
         setIsMatching(true);
         try {
-            // Real matching algorithm:
-            // 1. Fetch available teachers
             const allTeachers = await firebaseService.getTeachers();
 
             if (allTeachers.length === 0) {
@@ -30,11 +53,8 @@ const Home = () => {
                 return;
             }
 
-            // 2. Filter by style or elo if possible, or just pick best fit
-            // Simple logic: priority to style match
             let matched = allTeachers.find(t => t.teachingStyle === answers.style);
 
-            // If no style match, pick random but with similar ELO expectations
             if (!matched) {
                 matched = allTeachers[Math.floor(Math.random() * allTeachers.length)];
             }
@@ -89,40 +109,41 @@ const Home = () => {
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-gold/5 rounded-full blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
 
             {!showWizard && !matchResult ? (
-                <div className="max-w-4xl w-full text-center z-10 space-y-12 animate-enter">
-
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                    className="max-w-4xl w-full text-center z-10 space-y-12"
+                >
                     {/* Hero Text */}
                     <div className="space-y-6">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-gold/20 text-gold/90 text-xs font-bold uppercase tracking-widest shadow-lg shadow-gold/5 mb-4 animate-float">
+                        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-gold/20 text-gold/90 text-xs font-bold uppercase tracking-widest shadow-lg shadow-gold/5 mb-4">
                             <Sparkles size={14} /> {t('premium_platform')}
-                        </div>
+                        </motion.div>
 
-                        <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
+                        <motion.h1 variants={itemVariants} className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
                             {t('hero_title')}
-                        </h1>
+                        </motion.h1>
 
-                        <p className="text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
+                        <motion.p variants={itemVariants} className="text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
                             {t('hero_subtitle')}
-                        </p>
+                        </motion.p>
                     </div>
 
                     {/* Main Action */}
-                    <div className="flex flex-col items-center gap-4">
-                        <button
+                    <motion.div variants={itemVariants} className="flex flex-col items-center gap-4">
+                        <PremiumButton
                             onClick={() => setShowWizard(true)}
-                            className="group relative px-10 py-5 bg-white text-black rounded-2xl font-black text-xl tracking-tight hover:scale-105 transition-all duration-300 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.5)] overflow-hidden"
-                            aria-label={t('find_mentor')}
+                            size="lg"
+                            icon={Play}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-                            <span className="relative flex items-center gap-3">
-                                {t('find_mentor')} <Play size={24} fill="currentColor" />
-                            </span>
-                        </button>
+                            {t('find_mentor')}
+                        </PremiumButton>
                         <p className="text-sm text-text-muted opacity-60">{t('no_commitment')}</p>
-                    </div>
+                    </motion.div>
 
                     {/* Social Proof / Stats */}
-                    <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8 border-t border-white/5">
+                    <motion.div variants={itemVariants} className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8 border-t border-white/5">
                         {stats.map((stat, i) => (
                             <div key={i} className="flex flex-col items-center space-y-1 group">
                                 <div className="p-3 rounded-full bg-white/5 text-gold mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
@@ -130,11 +151,10 @@ const Home = () => {
                                 <span className="text-xs text-text-muted uppercase tracking-wider">{stat.label}</span>
                             </div>
                         ))}
-                    </div>
+                    </motion.div>
 
-                </div>
+                </motion.div>
             ) : matchResult ? (
-                // MATCH RESULT VIEW
                 <div className="max-w-md w-full animate-enter z-20">
                     <div className="glass-panel p-8 rounded-3xl text-center space-y-6 border border-gold/30 shadow-[0_0_50px_rgba(212,175,55,0.1)]">
                         <div className="inline-block p-4 rounded-full bg-gold/10 border border-gold/30 mb-2">
@@ -160,12 +180,19 @@ const Home = () => {
                         </div>
 
                         <div className="flex gap-3 pt-4">
-                            <button onClick={() => setMatchResult(null)} className="flex-1 py-3 rounded-xl border border-white/10 text-text-muted hover:text-white hover:bg-white/5 transition-colors font-bold text-sm">
+                            <PremiumButton
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => setMatchResult(null)}
+                            >
                                 Volver
-                            </button>
-                            <button onClick={confirmMatch} className="flex-1 py-3 rounded-xl bg-gold text-black hover:bg-gold-hover font-bold text-sm shadow-lg hover:shadow-gold/20 transition-all text-center">
+                            </PremiumButton>
+                            <PremiumButton
+                                className="flex-1"
+                                onClick={confirmMatch}
+                            >
                                 Conectar
-                            </button>
+                            </PremiumButton>
                         </div>
                     </div>
                 </div>
@@ -195,3 +222,4 @@ const Home = () => {
 };
 
 export default Home;
+

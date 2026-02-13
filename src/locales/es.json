@@ -31,5 +31,60 @@
         "quick_access": "Acceso Rápido",
         "enter_classroom": "Entrar al Aula",
         "next_class": "Próxima Clase"
+    },
+    "admin": {
+        "loading": "Iniciando Panel de Control Central...",
+        "title": "SISTEMA ADMIN",
+        "subtitle": "Centro de Operaciones TopChess",
+        "status_online": "ESTADO: ONLINE",
+        "stats": {
+            "users": "Usuarios",
+            "mentors": "Mentores",
+            "requests": "Solicitudes",
+            "revenue": "Ingresos Plataforma"
+        },
+        "tabs": {
+            "users": "Usuarios",
+            "teachers": "Profesores",
+            "transactions": "Transacciones"
+        },
+        "titles": {
+            "users": "Directorio de Usuarios",
+            "teachers": "Gestión de Mentores",
+            "payments": "Registro de Pagos"
+        },
+        "filter": "Filtrar registros...",
+        "table": {
+            "identity": "Identidad",
+            "role": "Rol",
+            "wallet": "Cartera",
+            "status": "Estado",
+            "maintenance": "Mantenimiento",
+            "mentor": "Mentor",
+            "region": "Región",
+            "price_com": "Precio/Com",
+            "classes_earnings": "Clases/Ganancias",
+            "verification": "Verificación",
+            "type": "Tipo",
+            "concept": "Concepto",
+            "amount": "Importe",
+            "date_time": "Fecha/Hora",
+            "participants": "Participantes"
+        },
+        "status": {
+            "banned": "BLOQUEADO",
+            "active": "ACTIVO",
+            "verified": "VERIFICADO",
+            "pending": "PENDIENTE"
+        },
+        "messages": {
+            "verif_removed": "Verificación removida",
+            "verif_added": "Profesor verificado",
+            "verif_error": "Error al actualizar verificación",
+            "user_unbanned": "Usuario desbloqueado",
+            "user_banned": "Usuario baneado",
+            "status_error": "Error al actualizar estado",
+            "load_error": "Error cargando datos de administración"
+        }
     }
 }

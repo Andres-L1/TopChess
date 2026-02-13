@@ -4,6 +4,7 @@ import { User, LayoutDashboard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
+import Navbar from './components/Navbar';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
@@ -180,11 +181,9 @@ function App() {
         <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
           <Navbar />
           <Toaster position="top-center" />
-          <main className="container mx-auto p-4">
+          <main className="pt-16">
             <Suspense fallback={<LoadingSpinner />}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <AnimatedRoutes />
-              </Suspense>
+              <AnimatedRoutes />
             </Suspense>
           </main>
         </div>
@@ -193,60 +192,6 @@ function App() {
   );
 }
 
-function Navbar() {
-  const authContext = useAuth();
-  const { userRole, setUserRole } = authContext;
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useTranslation();
 
-  const isClassroom = location.pathname.includes('/classroom/') || location.pathname.includes('/room/');
-
-  return (
-    <nav className="bg-[#262421] border-b border-[#302e2b] p-4 flex justify-between items-center h-16 shadow-lg z-50">
-      <Link to="/" className="text-xl font-bold flex items-center gap-2 text-[#bababa] hover:text-white transition-colors" aria-label="Home">
-        <span className="text-2xl" role="img" aria-label="Chess Piece">♟️</span> TopChess
-      </Link>
-
-      <div className="flex items-center gap-6">
-
-
-        {/* Auth Buttons */}
-        {!authContext?.isAuthenticated ? (
-          <button
-            onClick={() => authContext?.loginWithGoogle()}
-            className="px-4 py-2 rounded bg-gold text-black font-bold hover:bg-yellow-400 transition-colors text-sm"
-          >
-            Iniciar Sesión
-          </button>
-        ) : (
-          <div className="flex items-center gap-4">
-            {userRole === 'teacher' && (
-              <Link to="/dashboard" className="flex items-center gap-2 px-4 py-2 rounded bg-[#363431] hover:bg-[#403d39] text-[#bababa] hover:text-white transition-colors font-medium text-sm" aria-label="Dashboard">
-                <LayoutDashboard size={18} />
-                {t('nav.panel')}
-              </Link>
-            )}
-
-            {authContext.currentUser?.email === 'andreslgumuzio@gmail.com' && (
-              <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded bg-red-900/20 text-red-400 hover:bg-red-900/40 hover:text-red-300 transition-colors font-medium text-sm border border-red-900/50" aria-label="Admin">
-                <LayoutDashboard size={18} />
-                Admin
-              </Link>
-            )}
-
-            <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded bg-[#363431] hover:bg-[#403d39] text-[#bababa] hover:text-white transition-colors font-medium text-sm" title="Mi Perfil" aria-label="Profile">
-              {authContext.currentUser?.photoURL ? (
-                <img src={authContext.currentUser.photoURL} alt="Profile" className="w-5 h-5 rounded-full" />
-              ) : (
-                <User size={18} />
-              )}
-            </Link>
-          </div>
-        )}
-      </div>
-    </nav>
-  );
-}
 
 export default App;

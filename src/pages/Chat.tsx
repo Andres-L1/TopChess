@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
-import { Send, CheckCircle, Clock, Lock, DollarSign } from 'lucide-react';
+import { Send, CheckCircle, Clock, DollarSign, ChevronLeft } from 'lucide-react';
 import { Message, Profile, Request } from '../types/index';
 import toast from 'react-hot-toast';
+import PremiumButton from '../components/PremiumButton';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Chat: React.FC = () => {
     const { teacherId } = useParams<{ teacherId: string }>();
@@ -21,7 +23,7 @@ const Chat: React.FC = () => {
 
     // Payment State
     const [showPayModal, setShowPayModal] = useState(false);
-    const [payAmount, setPayAmount] = useState(59); // Default current price
+    const [payAmount] = useState(59);
     const [isProcessingPay, setIsProcessingPay] = useState(false);
 
     // Initial Load
@@ -30,18 +32,15 @@ const Chat: React.FC = () => {
 
         const initChat = async () => {
             try {
-                // 1. Get Profile
                 const profile = await firebaseService.getPublicProfile(targetId);
                 setTargetProfile(profile);
 
-                // 2. Determine Request Status
                 const reqStatus = await firebaseService.getRequestStatus(
                     userRole === 'student' ? currentUserId : targetId,
                     userRole === 'student' ? targetId : currentUserId
                 );
                 setStatus(reqStatus);
 
-                // 3. Subscribe to Chat
                 const uid1 = userRole === 'student' ? currentUserId : targetId;
                 const uid2 = userRole === 'student' ? targetId : currentUserId;
 
@@ -81,7 +80,6 @@ const Chat: React.FC = () => {
             };
 
             if (userRole === 'student' && !status) {
-                // Create Request on first message if no status
                 await firebaseService.createRequest({
                     id: `req_${Date.now()}`,
                     studentId: currentUserId,
@@ -110,7 +108,6 @@ const Chat: React.FC = () => {
                 setShowPayModal(false);
 
                 const month = new Date().toLocaleString('es-ES', { month: 'long' });
-                // Send notification message
                 await firebaseService.sendMessage({
                     studentId: currentUserId,
                     teacherId: targetId,
@@ -130,129 +127,194 @@ const Chat: React.FC = () => {
         }
     };
 
-    if (!targetProfile) return <div className="p-8 text-center text-white">Cargando perfil...</div>;
+    if (!targetProfile) return (
+        <div className="flex items-center justify-center min-h-screen bg-dark-bg text-gold">
+            <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin"></div>
+        </div>
+    );
 
     return (
-        <div className="max-w-2xl mx-auto h-[calc(100vh-100px)] flex flex-col pt-4 px-4 sm:px-0 animate-fade-in">
-            {/* Header / Status Banner */}
-            <div className="bg-[#262421] border border-[#302e2b] rounded-t-2xl p-4 flex items-center justify-between shadow-lg">
+        <div className="max-w-4xl mx-auto h-[calc(100vh-100px)] flex flex-col pt-8 px-4 animate-fade-in">
+            {/* Header */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-t-3xl p-4 flex items-center justify-between shadow-2xl z-10">
                 <div className="flex items-center gap-4">
-                    <img src={targetProfile.image} alt={targetProfile.name} className="w-12 h-12 rounded-full object-cover border border-[#403d39]" />
-                    <div className="hidden sm:block">
-                        <h2 className="font-bold text-white text-lg leading-tight">{targetProfile.name}</h2>
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-[#8b8982]">
-                            {userRole === 'student' ? 'Profesor' : 'Estudiante'} • ELO {targetProfile.elo}
-                        </p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 hover:bg-white/5 rounded-full text-text-muted transition-colors"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+                    <div className="relative">
+                        <img src={targetProfile.image} alt={targetProfile.name} className="w-12 h-12 rounded-2xl object-cover border border-white/10 shadow-lg" />
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[#161512] rounded-full shadow-lg"></div>
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-white text-lg leading-tight tracking-tight">{targetProfile.name}</h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-[#8b8982]">
+                                {userRole === 'student' ? 'Profesor' : 'Estudiante'}
+                            </span>
+                            <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                            <span className="text-[10px] uppercase font-black tracking-widest text-gold/80">
+                                ELO {targetProfile.elo}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     {userRole === 'student' && status === 'approved' && (
-                        <button
+                        <PremiumButton
+                            variant="gold"
+                            size="sm"
                             onClick={() => setShowPayModal(true)}
-                            className="bg-gold/10 hover:bg-gold/20 text-gold border border-gold/30 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2 text-xs transition-all active:scale-95"
+                            icon={DollarSign}
                         >
-                            <DollarSign size={14} /> Pagar
-                        </button>
+                            Pagar
+                        </PremiumButton>
                     )}
 
                     {status === 'approved' && (
-                        <button
+                        <PremiumButton
+                            variant="white"
+                            size="sm"
                             onClick={() => navigate(userRole === 'student' ? `/classroom/${targetId}` : `/classroom/${currentUserId}`)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg font-bold flex items-center gap-2 text-xs transition-all shadow-lg active:scale-95"
+                            icon={CheckCircle}
                         >
-                            <CheckCircle size={14} /> Ir al Aula
-                        </button>
+                            Aula
+                        </PremiumButton>
                     )}
+
                     {status === 'pending' && (
-                        <div className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 font-bold">
-                            <Clock size={14} /> Pendiente
+                        <div className="px-4 py-2 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-inner">
+                            <Clock size={12} strokeWidth={3} /> {userRole === 'student' ? 'Esperando Respuesta' : 'Pendiente'}
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-grow bg-[#161512]/80 border-x border-[#302e2b] p-4 overflow-y-auto space-y-4 custom-scrollbar">
+            <div className="flex-grow bg-black/20 backdrop-blur-sm border-x border-white/5 p-6 overflow-y-auto space-y-6 custom-scrollbar scroll-smooth">
                 {messages.length === 0 ? (
-                    <div className="text-center text-[#666] mt-10 space-y-2">
-                        <p className="text-sm">
-                            {userRole === 'student'
-                                ? `Cuéntale a ${targetProfile.name} por qué quieres aprender ajedrez.`
-                                : `Inicio del chat con ${targetProfile.name}.`}
-                        </p>
-                        <div className="w-12 h-0.5 bg-white/5 mx-auto"></div>
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-40 space-y-4">
+                        <div className="p-6 rounded-full bg-white/5 border border-white/5">
+                            <Send size={40} strokeWidth={1} className="text-white/30" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-white max-w-[200px]">
+                                {userRole === 'student'
+                                    ? `Cuéntale a ${targetProfile.name} por qué quieres aprender ajedrez.`
+                                    : `Inicio del chat con ${targetProfile.name}.`}
+                            </p>
+                        </div>
                     </div>
                 ) : (
-                    messages.map((msg) => (
-                        <div key={msg.id} className={`flex ${msg.sender === userRole ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm text-sm ${msg.sender === userRole
-                                ? 'bg-blue-600 text-white rounded-br-none'
-                                : 'bg-[#262421] text-text-secondary border border-white/5 rounded-bl-none'
-                                }`}>
-                                <p className="leading-relaxed">{msg.text}</p>
-                                <span className={`text-[9px] block text-right mt-1 opacity-60`}>
-                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </div>
-                        </div>
-                    ))
+                    <div className="space-y-4">
+                        {messages.map((msg, i) => {
+                            const isMe = msg.sender === userRole;
+                            return (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    key={msg.id || i}
+                                    className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div className={`group relative max-w-[75%] px-5 py-3 shadow-2xl transition-all duration-300 ${isMe
+                                            ? 'bg-gold text-black rounded-3xl rounded-tr-none'
+                                            : 'bg-white/5 backdrop-blur-md text-white border border-white/10 rounded-3xl rounded-tl-none'
+                                        }`}>
+                                        <p className="text-sm leading-relaxed font-medium whitespace-pre-wrap">{msg.text}</p>
+                                        <div className={`text-[10px] font-bold mt-1.5 opacity-40 flex items-center gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {isMe && <CheckCircle size={10} />}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
-            <div className="bg-[#262421] border border-[#302e2b] rounded-b-2xl p-4 flex gap-3 shadow-2xl">
-                <input
-                    type="text"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder={status === 'approved' ? "Escribe un mensaje..." : "Escribe para presentarte..."}
-                    className="flex-grow bg-[#1a1917] border border-white/5 text-white text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-gold/50 transition-all placeholder:text-[#444]"
-                />
-                <button
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-b-3xl p-4 flex gap-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                <div className="relative flex-grow">
+                    <input
+                        type="text"
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder={status === 'approved' ? "Escribe un mensaje..." : "Escribe para presentarte..."}
+                        className="w-full bg-black/40 border border-white/10 text-white text-sm rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-transparent transition-all placeholder:text-white/20 shadow-inner"
+                    />
+                </div>
+                <PremiumButton
                     onClick={handleSend}
                     disabled={!inputText.trim()}
-                    className="bg-gold text-black p-2 rounded-xl hover:bg-gold-hover disabled:opacity-30 disabled:grayscale transition-all shadow-lg active:scale-95"
+                    className="!rounded-2xl shadow-xl shadow-gold/10"
+                    icon={Send}
                 >
-                    <Send size={20} />
-                </button>
+                    <span className="hidden sm:inline">Enviar</span>
+                </PremiumButton>
             </div>
 
             {/* Payment Modal */}
-            {showPayModal && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#262421] w-full max-w-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-enter">
-                        <div className="p-6 border-b border-white/5">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                <DollarSign size={20} className="text-gold" />
-                                Pagar Mensualidad
-                            </h3>
-                            <p className="text-sm text-[#8b8982] mt-1">Suscripción: {targetProfile.name}</p>
-                        </div>
-                        <div className="p-8">
-                            <div className="text-center mb-8">
-                                <div className="text-[#8b8982] text-xs uppercase font-bold tracking-widest mb-1">Monto a pagar</div>
-                                <div className="text-5xl font-black text-white">{payAmount}€</div>
+            <AnimatePresence>
+                {showPayModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-[#1a1917] w-full max-w-sm rounded-[40px] border border-white/10 shadow-[0_0_100px_rgba(212,175,55,0.15)] overflow-hidden"
+                        >
+                            <div className="p-8 text-center border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
+                                <div className="w-20 h-20 bg-gold/10 rounded-[30px] border border-gold/30 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-gold/5">
+                                    <DollarSign size={40} className="text-gold" />
+                                </div>
+                                <h3 className="text-2xl font-black text-white tracking-tight">Suscripción Premium</h3>
+                                <p className="text-sm font-bold text-text-muted mt-2 uppercase tracking-widest">{targetProfile.name}</p>
                             </div>
 
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={handlePayment}
-                                    disabled={isProcessingPay}
-                                    className="w-full py-4 bg-gold text-black font-black rounded-2xl hover:bg-white transition-all shadow-xl shadow-gold/10 flex items-center justify-center gap-2"
-                                >
-                                    {isProcessingPay ? 'Procesando...' : 'Confirmar Pago'}
-                                </button>
-                                <button onClick={() => setShowPayModal(false)} className="w-full py-3 text-[#8b8982] hover:text-white font-bold text-sm transition-colors">Cancelar</button>
+                            <div className="p-10">
+                                <div className="text-center mb-10">
+                                    <div className="text-5xl font-black text-white flex items-center justify-center gap-1">
+                                        {payAmount}
+                                        <span className="text-2xl text-gold font-light">€</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-[#8b8982] mt-2 uppercase tracking-[0.2em]">Pago Mensual</p>
+                                </div>
+
+                                <div className="flex flex-col gap-4">
+                                    <PremiumButton
+                                        onClick={handlePayment}
+                                        disabled={isProcessingPay}
+                                        className="w-full !rounded-[24px] !py-5 shadow-2xl shadow-gold/20"
+                                        size="lg"
+                                    >
+                                        {isProcessingPay ? 'Procesando...' : 'Confirmar Pago'}
+                                    </PremiumButton>
+                                    <button
+                                        onClick={() => setShowPayModal(false)}
+                                        className="w-full py-4 text-[#666] hover:text-white font-black text-xs uppercase tracking-widest transition-all"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 export default Chat;
+

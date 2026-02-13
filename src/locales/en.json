@@ -31,5 +31,60 @@
         "quick_access": "Quick Access",
         "enter_classroom": "Enter Classroom",
         "next_class": "Next Class"
+    },
+    "admin": {
+        "loading": "Initializing Central Command Center...",
+        "title": "ADMIN SYSTEM",
+        "subtitle": "TopChess Operations Center",
+        "status_online": "STATUS: ONLINE",
+        "stats": {
+            "users": "Users",
+            "mentors": "Mentors",
+            "requests": "Requests",
+            "revenue": "Platform Revenue"
+        },
+        "tabs": {
+            "users": "Users",
+            "teachers": "Teachers",
+            "transactions": "Transactions"
+        },
+        "titles": {
+            "users": "User Directory",
+            "teachers": "Mentor Management",
+            "payments": "Payment Logs"
+        },
+        "filter": "Filter records...",
+        "table": {
+            "identity": "Identity",
+            "role": "Role",
+            "wallet": "Wallet",
+            "status": "Status",
+            "maintenance": "Maintenance",
+            "mentor": "Mentor",
+            "region": "Region",
+            "price_com": "Price/Com",
+            "classes_earnings": "Classes/Earnings",
+            "verification": "Verification",
+            "type": "Type",
+            "concept": "Concept",
+            "amount": "Amount",
+            "date_time": "Date/Time",
+            "participants": "Participants"
+        },
+        "status": {
+            "banned": "BANNED",
+            "active": "ACTIVE",
+            "verified": "VERIFIED",
+            "pending": "PENDING"
+        },
+        "messages": {
+            "verif_removed": "Verification removed",
+            "verif_added": "Teacher verified",
+            "verif_error": "Error updating verification",
+            "user_unbanned": "User unbanned",
+            "user_banned": "User banned",
+            "status_error": "Error updating status",
+            "load_error": "Error loading admin data"
+        }
     }
 }
