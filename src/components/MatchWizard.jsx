@@ -70,7 +70,7 @@ const MatchWizard = ({ onComplete, onCancel }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-bg/95 backdrop-blur-md p-4 animate-fade-in">
-            <div className="w-full max-w-lg bg-dark-panel border border-gold/20 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col relative">
+            <div className="w-full max-w-lg bg-dark-panel border border-gold/20 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col relative max-h-[85vh]">
 
                 {/* Progress Bar */}
                 <div className="h-1 bg-white/5 w-full">

@@ -163,7 +163,7 @@ const Classroom = () => {
 
                 {/* RIGHT PANEL - Glassmorphism, Collapsible */}
                 <div className={`flex-none bg-dark-panel/95 backdrop-blur-xl flex flex-col border-t md:border-t-0 md:border-l border-white/5 relative z-20 shadow-2xl transition-all duration-300 ease-in-out
-                    ${isSidePanelOpen ? 'h-[40vh] md:h-auto md:w-[400px] opacity-100' : 'h-0 md:h-auto md:w-0 overflow-hidden opacity-0'}
+                    ${isSidePanelOpen ? 'h-[35vh] md:h-auto md:w-[400px] opacity-100' : 'h-0 md:h-auto md:w-0 overflow-hidden opacity-0'}
                 `}>
 
                     {/* Close Button (Internal) */}

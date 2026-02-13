@@ -62,7 +62,7 @@ const Home = () => {
                             <Sparkles size={14} /> La plataforma #1 de Ajedrez Premium
                         </div>
 
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
+                        <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
                             Domina el <span className="text-gradient-gold glow-text">Tablero</span>
                         </h1>
 
