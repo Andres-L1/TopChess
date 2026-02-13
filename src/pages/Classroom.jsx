@@ -98,7 +98,7 @@ const Classroom = () => {
             <div className="flex-grow flex flex-col md:flex-row overflow-hidden relative">
 
                 {/* BOARD AREA - Cockpit Style */}
-                <div className="flex-grow flex flex-col items-center justify-center bg-[#0a0a0a] relative md:border-r border-white/5 p-4 transition-all duration-300">
+                <div className="flex-grow flex flex-col items-center justify-center bg-[#0a0a0a] relative md:border-r border-white/5 p-2 md:p-4 transition-all duration-300 overflow-hidden">
                     {/* Background Grid/Effects */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 to-transparent opacity-40 pointer-events-none"></div>
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
@@ -114,48 +114,51 @@ const Classroom = () => {
                         <MessageSquare size={20} />
                     </button>
 
-                    <div className="flex flex-col gap-4 w-full max-w-[min(100%,calc(100vh-140px))] aspect-[3/4] md:aspect-auto md:h-full justify-center relative z-10 transition-all duration-300">
+                    {/* Main Game Container - Constrained to prevent Clipping */}
+                    <div className="flex flex-col w-full max-w-[100%] md:max-w-3xl h-full max-h-[calc(100dvh-60px)] justify-center relative z-10 transition-all duration-300 gap-2 md:gap-4">
 
                         {/* Top Player (Opponent/Teacher) */}
-                        <div className="flex items-center justify-between px-2 text-text-secondary bg-black/20 p-2 rounded-xl backdrop-blur-sm border border-white/5">
+                        <div className="flex-none flex items-center justify-between px-3 py-2 text-text-secondary bg-black/40 rounded-xl backdrop-blur-sm border border-white/10 shadow-lg w-full">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center shadow-lg relative">
-                                    <span className="text-gold font-bold text-sm">{teacherId?.substring(0, 2).toUpperCase()}</span>
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-dark-bg border border-white/10 flex items-center justify-center rounded-full">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center shadow-lg relative">
+                                    <span className="text-gold font-bold text-xs md:text-sm">{teacherId?.substring(0, 2).toUpperCase()}</span>
+                                    <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-dark-bg border border-white/10 flex items-center justify-center rounded-full">
+                                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></div>
                                     </div>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+                                    <span className="text-xs md:text-sm font-bold text-white tracking-wide flex items-center gap-2">
                                         GM {teacherId}
-                                        <span className="px-1.5 py-0.5 bg-gold/20 text-gold text-[8px] rounded font-black tracking-widest border border-gold/20">PRO</span>
+                                        <span className="px-1 py-0.5 bg-gold/20 text-gold text-[8px] rounded font-black tracking-widest border border-gold/20">PRO</span>
                                     </span>
                                     <span className="text-[10px] text-gold/80 font-mono flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full border border-gold/50"></span>
+                                        <span className="w-1.5 h-1.5 rounded-full border border-gold/50"></span>
                                         2850 ELO
                                     </span>
                                 </div>
                             </div>
-                            <div className="text-sm font-mono text-white/90 bg-black/40 px-4 py-2 rounded-lg border border-white/5 shadow-inner">10:00</div>
+                            <div className="text-xs md:text-sm font-mono text-white/90 bg-black/50 px-3 py-1.5 rounded-lg border border-white/5 shadow-inner">10:00</div>
                         </div>
 
-                        {/* Chess Board Container */}
-                        <div className="relative group shadow-2xl shadow-black/80 rounded-lg mx-auto w-full aspect-square">
-                            <Board teacherId={teacherId} onGameStateChange={handleGameStateChange} />
+                        {/* Chess Board Container - Auto Scale */}
+                        <div className="flex-grow flex items-center justify-center w-full min-h-0">
+                            <div className="aspect-square h-full max-h-full rounded-lg shadow-2xl shadow-black/80 overflow-hidden border border-white/5">
+                                <Board teacherId={teacherId} onGameStateChange={handleGameStateChange} />
+                            </div>
                         </div>
 
                         {/* Bottom Player (You) */}
-                        <div className="flex items-center justify-between px-2 text-text-secondary bg-black/20 p-2 rounded-xl backdrop-blur-sm border border-white/5 mt-1">
+                        <div className="flex-none flex items-center justify-between px-3 py-2 text-text-secondary bg-black/40 rounded-xl backdrop-blur-sm border border-white/10 shadow-lg w-full mt-auto">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 flex items-center justify-center shadow-lg">
-                                    <span className="text-green-500 font-bold text-sm">{currentUserId?.substring(0, 2).toUpperCase()}</span>
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 flex items-center justify-center shadow-lg">
+                                    <span className="text-green-500 font-bold text-xs md:text-sm">{currentUserId?.substring(0, 2).toUpperCase()}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-white tracking-wide">{currentUserId || 'Tú'}</span>
+                                    <span className="text-xs md:text-sm font-bold text-white tracking-wide">{currentUserId || 'Tú'}</span>
                                     <span className="text-[10px] text-green-400/80 font-mono">1500 ELO</span>
                                 </div>
                             </div>
-                            <div className="text-sm font-mono text-white bg-black/40 px-4 py-2 rounded-lg border-b-2 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]">09:45</div>
+                            <div className="text-xs md:text-sm font-mono text-white bg-black/50 px-3 py-1.5 rounded-lg border-b-2 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]">09:45</div>
                         </div>
 
                     </div>
