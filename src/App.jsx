@@ -48,6 +48,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/chat/:teacherId" element={<PrivateRoute><Chat /></PrivateRoute>} />
               <Route path="/room/:teacherId" element={<PrivateRoute><Classroom /></PrivateRoute>} />
+              <Route path="/classroom/:teacherId" element={<PrivateRoute><Classroom /></PrivateRoute>} />
               <Route path="/dashboard" element={<PrivateRoute><TeacherDashboard /></PrivateRoute>} />
               <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
               <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
@@ -69,7 +70,7 @@ function Navbar() {
     try { return window.location.pathname; } catch (e) { return '/'; }
   })();
 
-  const isClassroom = reactLocation.includes('/room/');
+  const isClassroom = reactLocation.includes('/classroom/') || reactLocation.includes('/room/');
 
   return (
     <nav className="bg-[#262421] border-b border-[#302e2b] p-4 flex justify-between items-center h-16 shadow-lg z-50">
