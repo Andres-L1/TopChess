@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp } from 'lucide-react';
+import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp, MessageCircle } from 'lucide-react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { Link, useNavigate } from 'react-router-dom';
@@ -22,6 +22,7 @@ const TeacherDashboard = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'schedule'>('overview');
     const [stats, setStats] = useState<DashboardStats>({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState<Request[]>([]);
+    const [myStudents, setMyStudents] = useState<any[]>([]);
     const [availability, setAvailability] = useState<string[]>([]);
     const [teacherProfile, setTeacherProfile] = useState<Teacher | null>(null);
     const [nextBooking, setNextBooking] = useState<Booking | null>(null);
@@ -49,6 +50,17 @@ const TeacherDashboard = () => {
                 }
 
                 setRequests(reqs);
+
+                // Filter active students (approved requests)
+                const approvedPromises = reqs
+                    .filter((r: any) => r.status === 'approved')
+                    .map(async (r: any) => {
+                        const u = await firebaseService.getUser(r.studentId);
+                        return u ? { ...u, requestId: r.id } : null;
+                    });
+                const approvedStudents = await Promise.all(approvedPromises);
+                setMyStudents(approvedStudents.filter(s => s !== null));
+
                 setAvailability(avail);
 
                 if (bookings.length > 0) {
@@ -119,20 +131,20 @@ const TeacherDashboard = () => {
                     <p className="text-sm md:text-base text-text-muted">{t('dashboard.subtitle')}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4 items-center w-full md:w-auto">
-                    <Link to={`/classroom/${currentUserId}`} className="btn-secondary flex items-center gap-2 text-sm md:text-base flex-1 md:flex-none justify-center">
+                    <Link to={`/classroom/${currentUserId}`} className="btn-secondary flex items-center gap-2 text-[10px] sm:text-sm md:text-base flex-1 md:flex-none justify-center py-2 px-2 sm:px-4">
                         <ExternalLink size={18} />
-                        {t('dashboard.my_classroom')}
+                        <span className="truncate">{t('dashboard.my_classroom')}</span>
                     </Link>
-                    <div className="flex gap-2 p-1 bg-dark-panel rounded-lg border border-white/5 flex-1 md:flex-none justify-center">
+                    <div className="flex gap-1 p-1 bg-dark-panel rounded-lg border border-white/5 flex-1 md:flex-none justify-center">
                         <button
                             onClick={() => setActiveTab('overview')}
-                            className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all ${activeTab === 'overview' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
+                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'overview' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
                         >
                             {t('dashboard.overview')}
                         </button>
                         <button
                             onClick={() => setActiveTab('schedule')}
-                            className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all ${activeTab === 'schedule' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
+                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'schedule' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
                         >
                             {t('dashboard.schedule')}
                         </button>
@@ -314,6 +326,49 @@ const TeacherDashboard = () => {
                                     </>
                                 ) : (
                                     <p className="text-xs text-text-muted italic">No tienes clases próximas agendadas.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Active Students Section */}
+                        <div className="flex-1 glass-panel rounded-2xl p-4 md:p-6 min-h-[400px]">
+                            <h2 className="text-lg md:text-xl font-bold text-white mb-6">Mis Alumnos</h2>
+                            <div className="space-y-4">
+                                {isLoading ? (
+                                    [1, 2].map((i) => <Skeleton key={i} width="100%" height={80} />)
+                                ) : (
+                                    myStudents.length === 0 ? (
+                                        <div className="text-center py-10 text-text-muted">
+                                            <Users size={40} className="mx-auto mb-4 opacity-20" />
+                                            <p>Aún no tienes alumnos activos.</p>
+                                        </div>
+                                    ) : (
+                                        myStudents.map(student => (
+                                            <div key={student.id} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-gold/30 transition-all">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/40 flex items-center justify-center font-bold text-gold">
+                                                            {(student.name || 'U').substring(0, 1).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-white">{student.name || 'Usuario'}</h4>
+                                                            <p className="text-xs text-text-muted">Alumno Activo</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row gap-2">
+                                                    <div className="flex gap-2 flex-1">
+                                                        <Link to={`/chat/${student.id}`} className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] md:text-xs py-2 px-1 rounded-lg transition-all flex items-center justify-center gap-2">
+                                                            <MessageCircle size={14} /> Chat
+                                                        </Link>
+                                                        <Link to={`/classroom/${currentUserId}`} className="flex-1 btn-secondary text-center text-[10px] md:text-xs py-2 px-1 flex items-center justify-center gap-2">
+                                                            <Video size={14} /> Aula
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                        ))
                                 )}
                             </div>
                         </div>

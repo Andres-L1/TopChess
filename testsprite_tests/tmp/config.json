@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "executionArgs": {
+    "projectName": "AppTopChess",
+    "projectPath": "c:\\Users\\tomih\\Desktop\\App TopChess",
+    "testIds": [
+      "TC001"
+    ],
+    "additionalInstruction": "Ejecuta únicamente el caso TC001 para validar el acceso como alumno usando el botón \"Test Alumno\" en el Navbar. Este botón es esencial para el flujo de demo. No intentes usar Google Login.",
+    "envs": {
+      "API_KEY": "sk-user-A4F4SrVDY3MpAjG2Feofu4Hjgw03Reog2sfFtprTWYono_ge0R5mqG5tVKfFaSUwTagJ9b3_AP1XPjeLQo3yl1QcuELi2pfngETzXfSS3qpCoQYnAbKj26pTUonhGw4Kagw"
+    }
+  },
+  "serverPort": 52717,
+  "proxy": "http://d4e31478-a477-42f2-b562-8da19d0cf975:viK2gskqBVqruQDbmaB8yuJvmG9Lz5HD@tun.testsprite.com:8080"
+}

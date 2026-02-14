@@ -1,0 +1,104 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - React
+  - Tailwind CSS
+  - Firebase
+  - Chess.js
+  - Chessground
+  - LiveKit
+routes:
+  - path: /
+    file: src/pages/Home.tsx
+    auth_required: false
+    description: Landing page and teacher listing
+  - path: /onboarding
+    file: src/pages/Onboarding.tsx
+    auth_required: true
+    description: Role selection for new users
+  - path: /chat/:teacherId
+    file: src/pages/Chat.tsx
+    auth_required: true
+    description: Chat room between student and teacher
+  - path: /room/:teacherId
+    file: src/pages/Classroom.tsx
+    auth_required: true
+    description: Virtual classroom with chessboard
+  - path: /classroom/:teacherId
+    file: src/pages/Classroom.tsx
+    auth_required: true
+    description: Virtual classroom (alias)
+  - path: /dashboard
+    file: src/pages/TeacherDashboard.tsx
+    auth_required: true
+    description: Dashboard for teachers
+  - path: /student-dashboard
+    file: src/pages/StudentDashboard.tsx
+    auth_required: true
+    description: Dashboard for students
+  - path: /wallet
+    file: src/pages/Wallet.tsx
+    auth_required: true
+    description: User wallet and balance management
+  - path: /profile
+    file: src/pages/UserProfile.tsx
+    auth_required: true
+    description: User profile settings
+  - path: /admin
+    file: src/pages/AdminDashboard.tsx
+    auth_required: true
+    description: Admin control panel
+features:
+  - name: User Authentication
+    description: Login with Google or use test accounts for dev
+    files:
+      - src/App.tsx
+      - src/firebase.ts
+      - src/components/Navbar.tsx
+    entry_route: /
+    user_interactions:
+      - Click "Iniciar Sesión" button
+      - Click "Test Alumno" or "Test Profesor" for quick access
+    api_calls:
+      - method: FIREBASE_AUTH
+        endpoint: signInWithPopup
+    auth_required: false
+  - name: Onboarding
+    description: Select user role and create profile
+    files:
+      - src/pages/Onboarding.tsx
+    entry_route: /onboarding
+    user_interactions:
+      - Select "Quiero Aprender" or "Quiero Enseñar"
+      - Click confirm button
+    api_calls:
+      - method: FIREBASE_FIRESTORE
+        endpoint: setDoc(users)
+    auth_required: true
+  - name: Classroom Sync
+    description: Real-time chessboard synchronization
+    files:
+      - src/pages/Classroom.tsx
+      - src/components/ChessBoard/Board.tsx
+    entry_route: /room/:teacherId
+    user_interactions:
+      - Drag and drop chess pieces
+      - See opponent's moves in real-time
+    api_calls:
+      - method: FIREBASE_FIRESTORE
+        endpoint: updateDoc(rooms)
+    auth_required: true
+  - name: Wallet Management
+    description: View balance and transaction history
+    files:
+      - src/pages/Wallet.tsx
+    entry_route: /wallet
+    user_interactions:
+      - View current balance
+      - View transaction history list
+    auth_required: true
+known_limitations:
+  - issue: LiveKit audio/video requires valid credentials and room tokens
+    location: src/pages/Classroom.tsx
+    impact: Audio/video might fail if LiveKit server is not configured correctly in .env

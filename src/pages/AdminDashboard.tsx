@@ -139,10 +139,12 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Tabs Navigation */}
-                <div className="flex p-1 bg-[#262421] rounded-2xl border border-[#302e2b] w-fit mx-auto md:mx-0">
-                    <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label={t('admin.tabs.users')} />
-                    <TabButton active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon={GraduationCap} label={t('admin.tabs.teachers')} />
-                    <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={FileText} label={t('admin.tabs.transactions')} />
+                <div className="flex p-1 bg-[#262421] rounded-2xl border border-[#302e2b] w-full md:w-fit overflow-x-auto mx-auto md:mx-0 hide-scrollbar scrollbar-hide">
+                    <div className="flex min-w-max">
+                        <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label={t('admin.tabs.users')} />
+                        <TabButton active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon={GraduationCap} label={t('admin.tabs.teachers')} />
+                        <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={FileText} label={t('admin.tabs.transactions')} />
+                    </div>
                 </div>
 
                 {/* Content Area */}
@@ -170,18 +172,18 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">{t('admin.table.identity')}</th>
-                                        <th className="p-4">{t('admin.table.role')}</th>
-                                        <th className="p-4">{t('admin.table.wallet')}</th>
-                                        <th className="p-4">{t('admin.table.status')}</th>
-                                        <th className="p-4 text-right">{t('admin.table.maintenance')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.identity')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.role')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.wallet')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.status')}</th>
+                                        <th className="p-2 md:p-4 text-right">{t('admin.table.maintenance')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#302e2b]">
                                     {filteredUsers.map(user => (
                                         <tr key={user.id} className="hover:bg-white/5 transition-colors group">
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-3">
+                                            <td className="p-2 md:p-4">
+                                                <div className="flex items-center gap-2 md:gap-3">
                                                     <div className="relative">
                                                         <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.name}&background=random`} alt="" className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10" />
                                                         {user.status === 'banned' && (
@@ -196,23 +198,23 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${user.role === 'teacher' ? 'bg-gold/10 text-gold border-gold/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
                                                     {user.role}
                                                 </span>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <div className="flex items-center gap-1 text-xs font-mono text-green-400/80">
                                                     <DollarSign size={10} />
                                                     {user.walletBalance || 0}
                                                 </div>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <span className={`text-[10px] font-bold ${user.status === 'banned' ? 'text-red-500' : 'text-green-500'}`}>
                                                     {user.status === 'banned' ? t('admin.status.banned') : t('admin.status.active')}
                                                 </span>
                                             </td>
-                                            <td className="p-4 text-right">
+                                            <td className="p-2 md:p-4 text-right">
                                                 <button
                                                     onClick={() => handleBanUser(user.id, user.status || 'active')}
                                                     className={`p-2 rounded-lg transition-all ${user.status === 'banned' ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'}`}
@@ -231,18 +233,18 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">{t('admin.table.teacher')}</th>
-                                        <th className="p-4">{t('admin.table.region')}</th>
-                                        <th className="p-4">{t('admin.table.price_com')}</th>
-                                        <th className="p-4">{t('admin.table.classes_earnings')}</th>
-                                        <th className="p-4 text-right">{t('admin.table.verification')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.teacher')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.region')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.price_com')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.classes_earnings')}</th>
+                                        <th className="p-2 md:p-4 text-right">{t('admin.table.verification')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#302e2b]">
                                     {filteredTeachers.map(teacher => (
                                         <tr key={teacher.id} className="hover:bg-white/5 transition-colors">
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-3">
+                                            <td className="p-2 md:p-4">
+                                                <div className="flex items-center gap-2 md:gap-3">
                                                     <img src={teacher.image} className="w-8 h-8 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all border border-white/5" alt="" />
                                                     <div className="flex flex-col">
                                                         <div className="flex items-center gap-2">
@@ -253,20 +255,20 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-xs font-bold text-[#8b8982]">{teacher.region}</td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4 text-xs font-bold text-[#8b8982]">{teacher.region}</td>
+                                            <td className="p-2 md:p-4">
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-bold">{teacher.price}{teacher.currency === 'EUR' ? '€' : '$'}</span>
                                                     <span className="text-[10px] text-[#666]">Fee: {teacher.commissionRate * 100}%</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-bold">{teacher.classesGiven} Clases</span>
                                                     <span className="text-[10px] text-green-400/80">{teacher.earnings.toFixed(0)} Total</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-right">
+                                            <td className="p-2 md:p-4 text-right">
                                                 <button
                                                     onClick={() => handleVerifyTeacher(teacher.id, teacher.isVerified || false)}
                                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all border ${teacher.isVerified ? 'bg-gold text-black border-gold shadow-[0_0_10px_rgba(212,175,55,0.2)]' : 'bg-white/5 text-white/40 border-white/10 hover:border-gold/50 hover:text-gold'}`}
@@ -284,38 +286,38 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">{t('admin.table.type')}</th>
-                                        <th className="p-4">{t('admin.table.concept')}</th>
-                                        <th className="p-4">{t('admin.table.amount')}</th>
-                                        <th className="p-4">{t('admin.table.date_time')}</th>
-                                        <th className="p-4">{t('admin.table.participants')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.type')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.concept')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.amount')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.date_time')}</th>
+                                        <th className="p-2 md:p-4">{t('admin.table.participants')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#302e2b]">
                                     {transactions.map(tx => (
                                         <tr key={tx.id} className="hover:bg-white/5 transition-colors">
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 {tx.type === 'deposit' ? (
                                                     <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg w-fit"><ArrowDownLeft size={16} /></div>
                                                 ) : (
                                                     <div className="p-2 bg-green-500/10 text-green-400 rounded-lg w-fit"><ArrowUpRight size={16} /></div>
                                                 )}
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <span className="text-xs font-bold tracking-tight">{tx.description}</span>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <span className={`font-mono text-sm font-bold ${tx.description.includes('Comisión') ? 'text-gold' : 'text-white'}`}>
                                                     {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}€
                                                 </span>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-2 md:p-4">
                                                 <div className="flex flex-col text-[10px] text-[#666]">
                                                     <span className="font-bold">{new Date(tx.timestamp).toLocaleDateString()}</span>
                                                     <span>{new Date(tx.timestamp).toLocaleTimeString()}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-[10px] font-mono text-white/30 truncate max-w-[150px]">
+                                            <td className="p-2 md:p-4 text-[10px] font-mono text-white/30 truncate max-w-[150px]">
                                                 {tx.fromId} → {tx.toId}
                                             </td>
                                         </tr>
@@ -340,11 +342,11 @@ const StatCard = ({ icon: Icon, label, value, color }: any) => {
     };
 
     return (
-        <div className={`glass-panel p-6 rounded-2xl flex flex-col gap-3 border-l-4 shadow-xl transition-all hover:scale-[1.02] ${colors[color]}`}>
+        <div className={`glass-panel p-4 md:p-6 rounded-2xl flex flex-col gap-2 md:gap-3 border-l-4 shadow-xl transition-all hover:scale-[1.02] ${colors[color]}`}>
             <Icon size={20} className="opacity-80" />
             <div>
-                <p className="text-[#8b8982] text-[10px] font-black uppercase tracking-widest">{label}</p>
-                <h3 className="text-2xl font-black tracking-tighter text-white">{value}</h3>
+                <p className="text-[#8b8982] text-[8px] md:text-[10px] font-black uppercase tracking-widest">{label}</p>
+                <h3 className="text-xl md:text-2xl font-black tracking-tighter text-white">{value}</h3>
             </div>
         </div>
     );

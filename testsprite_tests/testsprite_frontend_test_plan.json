@@ -1,0 +1,2244 @@
+[
+  {
+    "id": "TC001",
+    "title": "Quick login buttons are not duplicated or ambiguous on Home",
+    "description": "Verifies that the home page shows distinct, clearly labeled quick login options for student and teacher.",
+    "category": "User Authentication",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Soy Alumno (Prueba)\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Soy Profesor (Prueba)\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login with Google\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Student onboarding: select \"Quiero Aprender\" and reach Student Dashboard",
+    "description": "Verifies a logged-in new user can choose the student role and is redirected to the student dashboard.",
+    "category": "Onboarding",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Quiero Aprender\" role option"
+      },
+      {
+        "type": "action",
+        "description": "Click the confirm button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/student-dashboard\""
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Teacher onboarding: select \"Quiero Enseñar\" and reach Teacher Dashboard",
+    "description": "Verifies a logged-in new user can choose the teacher role and is redirected to the teacher dashboard.",
+    "category": "Onboarding",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Quiero Enseñar\" role option"
+      },
+      {
+        "type": "action",
+        "description": "Click the confirm button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/dashboard\""
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Onboarding page loads and shows both role options",
+    "description": "Verifies the onboarding screen renders the expected role selection UI for an authenticated user.",
+    "category": "Onboarding",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Quiero Aprender\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Quiero Enseñar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"confirm button\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Onboarding requires selecting a role before confirming",
+    "description": "Verifies the user cannot proceed when no role is selected and receives visible guidance or remains on onboarding.",
+    "category": "Onboarding",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Click the confirm button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/onboarding\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Quiero Aprender\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Role selection can be changed before confirming",
+    "description": "Verifies the user can switch between roles before confirming and still successfully completes onboarding.",
+    "category": "Onboarding",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Quiero Aprender\" role option"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Quiero Enseñar\" role option"
+      },
+      {
+        "type": "action",
+        "description": "Click the confirm button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/dashboard\""
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "View teacher listing cards on Home marketplace",
+    "description": "Verifies the landing page loads and shows teacher cards with key summary information.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"TopChess\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Teachers\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher listing\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher rating\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher price\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Open a teacher from the marketplace listing",
+    "description": "Verifies a user can click a teacher card and reach a detail view or a contact call-to-action.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first \"Teacher card\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher name\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher specialty\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Contact\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Book\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Filter teachers by specialty (results update)",
+    "description": "Verifies selecting a specialty filter updates the visible teacher results.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filters\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Specialty\" filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Beginner\" from dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Beginner\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filtered results\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Filter teachers by price range (results update)",
+    "description": "Verifies applying a price filter changes the teacher cards shown.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filters\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Price\" filter"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Under $25\" from dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Under $25\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filtered results\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Combine multiple filters and verify results refresh",
+    "description": "Verifies using more than one filter at once updates the listing accordingly.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filters\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Specialty\" filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Tournament Prep\" from dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Rating\" filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select \"2000+\" from dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filtered results\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Clear filters and return to unfiltered teacher list",
+    "description": "Verifies that filters can be cleared and the full teacher list returns.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Specialty\" filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Beginner\" from dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Beginner\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clear filters\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Beginner\" is not visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Apply filters that return no matches and see empty state",
+    "description": "Verifies the marketplace shows an empty state when filters yield no results.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Filters\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Specialty\" filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Endgame Studies\" from dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Price\" filter"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Over $200\" from dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No teachers found\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Try broadening your search\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Empty-state recovery by broadening search (clear or loosen filters)",
+    "description": "Verifies a user can recover from an empty state by adjusting filters and seeing results return.",
+    "category": "Home / Teacher Marketplace",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Specialty\" filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Endgame Studies\" from dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Price\" filter"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Over $200\" from dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No teachers found\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clear filters\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Teacher card\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Join classroom and see chessboard loaded (without relying on AV permissions)",
+    "description": "Verifies an authenticated user can open a classroom and see the chessboard UI load successfully.",
+    "category": "Classroom (Realtime Chessboard & AV)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on any visible \"Start lesson\", \"Enter room\", or \"Classroom\" button/link for a listed teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Chessboard\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Verify classroom page has LiveKit controls visible (UI readiness)",
+    "description": "Verifies the classroom renders the expected AV control UI elements even if AV cannot connect.",
+    "category": "Classroom (Realtime Chessboard & AV)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on any visible \"Start lesson\", \"Enter room\", or \"Classroom\" button/link for a listed teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Join\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Camera\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Make a legal opening move and see it applied locally",
+    "description": "Verifies a user can make a valid chess move and the board updates to the new position.",
+    "category": "Classroom (Realtime Chessboard & AV)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on any visible \"Start lesson\", \"Enter room\", or \"Classroom\" button/link for a listed teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Chessboard\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the white pawn on e2"
+      },
+      {
+        "type": "action",
+        "description": "Click the square e4"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"e4\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Reject an illegal move and restore the original position",
+    "description": "Verifies illegal moves are rejected and the piece returns to its original square.",
+    "category": "Classroom (Realtime Chessboard & AV)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on any visible \"Start lesson\", \"Enter room\", or \"Classroom\" button/link for a listed teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Chessboard\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the white king on e1"
+      },
+      {
+        "type": "action",
+        "description": "Click the square e3"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the white king is visible on e1"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Send a chat message to a teacher and see it appear in the thread",
+    "description": "Verifies that a logged-in user can send a message and immediately see it in the chat window.",
+    "category": "Chat (Student <-> Teacher)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a teacher card in the teacher listing"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Chat\" button or link for the selected teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/chat\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"Hello! Are you available for a lesson this week?\" into the message input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Send\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Hello! Are you available for a lesson this week?\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Attempt to send an empty message and confirm it is not sent",
+    "description": "Verifies the chat input validation prevents sending blank messages.",
+    "category": "Chat (Student <-> Teacher)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a teacher card in the teacher listing"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Chat\" button or link for the selected teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/chat\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Send\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Message\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "Send message by pressing Enter and see it appear",
+    "description": "Verifies that pressing Enter submits the message if supported by the UI.",
+    "category": "Chat (Student <-> Teacher)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a teacher card in the teacher listing"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Chat\" button or link for the selected teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/chat\","
+      },
+      {
+        "type": "action",
+        "description": "Type \"Can we reschedule to Friday?\" into the message input field"
+      },
+      {
+        "type": "action",
+        "description": "Press \"Enter\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Can we reschedule to Friday?\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Chat UI remains usable after a send attempt (input clears or stays consistent)",
+    "description": "Verifies the message input state behaves predictably after sending (clears or remains editable) and the user can continue typing.",
+    "category": "Chat (Student <-> Teacher)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a teacher card in the teacher listing"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Chat\" button or link for the selected teacher"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/chat\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"First message\" into the message input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Send\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"First message\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Second message\" into the message input field"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Second message\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "View wallet balance on the Wallet page",
+    "description": "Verifies an authenticated user can open the Wallet page and see a visible current balance section.",
+    "category": "Wallet Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Balance\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Current balance amount\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC024",
+    "title": "View transaction history list in wallet",
+    "description": "Verifies an authenticated user can see the transaction history list on the Wallet page.",
+    "category": "Wallet Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Transaction History\" section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Transaction history list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Open a transaction to view its details",
+    "description": "Verifies an authenticated user can click a transaction in history and see transaction details.",
+    "category": "Wallet Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Transaction History\" section"
+      },
+      {
+        "type": "action",
+        "description": "Click the first transaction in the transaction history list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Transaction details\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC026",
+    "title": "Verify transaction details show key fields",
+    "description": "Verifies the transaction details view shows common fields like amount, status, date, and type as visible labels/values.",
+    "category": "Wallet Management",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Transaction History\" section"
+      },
+      {
+        "type": "action",
+        "description": "Click the first transaction in the transaction history list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Amount\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Status\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Date\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Type\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC027",
+    "title": "Retry loading transactions after an error state appears",
+    "description": "Verifies that when the transactions list shows an error state, the user can use the retry call-to-action and see the list area render again.",
+    "category": "Wallet Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Error\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Retry\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Transaction history list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC028",
+    "title": "Wallet page shows a loading indicator before transactions appear",
+    "description": "Verifies the Wallet page provides visible feedback while transaction history is being fetched.",
+    "category": "Wallet Management",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Transactions loading indicator\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Transaction history list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC029",
+    "title": "Wallet page remains usable when transaction list is empty",
+    "description": "Verifies that if there are no transactions, the user sees an empty-state message instead of a broken list.",
+    "category": "Wallet Management",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Wallet\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Transaction History\" section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No transactions\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC030",
+    "title": "Teacher dashboard loads and shows key summary sections",
+    "description": "Verifies a logged-in teacher can open the dashboard and see core summary information like earnings and classes.",
+    "category": "Teacher Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Dashboard\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Earnings\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC031",
+    "title": "Dashboard shows list of classes (upcoming/past)",
+    "description": "Verifies the dashboard displays a visible list/section for upcoming and/or past classes.",
+    "category": "Teacher Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Classes\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Classes list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC032",
+    "title": "Open a class from the dashboard and view class details",
+    "description": "Verifies clicking a class entry from the dashboard opens a class detail view with class information.",
+    "category": "Teacher Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Click the first class item in the classes list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Class Details\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC033",
+    "title": "Dashboard shows student list section",
+    "description": "Verifies that the teacher dashboard includes a visible student list area.",
+    "category": "Teacher Dashboard",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Students\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Student list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC034",
+    "title": "Dashboard handles empty state for classes gracefully",
+    "description": "Verifies the dashboard shows a clear empty state message if there are no upcoming/past classes.",
+    "category": "Teacher Dashboard",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Classes\" section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No classes\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC035",
+    "title": "Non-teacher user cannot access teacher dashboard content",
+    "description": "Verifies that a logged-in user without teacher access does not see teacher dashboard content and is redirected or blocked appropriately.",
+    "category": "Teacher Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify either text \"Access denied\" is visible or URL contains \"/onboarding\""
+      }
+    ]
+  },
+  {
+    "id": "TC036",
+    "title": "Student dashboard shows upcoming classes and class history",
+    "description": "Verifies a logged-in student can view the student dashboard with upcoming classes and class history sections visible.",
+    "category": "Student Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/student-dashboard\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Upcoming\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"History\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC037",
+    "title": "Open a scheduled class details from the student dashboard",
+    "description": "Verifies a logged-in student can click a scheduled class from the dashboard to view its details or selection state.",
+    "category": "Student Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/student-dashboard\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible scheduled class in the upcoming classes area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Join\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC038",
+    "title": "Wallet balance is visible on the student dashboard",
+    "description": "Verifies the student dashboard surfaces wallet/balance information for the logged-in student.",
+    "category": "Student Dashboard",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/student-dashboard\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Wallet\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Balance\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC039",
+    "title": "Student with no upcoming classes sees an empty state (if applicable)",
+    "description": "Verifies the dashboard handles the edge case where there are no upcoming classes by showing a clear empty state.",
+    "category": "Student Dashboard",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/student-dashboard\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Upcoming\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No upcoming\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC040",
+    "title": "Student with no class history sees an empty state (if applicable)",
+    "description": "Verifies the dashboard handles the edge case where there is no class history by showing a clear empty state.",
+    "category": "Student Dashboard",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/student-dashboard\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"History\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No history\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC041",
+    "title": "Pre-onboarding student sees prompt to complete onboarding",
+    "description": "Verifies that a logged-in user who has not completed onboarding is prompted to complete onboarding from the student dashboard experience.",
+    "category": "Student Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /student-dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Complete onboarding\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Complete onboarding\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/onboarding\""
+      }
+    ]
+  },
+  {
+    "id": "TC042",
+    "title": "Update profile name and save successfully",
+    "description": "Verifies a logged-in user can update their display name and sees a success confirmation with updated data shown.",
+    "category": "User Profile",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\" in the app navigation"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Updated Test Name\" into the Name field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Save\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Profile updated\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC043",
+    "title": "Update profile bio and verify it persists on the page",
+    "description": "Verifies a logged-in user can update their bio, save, and see the updated bio displayed after saving.",
+    "category": "User Profile",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\" in the app navigation"
+      },
+      {
+        "type": "action",
+        "description": "Type \"This is an updated bio for automated UI testing.\" into the Bio field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Save\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"This is an updated bio for automated UI testing.\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC044",
+    "title": "Save with no changes shows confirmation and keeps existing values",
+    "description": "Verifies clicking Save without modifying fields does not clear data and shows a visible confirmation or completion state.",
+    "category": "User Profile",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\" in the app navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Save\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Profile updated\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC045",
+    "title": "Attempt to save an empty Name and verify validation message",
+    "description": "Verifies the profile form prevents saving when the Name field is cleared and shows a visible validation error.",
+    "category": "User Profile",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\" in the app navigation"
+      },
+      {
+        "type": "action",
+        "description": "Type \"\" into the Name field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Save\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Name is required\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC046",
+    "title": "Attempt to save an overly long bio and verify validation message",
+    "description": "Verifies the profile form handles excessively long bio input by showing a visible error and not confirming success.",
+    "category": "User Profile",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\" in the app navigation"
+      },
+      {
+        "type": "action",
+        "description": "Type \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" into the Bio field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Save\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Bio is too long\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC047",
+    "title": "Profile page loads and shows key profile fields",
+    "description": "Verifies the Profile page is reachable for an authenticated user and displays expected fields like Name and Bio.",
+    "category": "User Profile",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\" in the app navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Profile\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Name\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Bio\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC048",
+    "title": "Admin can access Admin Panel and view global metrics and user list",
+    "description": "Verifies an admin user can open the Admin Panel and see key metrics plus a visible user list.",
+    "category": "Admin Panel",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Admin\" in the main navigation or menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/admin\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Users\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC049",
+    "title": "Admin can select a user from the list and open user details",
+    "description": "Verifies the user list is interactive and selecting a user reveals a details panel or user management controls.",
+    "category": "Admin Panel",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Admin\" in the main navigation or menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/admin\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the first user in the user list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Role\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC050",
+    "title": "Admin modifies a selected user's role and sees success confirmation",
+    "description": "Verifies an admin can change a user's role and receives a visible success confirmation.",
+    "category": "Admin Panel",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Admin\" in the main navigation or menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first user in the user list"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Teacher\" from the Role dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Success\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC051",
+    "title": "Admin disables (or suspends) a user and sees status updated",
+    "description": "Verifies an admin can change a user's status (e.g., active to disabled/suspended) and sees a confirmation and/or updated status text.",
+    "category": "Admin Panel",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Admin\" in the main navigation or menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first user in the user list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Disable\" or \"Suspend\" button for the user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Success\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC052",
+    "title": "Admin Panel shows access denied for non-admin users",
+    "description": "Verifies a non-admin user cannot access the Admin Panel and sees an access denied message or is redirected away from /admin.",
+    "category": "Admin Panel",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"nonadmin_user@example.com\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"WrongPassword123!\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Invalid\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC053",
+    "title": "Logged-in non-admin is blocked when attempting to open Admin Panel via UI navigation",
+    "description": "Verifies a signed-in non-admin who clicks an Admin entry is blocked with an access denied page or redirected to an authorized dashboard.",
+    "category": "Admin Panel",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Admin\" in the main navigation or menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Access denied\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/admin\""
+      }
+    ]
+  },
+  {
+    "id": "TC054",
+    "title": "Admin metrics section is visible on Admin Panel landing view",
+    "description": "Verifies the Admin Panel landing page shows global metrics content (at least one recognizable metrics label/value) in addition to user management.",
+    "category": "Admin Panel",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL does not contain \"/login\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Admin\" in the main navigation or menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/admin\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Metrics\" is visible"
+      }
+    ]
+  }
+]

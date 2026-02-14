@@ -134,43 +134,44 @@ const Chat: React.FC = () => {
     );
 
     return (
-        <div className="max-w-4xl mx-auto h-[calc(100vh-100px)] flex flex-col pt-8 px-4 animate-fade-in">
+        <div className="max-w-4xl mx-auto h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] flex flex-col pt-4 md:pt-8 px-2 md:px-4 animate-fade-in pb-20 md:pb-0">
             {/* Header */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-t-3xl p-4 flex items-center justify-between shadow-2xl z-10">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-white/5 rounded-full text-text-muted transition-colors"
+                        className="p-1 md:p-2 hover:bg-white/5 rounded-full text-text-muted transition-colors"
                     >
                         <ChevronLeft size={20} />
                     </button>
-                    <div className="relative">
-                        <img src={targetProfile.image} alt={targetProfile.name} className="w-12 h-12 rounded-2xl object-cover border border-white/10 shadow-lg" />
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[#161512] rounded-full shadow-lg"></div>
+                    <div className="relative flex-shrink-0">
+                        <img src={targetProfile.image} alt={targetProfile.name} className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border border-white/10 shadow-lg" />
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-[#161512] rounded-full shadow-lg"></div>
                     </div>
-                    <div>
-                        <h2 className="font-bold text-white text-lg leading-tight tracking-tight">{targetProfile.name}</h2>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-black tracking-widest text-[#8b8982]">
-                                {userRole === 'student' ? 'Profesor' : 'Estudiante'}
+                    <div className="min-w-0">
+                        <h2 className="font-bold text-white text-sm md:text-lg leading-tight tracking-tight truncate">{targetProfile.name}</h2>
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-[8px] md:text-[10px] uppercase font-black tracking-widest text-[#8b8982] truncate">
+                                {userRole === 'student' ? 'Profesor' : 'Alumno'}
                             </span>
                             <span className="w-1 h-1 bg-white/20 rounded-full"></span>
-                            <span className="text-[10px] uppercase font-black tracking-widest text-gold/80">
+                            <span className="text-[8px] md:text-[10px] uppercase font-black tracking-widest text-gold/80 flex-shrink-0">
                                 ELO {targetProfile.elo}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 md:gap-3 ml-2">
                     {userRole === 'student' && status === 'approved' && (
                         <PremiumButton
                             variant="gold"
                             size="sm"
                             onClick={() => setShowPayModal(true)}
                             icon={DollarSign}
+                            className="!px-2 md:!px-4 !py-1 text-[10px] md:text-xs"
                         >
-                            Pagar
+                            <span className="hidden sm:inline">Pagar</span>
                         </PremiumButton>
                     )}
 
@@ -180,14 +181,15 @@ const Chat: React.FC = () => {
                             size="sm"
                             onClick={() => navigate(userRole === 'student' ? `/classroom/${targetId}` : `/classroom/${currentUserId}`)}
                             icon={CheckCircle}
+                            className="!px-2 md:!px-4 !py-1 text-[10px] md:text-xs"
                         >
                             Aula
                         </PremiumButton>
                     )}
 
                     {status === 'pending' && (
-                        <div className="px-4 py-2 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-inner">
-                            <Clock size={12} strokeWidth={3} /> {userRole === 'student' ? 'Esperando Respuesta' : 'Pendiente'}
+                        <div className="px-2 md:px-4 py-1.5 md:py-2 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 md:gap-2 shadow-inner">
+                            <Clock size={10} className="md:w-3 md:h-3" strokeWidth={3} /> <span className="hidden xs:inline">{userRole === 'student' ? 'Esperando' : 'Pendiente'}</span><span className="xs:hidden">...</span>
                         </div>
                     )}
                 </div>
@@ -220,8 +222,8 @@ const Chat: React.FC = () => {
                                     className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div className={`group relative max-w-[75%] px-5 py-3 shadow-2xl transition-all duration-300 ${isMe
-                                            ? 'bg-gold text-black rounded-3xl rounded-tr-none'
-                                            : 'bg-white/5 backdrop-blur-md text-white border border-white/10 rounded-3xl rounded-tl-none'
+                                        ? 'bg-gold text-black rounded-3xl rounded-tr-none'
+                                        : 'bg-white/5 backdrop-blur-md text-white border border-white/10 rounded-3xl rounded-tl-none'
                                         }`}>
                                         <p className="text-sm leading-relaxed font-medium whitespace-pre-wrap">{msg.text}</p>
                                         <div className={`text-[10px] font-bold mt-1.5 opacity-40 flex items-center gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>

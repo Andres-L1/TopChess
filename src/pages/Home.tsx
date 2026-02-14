@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Sparkles, Users, Award, Zap } from 'lucide-react';
+import { Play, Sparkles, Users, Award, Zap, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FindMentorWizard from '../components/FindMentorWizard';
 import PremiumButton from '../components/PremiumButton';
@@ -36,7 +36,7 @@ const itemVariants = {
 
 const Home = () => {
     const navigate = useNavigate();
-    const { currentUserId, isAuthenticated, loginWithGoogle } = useAuth();
+    const { currentUserId, isAuthenticated, loginWithGoogle, userRole } = useAuth();
     const { t } = useTranslation();
     const [showWizard, setShowWizard] = useState(false);
     const [matchResult, setMatchResult] = useState<Teacher | null>(null);
@@ -170,13 +170,26 @@ const Home = () => {
 
                     {/* Main Action */}
                     <motion.div variants={itemVariants} className="flex flex-col items-center gap-4">
-                        <PremiumButton
-                            onClick={handleFindTeacher}
-                            size="lg"
-                            icon={Play}
-                        >
-                            {!isAuthenticated ? t('login_to_find') : t('find_teacher')}
-                        </PremiumButton>
+                        <div className="flex flex-wrap items-center justify-center gap-4">
+                            <PremiumButton
+                                onClick={handleFindTeacher}
+                                size="lg"
+                                icon={Play}
+                            >
+                                {!isAuthenticated ? t('login_to_find') : t('find_teacher')}
+                            </PremiumButton>
+
+                            {isAuthenticated && userRole && (
+                                <PremiumButton
+                                    variant="outline"
+                                    size="lg"
+                                    onClick={() => navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard')}
+                                    icon={LayoutDashboard}
+                                >
+                                    {t('nav.panel')}
+                                </PremiumButton>
+                            )}
+                        </div>
                         <p className="text-sm text-text-muted opacity-60">{t('no_commitment')}</p>
                     </motion.div>
 

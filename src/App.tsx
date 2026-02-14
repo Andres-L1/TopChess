@@ -31,6 +31,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: FirebaseUser | null;
   loginWithGoogle: () => Promise<void>;
+  loginAsTest: (role: 'student' | 'teacher') => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -80,10 +81,51 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const loginAsTest = async (role: 'student' | 'teacher') => {
+    try {
+      setLoading(true);
+      const testUid = `test_${role}_123`;
+      const mockUser = {
+        uid: testUid,
+        email: `${role}@test.com`,
+        displayName: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+        photoURL: `https://ui-avatars.com/api/?name=Test+${role}&background=random`
+      } as FirebaseUser;
+
+      // Mock the successful login
+      setCurrentUser(mockUser);
+
+      // Ensure the user exists in Firestore mock-wise or real-wise
+      const dbUser = await firebaseService.getUser(testUid);
+      if (!dbUser) {
+        await firebaseService.createUser({
+          id: testUid,
+          name: mockUser.displayName || 'Test User',
+          email: mockUser.email || '',
+          role: role,
+          photoURL: mockUser.photoURL || '',
+          walletBalance: 100,
+          status: 'active',
+          createdAt: Date.now(),
+          currency: 'EUR'
+        });
+      }
+
+      setUserRole(role);
+      toast.success(`Iniciado como ${role} de prueba`);
+    } catch (error) {
+      console.error("Test login failed", error);
+      toast.error("Error en login de prueba");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
       setUserRole(null);
+      setCurrentUser(null);
       toast.success("Sesión cerrada");
     } catch (error) {
       console.error("Logout failed", error);
@@ -96,7 +138,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated, currentUser, loginWithGoogle, logout, loading }}>
+    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated, currentUser, loginWithGoogle, loginAsTest, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -184,10 +226,9 @@ const AnimatedRoutes = () => {
 };
 
 function App() {
-
   return (
-    <AuthProvider>
-      <Router basename="/TopChess">
+    <Router basename="/TopChess">
+      <AuthProvider>
         <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
           <Navbar />
           <Toaster position="top-center" />
@@ -197,8 +238,8 @@ function App() {
             </Suspense>
           </main>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

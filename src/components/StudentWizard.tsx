@@ -92,7 +92,7 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
     const canIsNext = answers[step.id];
 
     return (
-        <div className="w-full bg-[#262421] border border-[#302e2b] rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[600px]">
+        <div className="w-full bg-[#262421] border border-[#302e2b] rounded-2xl shadow-2xl overflow-hidden flex flex-col h-auto md:h-[600px]">
             {/* Header */}
             <div className="bg-[#1e1d1b] p-6 border-b border-[#302e2b] flex items-center justify-between">
                 <div className="flex items-center gap-3">

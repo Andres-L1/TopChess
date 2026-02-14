@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, LayoutDashboard, LogOut } from 'lucide-react';
+import { User, LayoutDashboard, LogOut, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../App';
 import Logo from './Logo';
@@ -39,31 +39,45 @@ const Navbar: React.FC = () => {
 
             <div className="flex items-center gap-4">
                 {!authContext?.isAuthenticated ? (
-                    <button
-                        onClick={() => authContext?.loginWithGoogle()}
-                        className="px-6 py-2 rounded-xl bg-white text-black font-bold hover:bg-gold transition-all duration-300 text-xs uppercase tracking-widest shadow-lg shadow-white/5"
-                    >
-                        Iniciar Sesión
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => authContext?.loginWithGoogle()}
+                            className="px-6 py-2 rounded-xl bg-white text-black font-bold hover:bg-gold transition-all duration-300 text-xs uppercase tracking-widest shadow-lg shadow-white/5"
+                        >
+                            Iniciar Sesión
+                        </button>
+                        <button
+                            onClick={() => authContext?.loginAsTest('student')}
+                            className="px-4 py-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold text-[10px] uppercase tracking-widest hover:bg-blue-500/20 transition-all"
+                        >
+                            Test Alumno
+                        </button>
+                        <button
+                            onClick={() => authContext?.loginAsTest('teacher')}
+                            className="px-4 py-2 rounded-xl bg-gold/10 text-gold border border-gold/20 font-bold text-[10px] uppercase tracking-widest hover:bg-gold/20 transition-all"
+                        >
+                            Test Profesor
+                        </button>
+                    </div>
                 ) : (
                     <div className="flex items-center gap-3">
                         {userRole === 'teacher' && (
                             <Link
                                 to="/dashboard"
-                                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white transition-all border border-white/5 hover:border-white/10 font-bold text-[10px] uppercase tracking-wider"
+                                className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white transition-all border border-white/5 hover:border-white/10 font-bold text-[10px] uppercase tracking-wider"
                             >
                                 <LayoutDashboard size={14} />
-                                {t('nav.panel')}
+                                <span className="hidden sm:inline">{t('nav.panel')}</span>
                             </Link>
                         )}
 
                         {authContext.currentUser?.email === 'andreslgumuzio@gmail.com' && (
                             <Link
                                 to="/admin"
-                                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all border border-red-500/20 font-bold text-[10px] uppercase tracking-wider"
+                                className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all border border-red-500/20 font-bold text-[10px] uppercase tracking-wider"
                             >
-                                <LayoutDashboard size={14} />
-                                Admin
+                                <Shield size={14} />
+                                <span className="hidden sm:inline">Admin</span>
                             </Link>
                         )}
 

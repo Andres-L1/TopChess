@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X, LogOut, Search } from 'lucide-react';
+import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X, LogOut, Search, MessageCircle } from 'lucide-react';
 import Calendar from '../components/Calendar';
 import toast from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
@@ -118,19 +118,19 @@ const StudentDashboard: React.FC = () => {
     const nextClass = myBookings.length > 0 ? myBookings[0] : null; // Should sort by date
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in pb-24">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold font-display text-white">
-                        Hola, <span className="text-gold">Estudiante</span>
+                    <h1 className="text-2xl md:text-3xl font-bold font-display text-white">
+                        Hola, <span className="text-gold">Alumno</span>
                     </h1>
-                    <p className="text-text-muted">Continúa tu camino hacia la maestría.</p>
+                    <p className="text-sm md:text-base text-text-muted">Continúa tu camino hacia la maestría.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <button
                         onClick={handleLogout}
-                        className="ml-2 p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg border border-transparent hover:border-red-500/20"
+                        className="p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg border border-white/5 hover:border-red-500/20"
                         title="Cerrar Sesión"
                     >
                         <LogOut size={20} />
@@ -139,7 +139,7 @@ const StudentDashboard: React.FC = () => {
             </div>
 
             {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
 
                 {/* Left Col: Learning Journey */}
                 <div className="lg:col-span-2 space-y-6">
@@ -161,7 +161,7 @@ const StudentDashboard: React.FC = () => {
                             ) : (
                                 <>
                                     {myTeachers.length === 0 && (
-                                        <div className="col-span-2 p-8 rounded-2xl border border-dashed border-white/10 text-center text-text-muted">
+                                        <div className="col-span-1 md:col-span-2 p-8 rounded-2xl border border-dashed border-white/10 text-center text-text-muted">
                                             <p>Aún no tienes profesores activos.</p>
                                             <Link to="/" className="text-gold hover:underline mt-2 inline-block">Buscar Profesor</Link>
                                         </div>
@@ -171,18 +171,23 @@ const StudentDashboard: React.FC = () => {
                                         <div key={teacher.id} className="glass-panel p-4 rounded-xl flex flex-col gap-4 group hover:border-gold/30 transition-all">
                                             <div className="flex items-center gap-4">
                                                 <img src={teacher.image || 'https://ui-avatars.com/api/?name=Profesor+Chess&background=random'} alt={teacher.name} className="w-12 h-12 rounded-full object-cover border-2 border-gold/20" />
-                                                <div>
-                                                    <h3 className="font-bold text-white">{teacher.name}</h3>
+                                                <div className="min-w-0">
+                                                    <h3 className="font-bold text-white truncate">{teacher.name}</h3>
                                                     <p className="text-xs text-text-muted">{teacher.elo} ELO</p>
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2 mt-auto">
-                                                <Link to={`/classroom/${teacher.id}`} className="flex-1 btn-secondary text-center text-xs py-2 flex items-center justify-center gap-2">
-                                                    <Video size={14} /> Entrar al Aula
-                                                </Link>
+                                            <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+                                                <div className="flex gap-2 flex-1">
+                                                    <Link to={`/classroom/${teacher.id}`} className="flex-1 btn-secondary text-center text-[10px] md:text-xs py-2 px-1 flex items-center justify-center gap-1">
+                                                        <Video size={14} /> Aula
+                                                    </Link>
+                                                    <Link to={`/chat/${teacher.id}`} className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] md:text-xs py-2 px-1 rounded-lg transition-all flex items-center justify-center gap-1">
+                                                        <MessageCircle size={14} /> Chat
+                                                    </Link>
+                                                </div>
                                                 <button
                                                     onClick={() => openBookingModal(teacher)}
-                                                    className="flex-1 bg-white/5 hover:bg-gold hover:text-black border border-white/10 text-white text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+                                                    className="w-full sm:w-auto sm:px-4 bg-white/5 hover:bg-gold hover:text-black border border-white/10 text-white text-[10px] md:text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-1"
                                                 >
                                                     <CalendarIcon size={14} /> Agendar
                                                 </button>
@@ -206,11 +211,11 @@ const StudentDashboard: React.FC = () => {
                             {pendingRequests.length === 0 && <p className="text-xs text-text-muted italic">No tienes solicitudes pendientes.</p>}
                             {pendingRequests.map(req => (
                                 <div key={req.id} className="p-3 bg-white/5 rounded-lg border border-white/5 flex items-center gap-3 opacity-70">
-                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs flex-shrink-0">
                                         {req.name.substring(0, 2)}
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm text-white font-medium">{req.name}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-white font-medium truncate">{req.name}</p>
                                         <p className="text-[10px] text-yellow-500">Pendiente de aprobación</p>
                                     </div>
                                 </div>

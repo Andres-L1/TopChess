@@ -120,7 +120,7 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
     const canIsNext = answers[step.id];
 
     return (
-        <div className="w-full bg-[#262421] border border-gold/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col relative h-[650px] md:h-auto md:min-h-[600px]">
+        <div className="w-full bg-[#262421] border border-gold/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col relative h-auto md:min-h-[600px]">
 
             {/* Gamification Banner */}
             <div className="bg-gradient-to-r from-gold/20 to-[#262421] p-4 flex items-center gap-3 border-b border-gold/10">

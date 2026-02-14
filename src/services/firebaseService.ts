@@ -233,6 +233,8 @@ export const firebaseService = {
         const q = query(
             messagesRef,
             where("chatId", "==", chatId),
+            where("studentId", "==", userId1),
+            where("teacherId", "==", userId2),
             orderBy("timestamp", "asc")
         );
 
