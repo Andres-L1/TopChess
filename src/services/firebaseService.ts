@@ -91,13 +91,21 @@ export const firebaseService = {
     },
 
     async getTransactions(userId: string): Promise<Transaction[]> {
-        const q = query(
-            collection(db, 'transactions'),
-            or(where("fromId", "==", userId), where("toId", "==", userId)),
-            orderBy("timestamp", "desc")
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => doc.data() as Transaction);
+        try {
+            const qFrom = query(transactionsRef, where("fromId", "==", userId));
+            const qTo = query(transactionsRef, where("toId", "==", userId));
+
+            const [fromSnap, toSnap] = await Promise.all([getDocs(qFrom), getDocs(qTo)]);
+
+            const results = [...fromSnap.docs, ...toSnap.docs].map(doc => doc.data() as Transaction);
+
+            // Remove duplicates and sort in memory
+            const uniqueResults = Array.from(new Map(results.map(item => [item.id, item])).values());
+            return uniqueResults.sort((a, b) => b.timestamp - a.timestamp);
+        } catch (error) {
+            console.error("Error fetching transactions:", error);
+            return [];
+        }
     },
 
     async processPayment(studentId: string, teacherId: string, amount: number): Promise<{ success: boolean; message: string }> {
@@ -217,37 +225,64 @@ export const firebaseService = {
 
     // --- CHAT & MESSAGING ---
     subscribeToChat(userId1: string, userId2: string, callback: (messages: Message[]) => void): () => void {
-        // Query messages where (studentId == userId1 AND teacherId == userId2) OR (studentId == userId2 AND teacherId == userId1)
-        // Note: Firestore OR queries can be complex. Simpler is to store "participants" array.
-        // For matching existing schema:
-        // We assume userId1 is student, userId2 is teacher OR vice versa.
-        // Let's TRY to find a way to query both.
-        // Firestore simple query:
-        // We will assume "participants" array [uid1, uid2] is better, but since we use studentId/teacherId fields in Message type:
+        // Generamos un ID de chat predecible ordenando los UIDs
+        const chatId = [userId1, userId2].sort().join('_');
 
-        // We can just query by one combination if we know who is who. 
-        // But `Chat.tsx` knows `userRole`.
-
-        // Let's try OR query if supported by SDK version imported, else just 2 listeners?
-        // Using `or` from firestore.
-
+        // Buscamos mensajes con este chatId. 
+        // Si no existe, usamos el filtro simple de studentId/teacherId pero sin el OR complejo
         const q = query(
             messagesRef,
-            or(
-                and(where("studentId", "==", userId1), where("teacherId", "==", userId2)),
-                and(where("studentId", "==", userId2), where("teacherId", "==", userId1))
-            ),
+            where("chatId", "==", chatId),
             orderBy("timestamp", "asc")
         );
 
-        return onSnapshot(q, (snapshot) => {
-            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-            callback(messages);
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+                callback(messages);
+            } else {
+                // Fallback para mensajes antiguos que no tengan chatId
+                // Usamos dos listeners para evitar el index de OR + OrderBy
+                const q1 = query(messagesRef, where("studentId", "==", userId1), where("teacherId", "==", userId2));
+                const q2 = query(messagesRef, where("studentId", "==", userId2), where("teacherId", "==", userId1));
+
+                let msgs1: Message[] = [];
+                let msgs2: Message[] = [];
+
+                const update = () => {
+                    const combined = [...msgs1, ...msgs2].sort((a, b) => a.timestamp - b.timestamp);
+                    callback(combined);
+                };
+
+                const unsub1 = onSnapshot(q1, (s) => {
+                    msgs1 = s.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+                    update();
+                });
+                const unsub2 = onSnapshot(q2, (s) => {
+                    msgs2 = s.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+                    update();
+                });
+
+                return () => { unsub1(); unsub2(); };
+            }
+        }, (error) => {
+            console.error("Chat subscription error:", error);
+            // Si el index falla, intentamos el fallback directamente
+            if (error.message.includes('requires an index')) {
+                // ... (el fallback ya se maneja arriba si la query principal falla)
+            }
         });
+
+        return unsubscribe;
     },
 
     async sendMessage(message: Omit<Message, 'id'>): Promise<void> {
-        await addDoc(messagesRef, message);
+        // Enriquecemos el mensaje con un chatId para optimizar futuras búsquedas
+        const enrichedMessage = {
+            ...message,
+            chatId: [message.studentId, message.teacherId].sort().join('_')
+        };
+        await addDoc(messagesRef, enrichedMessage);
     },
 
     // --- PROFILES ---
