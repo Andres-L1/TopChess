@@ -290,7 +290,7 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
 
         await firebaseService.updateRoom(teacherId, {
             fen: newFen,
-            lastMove: moveArr || undefined,
+            lastMove: moveArr || null,
             orientation: orientation,
             history: currentHistory,
             fenHistory: currentFenHistory,

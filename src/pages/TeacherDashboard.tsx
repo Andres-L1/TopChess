@@ -320,31 +320,37 @@ const TeacherDashboard = () => {
                                     </>
                                 ) : (
                                     requests.length === 0 ? (
-                                        <div className="text-center py-10 text-text-muted">
-                                            <Bell size={40} className="mx-auto mb-4 opacity-20" />
-                                            <p>No tienes solicitudes de alumnos por el momento.</p>
+                                        <div className="text-center py-10 text-white/20 border-2 border-dashed border-white/5 rounded-2xl">
+                                            <Bell size={40} className="mx-auto mb-4 opacity-10" />
+                                            <p className="text-sm font-medium">Bandeja de entrada vacía</p>
                                         </div>
                                     ) : (
                                         requests.map(req => (
-                                            <div key={req.id} className="p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-3">
+                                            <div key={req.id} className="p-4 rounded-2xl bg-gradient-to-r from-white/[0.03] to-transparent border border-white/5 hover:border-gold/30 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-4 relative overflow-hidden">
+                                                <div className="absolute inset-y-0 left-0 w-1 bg-gold scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white flex-shrink-0">
+                                                    <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center font-bold text-gold border border-gold/20 shadow-lg">
                                                         {(req.studentName || 'U').substring(0, 1).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-bold text-white">{req.studentName || 'Alumno'}</h4>
-                                                        <p className="text-xs text-text-muted">Interesado en tus clases</p>
+                                                        <h4 className="font-bold text-white text-sm">{req.studentName || 'Interesado'}</h4>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></div>
+                                                            <span className="text-[10px] text-gold/60 font-black uppercase tracking-widest">Nueva Solicitud</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2 w-full sm:w-auto justify-end">
+                                                <div className="flex gap-2 w-full sm:w-auto">
                                                     <button
                                                         onClick={() => handleAcceptRequest(req.id)}
-                                                        className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-all" title="Aceptar" aria-label="Aceptar">
-                                                        <Check size={18} />
+                                                        className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-gold/10"
+                                                    >
+                                                        Aceptar
                                                     </button>
                                                     <button
                                                         onClick={() => handleRejectRequest(req.id)}
-                                                        className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Rechazar" aria-label="Rechazar">
+                                                        className="p-2 rounded-xl bg-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-all border border-white/10"
+                                                    >
                                                         <X size={18} />
                                                     </button>
                                                 </div>
@@ -467,37 +473,45 @@ const TeacherDashboard = () => {
                                     [1, 2].map((i) => <Skeleton key={i} width="100%" height={80} />)
                                 ) : (
                                     myStudents.length === 0 ? (
-                                        <div className="text-center py-10 text-text-muted">
-                                            <Users size={40} className="mx-auto mb-4 opacity-20" />
-                                            <p>Aún no tienes alumnos activos.</p>
+                                        <div className="text-center py-10 text-white/20 border-2 border-dashed border-white/5 rounded-2xl">
+                                            <Users size={40} className="mx-auto mb-4 opacity-10" />
+                                            <p className="text-sm font-medium">Sin alumnos activos</p>
                                         </div>
                                     ) : (
                                         myStudents.map(student => (
-                                            <div key={student.id} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-gold/30 transition-all">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/40 flex items-center justify-center font-bold text-gold">
+                                            <div key={student.id} className="p-5 rounded-2xl bg-[#1b1a17] border border-white/5 hover:border-gold/20 transition-all flex flex-col gap-4 shadow-xl">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center font-bold text-gold border border-gold/10">
                                                             {(student.name || 'U').substring(0, 1).toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-bold text-white">{student.name || 'Usuario'}</h4>
-                                                            <p className="text-xs text-text-muted">Alumno Activo</p>
+                                                            <h4 className="font-bold text-white text-sm">{student.name || 'Usuario'}</h4>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-[9px] font-black text-white/30 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">ESTUDIANTE</span>
+                                                                <div className="w-1 h-1 rounded-full bg-green-500"></div>
+                                                                <span className="text-[9px] text-green-500/60 font-black uppercase tracking-widest">En línea</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex flex-col sm:flex-row gap-2">
-                                                    <div className="flex gap-2 flex-1">
-                                                        <Link to={`/chat/${student.id}`} className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] md:text-xs py-2 px-1 rounded-lg transition-all flex items-center justify-center gap-2">
-                                                            <MessageCircle size={14} /> Chat
-                                                        </Link>
-                                                        <Link to={`/classroom/${currentUserId}`} className="flex-1 btn-secondary text-center text-[10px] md:text-xs py-2 px-1 flex items-center justify-center gap-2">
-                                                            <Video size={14} /> Aula
-                                                        </Link>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[10px] font-mono text-white/40 italic">Última clase: Ayer</span>
                                                     </div>
                                                 </div>
+
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Link to={`/chat/${student.id}`} className="bg-white/5 hover:bg-white/10 text-white/80 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group">
+                                                        <MessageCircle size={14} className="group-hover:text-gold transition-colors" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Mensaje</span>
+                                                    </Link>
+                                                    <Link to={`/classroom/${currentUserId}`} className="bg-gold hover:bg-white text-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group font-black shadow-lg shadow-gold/5">
+                                                        <Video size={14} />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Aula en vivo</span>
+                                                    </Link>
+                                                </div>
                                             </div>
-                                        )
                                         ))
+                                    )
                                 )}
                             </div>
                         </div>
