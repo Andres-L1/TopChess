@@ -8,9 +8,14 @@ import StudentWizard from '../components/StudentWizard';
 import toast from 'react-hot-toast';
 
 const Onboarding = () => {
-    const { currentUser, setUserRole } = useAuth();
+    const { currentUser, userRole, setUserRole } = useAuth();
     const navigate = useNavigate();
     const [view, setView] = useState<'selection' | 'student_wizard' | 'teacher_wizard'>('selection');
+
+    React.useEffect(() => {
+        if (userRole === 'teacher') navigate('/dashboard');
+        if (userRole === 'student') navigate('/student-dashboard');
+    }, [userRole, navigate]);
 
     const handleStudentSelect = () => {
         setView('student_wizard');

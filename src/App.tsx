@@ -150,8 +150,18 @@ const AnimatedRoutes = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!loading && isAuthenticated && userRole === null && location.pathname !== '/onboarding') {
-      navigate('/onboarding');
+    if (!loading) {
+      if (!isAuthenticated) {
+        if (location.pathname === '/onboarding') {
+          navigate('/');
+        }
+      } else {
+        if (userRole === null && location.pathname !== '/onboarding') {
+          navigate('/onboarding');
+        } else if (userRole !== null && location.pathname === '/onboarding') {
+          navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard');
+        }
+      }
     }
   }, [loading, isAuthenticated, userRole, location.pathname, navigate]);
 
