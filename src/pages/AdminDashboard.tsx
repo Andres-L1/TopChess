@@ -65,7 +65,7 @@ const AdminDashboard = () => {
         try {
             await firebaseService.verifyTeacher(teacherId, !currentStatus);
             toast.success(currentStatus ? t('admin.messages.verif_removed') : t('admin.messages.verif_added'));
-            fetchData();
+            // Stats will update automatically via real-time listeners
         } catch (error) {
             toast.error(t('admin.messages.verif_error'));
         }
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
         try {
             await firebaseService.banUser(userId, !isBanned);
             toast.success(isBanned ? t('admin.messages.user_unbanned') : t('admin.messages.user_banned'));
-            fetchData();
+            // Stats will update automatically via real-time listeners
         } catch (error) {
             toast.error(t('admin.messages.status_error'));
         }
