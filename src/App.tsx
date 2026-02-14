@@ -1,11 +1,8 @@
 import React, { useState, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
-import { User, LayoutDashboard } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
 import Navbar from './components/Navbar';
-
 import { AnimatePresence, motion } from 'framer-motion';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
