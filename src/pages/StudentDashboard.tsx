@@ -36,16 +36,26 @@ const StudentDashboard: React.FC = () => {
                 const requests = await firebaseService.getRequestsForStudent(currentUserId);
                 const bookings = await firebaseService.getBookingsForUser(currentUserId, 'student');
 
-                // Filter active teachers (approved requests)
-                const approvedPromises = requests
-                    .filter((r: any) => r.status === 'approved')
+                // Filter active teachers (approved requests) and deduplicate by teacherId
+                const approvedReqs = requests.filter((r: any) => r.status === 'approved');
+                const uniqueApprovedMap = new Map();
+                approvedReqs.forEach(r => {
+                    if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
+                });
+
+                const approvedPromises = Array.from(uniqueApprovedMap.values())
                     .map((r: any) => firebaseService.getTeacherById(r.teacherId));
 
                 const approvedTeachers = await Promise.all(approvedPromises);
 
-                // Pending requests
-                const pendingPromises = requests
-                    .filter((r: any) => r.status === 'pending')
+                // Pending requests and deduplicate
+                const pendingReqs = requests.filter((r: any) => r.status === 'pending');
+                const uniquePendingMap = new Map();
+                pendingReqs.forEach(r => {
+                    if (!uniquePendingMap.has(r.teacherId)) uniquePendingMap.set(r.teacherId, r);
+                });
+
+                const pendingPromises = Array.from(uniquePendingMap.values())
                     .map(async (r: any) => {
                         const t = await firebaseService.getTeacherById(r.teacherId);
                         return t ? { ...t, requestDate: r.timestamp } : null;

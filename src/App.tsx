@@ -22,6 +22,7 @@ const Wallet = lazy(() => import('./pages/Wallet'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const LichessCallback = lazy(() => import('./pages/LichessCallback'));
 
 // Types
 interface AuthContextType {
@@ -220,6 +221,7 @@ const AnimatedRoutes = () => {
         <Route path="/wallet" element={<PrivateRoute><PageTransition><Wallet /></PageTransition></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><PageTransition><UserProfile /></PageTransition></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><PageTransition><AdminDashboard /></PageTransition></AdminRoute>} />
+        <Route path="/lichess-callback" element={<PageTransition><LichessCallback /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   );
@@ -227,7 +229,13 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <Router basename="/TopChess">
+    <Router
+      basename="/TopChess"
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AuthProvider>
         <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
           <Navbar />

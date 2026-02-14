@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Chess, Move } from 'chess.js';
+import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import { Chess, fen as chessopsFen, parseSquare, SquareName, Square, Move, makeSquare, san, charToRole } from 'chessops';
 import { Chessground as NativeChessground } from 'chessground';
 import { Api } from 'chessground/api';
 import { Config } from 'chessground/config';
@@ -8,75 +8,152 @@ import { DrawShape } from 'chessground/draw';
 import 'chessground/assets/chessground.base.css';
 import 'chessground/assets/chessground.brown.css';
 import 'chessground/assets/chessground.cburnett.css';
+import '../styles/lichess.css';
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
-import { RotateCw, RotateCcw } from 'lucide-react';
 import useChessSound from '../hooks/useChessSound';
-import toast, { Toaster } from 'react-hot-toast';
+import { useLilaEval } from '../hooks/useLilaEval';
 import { RoomData, GameState } from '../types/index';
+import EngineEval from './EngineEval';
+import { Chess as ChessJS } from 'chess.js';
 
 interface BoardProps {
     teacherId: string;
     onGameStateChange?: (state: GameState) => void;
+    isAnalysisEnabled?: boolean;
+    onAnalysisToggle?: (enabled: boolean) => void;
+    chapterPgn?: string;
 }
 
-const Board: React.FC<BoardProps> = ({ teacherId, onGameStateChange }) => {
-    // Game Logic State
-    const chessRef = useRef(new Chess());
+export interface BoardHandle {
+    goToMove: (index: number) => void;
+    reset: () => void;
+    toggleOrientation: () => void;
+}
 
-    // We keep some state for UI reactivity
-    const [fen, setFen] = useState(chessRef.current.fen());
+const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChange, isAnalysisEnabled: externalAnalysisEnabled, chapterPgn }, ref) => {
+    // Logic State (Chessops)
+    const chessRef = useRef<Chess>(Chess.default());
+
+    // UI reactivity
+    const [fen, setFen] = useState(chessopsFen.makeFen(chessRef.current.toSetup()));
     const [orientation, setOrientation] = useState<"white" | "black">("white");
     const [lastMove, setLastMove] = useState<[Key, Key] | null>(null);
-    const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string; color: string } | null>(null);
+    const [pendingPromotion, setPendingPromotion] = useState<{ from: Key; to: Key; color: string } | null>(null);
     const [isGameOver, setIsGameOver] = useState(false);
-    const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [turn, setTurn] = useState<'w' | 'b'>('w');
     const [shapes, setShapes] = useState<DrawShape[]>([]);
+    const [history, setHistory] = useState<string[]>([]);
+    const [fenHistory, setFenHistory] = useState<string[]>([chessopsFen.makeFen(Chess.default().toSetup())]);
+    const [currentIndex, setCurrentIndex] = useState(-1);
+
+    // Atomic refs to avoid stale closures during rapid moves
+    const historyRef = useRef<string[]>([]);
+    const fenHistoryRef = useRef<string[]>([chessopsFen.makeFen(Chess.default().toSetup())]);
+    const currentIndexRef = useRef(-1);
+    const [internalAnalysisEnabled] = useState(false);
+
+    const isAnalysisActive = externalAnalysisEnabled !== undefined ? externalAnalysisEnabled : internalAnalysisEnabled;
 
     // Refs for Chessground
-    const boardRef = useRef<HTMLDivElement>(null);
+    const visualBoardRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<Api | null>(null);
+    const analysisTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     const { userRole } = useAuth();
     const { play } = useChessSound();
 
-    // Helper: Calculate Dests
-    const getDests = (inputChess: Chess) => {
-        const d = new Map();
-        const moves = inputChess.moves({ verbose: true });
-        moves.forEach((m: Move) => {
-            if (!d.has(m.from)) d.set(m.from, []);
-            d.get(m.from).push(m.to);
-        });
-        return d;
+    // Lila (Lichess Cloud Eval) Hook
+    const { result: lilaResult, isLoading: isLilaLoading, analyze, stop: stopLila } = useLilaEval();
+
+    useImperativeHandle(ref, () => ({
+        goToMove: (idx: number) => handleGoToMove(idx),
+        reset: () => handleReset(),
+        toggleOrientation: () => handleToggleOrientation()
+    }));
+
+    // Trigger analysis when FEN or Active state changes
+    useEffect(() => {
+        if (isAnalysisActive && fen && fen !== 'start') {
+            analyze(fen);
+        } else if (!isAnalysisActive) {
+            stopLila();
+        }
+    }, [isAnalysisActive, fen, analyze, stopLila]);
+
+    const getDests = (chess: Chess) => {
+        const dests = new Map<Key, Key[]>();
+        const allDests = chess.allDests();
+        for (const [from, squareSet] of allDests) {
+            const fromName = makeSquare(from) as Key;
+            const toNames: Key[] = [];
+            for (const to of squareSet) {
+                toNames.push(makeSquare(to) as Key);
+            }
+            dests.set(fromName, toNames);
+        }
+        return dests;
     };
 
     const snapback = () => {
-        apiRef.current?.set({ fen: chessRef.current.fen() });
+        apiRef.current?.set({ fen: chessopsFen.makeFen(chessRef.current.toSetup()) });
     };
 
     const handleUserMove = (orig: Key, dest: Key) => {
-        const chess = chessRef.current;
+        const currentIdx = currentIndexRef.current;
+        const currentHist = historyRef.current;
+        const currentFenHist = fenHistoryRef.current;
 
-        // Check for promotion
-        const moves = chess.moves({ verbose: true });
-        const isPromotion = moves.find((m: Move) => m.from === orig && m.to === dest && m.promotion);
+        const isAtEnd = currentIdx === -1 || currentIdx === currentHist.length - 1;
 
-        if (isPromotion) {
-            setPendingPromotion({
-                from: orig,
-                to: dest,
-                color: isPromotion.color
-            });
+        if (!isAtEnd && userRole !== 'teacher') {
+            snapback();
             return;
         }
 
+        const chess = chessRef.current;
+        const from = parseSquare(orig as SquareName)!;
+        const to = parseSquare(dest as SquareName)!;
+
+        const piece = chess.board.get(from);
+        const isPawn = piece?.role === 'pawn';
+        const rank = Math.floor(to / 8);
+        const isPromotionRank = (piece?.color === 'white' && rank === 7) || (piece?.color === 'black' && rank === 0);
+
+        if (isPawn && isPromotionRank) {
+            setPendingPromotion({ from: orig, to: dest, color: piece?.color || 'white' });
+            return;
+        }
+
+        const move: Move = { from, to };
+        const newPos = chess.clone();
         try {
-            const move = chess.move({ from: orig, to: dest });
-            if (move) {
-                if (move.captured) play('capture');
+            if (newPos.isLegal(move)) {
+                const sanMove = san.makeSan(chess, move);
+                newPos.play(move);
+                const captured = chess.board.has(to);
+                chessRef.current = newPos;
+                if (captured) play('capture');
                 else play('move');
-                updateGameState(chess, [orig, dest]);
+
+                // Truncate if moving from historical position, otherwise append
+                const updatedHistory = isAtEnd ? [...currentHist, sanMove] : currentHist.slice(0, currentIdx + 1).concat(sanMove);
+                const newFen = chessopsFen.makeFen(newPos.toSetup());
+                const updatedFenHistory = isAtEnd ? [...currentFenHist, newFen] : currentFenHist.slice(0, currentIdx + 2).concat(newFen);
+
+                const newIdx = updatedHistory.length - 1;
+
+                // Update refs (immediate for next move logic)
+                historyRef.current = updatedHistory;
+                fenHistoryRef.current = updatedFenHistory;
+                currentIndexRef.current = newIdx;
+
+                // Update states (for UI)
+                setHistory(updatedHistory);
+                setFenHistory(updatedFenHistory);
+                setCurrentIndex(newIdx);
+
+                updateGameState(newPos, [orig, dest], updatedHistory, updatedFenHistory, newIdx);
             } else {
                 snapback();
             }
@@ -85,37 +162,36 @@ const Board: React.FC<BoardProps> = ({ teacherId, onGameStateChange }) => {
         }
     };
 
-    // 1. Initialize Chessground (Native)
     useEffect(() => {
-        if (!boardRef.current) return;
+        if (!visualBoardRef.current) return;
 
         const config: Config = {
             fen: fen,
             orientation: orientation,
-            viewOnly: false,
-            turnColor: 'white',
-            check: false,
-            highlight: { lastMove: true, check: true },
-            animation: { enabled: true, duration: 250 },
+            turnColor: chessRef.current.turn === 'white' ? 'white' : 'black',
+            check: chessRef.current.isCheck(),
+            lastMove: lastMove || undefined,
+            coordinates: true,
             movable: {
                 free: false,
-                color: 'white',
+                color: userRole === 'teacher' ? 'both' : (orientation as 'white' | 'black'),
                 dests: getDests(chessRef.current),
                 showDests: true,
             },
-            draggable: {
-                enabled: true,
-                showGhost: true,
-            },
-            selectable: { enabled: true },
             drawable: {
                 enabled: true,
-                visible: true,
-                autoShapes: shapes,
+                shapes: shapes,
+                brushes: {
+                    green: { key: 'green', color: '#15781B', opacity: 1, lineWidth: 10 },
+                    red: { key: 'red', color: '#882020', opacity: 1, lineWidth: 10 },
+                    blue: { key: 'blue', color: '#003088', opacity: 1, lineWidth: 10 },
+                    yellow: { key: 'yellow', color: '#e68500', opacity: 1, lineWidth: 10 },
+                },
                 onChange: (newShapes) => {
                     setShapes(newShapes);
-                    // Sync shapes to DB immediately
-                    firebaseService.updateRoom(teacherId, { shapes: newShapes });
+                    if (userRole === 'teacher') {
+                        firebaseService.updateRoom(teacherId, { shapes: newShapes });
+                    }
                 }
             },
             events: {
@@ -123,64 +199,90 @@ const Board: React.FC<BoardProps> = ({ teacherId, onGameStateChange }) => {
             }
         };
 
-        const api = NativeChessground(boardRef.current, config);
+        const api = NativeChessground(visualBoardRef.current, config);
         apiRef.current = api;
 
-        // Force resize
-        const resizeObserver = new ResizeObserver(() => {
-            if (apiRef.current) apiRef.current.redrawAll();
-        });
-        resizeObserver.observe(boardRef.current);
-
-        return () => {
-            api.destroy();
-            resizeObserver.disconnect();
-        };
+        return () => api.destroy();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const updateGameState = async (chessInstance: Chess, moveArr: [Key, Key] | null, newHistory?: string[], newFenHistory?: string[], newIdx?: number) => {
+        const newFen = chessopsFen.makeFen(chessInstance.toSetup());
+        const turnColor = chessInstance.turn;
+        const currentHistory = newHistory || historyRef.current;
+        const currentFenHistory = newFenHistory || fenHistoryRef.current;
+        const activeIdx = newIdx !== undefined ? newIdx : currentIndexRef.current;
 
-    const updateGameState = async (chessInstance: Chess, moveArr: [Key, Key] | null) => {
-        const newFen = chessInstance.fen();
-        const newTurnColor = chessInstance.turn() === 'w' ? 'white' : 'black';
-        const history = chessInstance.history();
-        const pgn = chessInstance.pgn();
+        // Atomic update of refs
+        historyRef.current = currentHistory;
+        fenHistoryRef.current = currentFenHistory;
+        currentIndexRef.current = activeIdx;
 
         setFen(newFen);
         setLastMove(moveArr);
-        setTurn(chessInstance.turn());
+        setTurn(turnColor === 'white' ? 'w' : 'b');
         setShapes([]);
+        setHistory(currentHistory);
+        setFenHistory(currentFenHistory);
+        setCurrentIndex(activeIdx);
 
-        const gameOver = chessInstance.isGameOver();
+        const gameOver = chessInstance.isEnd();
         setIsGameOver(gameOver);
-        if (gameOver) setShowGameOverModal(true);
 
-        // Notify parent context of state change
+        // Extract comment from PGN if available (Only for teachers)
+        let currentComment = "";
+        if (userRole === 'teacher' && chapterPgn) {
+            try {
+                const tempGame = new ChessJS();
+                const cleanPgn = chapterPgn
+                    .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime) ".*"\]/g, "")
+                    .replace(/\{(\[%clk [^\]]+\]|\[%eval [^\]]+\])\}/g, "")
+                    .replace(/\r/g, "");
+
+                try {
+                    (tempGame as any).loadPgn(cleanPgn);
+                } catch (e) {
+                    const fenOnly = cleanPgn.match(/\[FEN "(.*)"\]/);
+                    if (fenOnly) tempGame.load(fenOnly[1]);
+                }
+
+                // Replay moves to find the comment for the current position
+                tempGame.reset();
+                for (let i = 0; i <= activeIdx; i++) {
+                    if (currentHistory[i]) {
+                        try {
+                            tempGame.move(currentHistory[i]);
+                        } catch (moveErr) {
+                            break;
+                        }
+                    }
+                }
+                currentComment = tempGame.getComment() || "";
+            } catch (e) {
+                console.warn("Could not extract comment from PGN", e);
+            }
+        }
+
         if (onGameStateChange) {
             onGameStateChange({
                 fen: newFen,
-                history: history,
-                turn: chessInstance.turn(),
+                history: currentHistory,
+                turn: turnColor === 'white' ? 'w' : 'b',
                 isGameOver: gameOver,
-                orientation: orientation
+                orientation: orientation,
+                currentIndex: activeIdx
             });
-        }
-
-        if (gameOver) {
-            play('gameEnd');
-            if (chessInstance.isCheckmate()) toast.success("¡Jaque Mate!", { duration: 5000, icon: '👑' });
-            else if (chessInstance.isDraw()) toast("Tablas.", { icon: '🤝' });
         }
 
         if (apiRef.current) {
             apiRef.current.set({
                 fen: newFen,
-                turnColor: newTurnColor as 'white' | 'black',
-                check: chessInstance.inCheck(),
+                turnColor: turnColor,
+                check: chessInstance.isCheck(),
                 lastMove: moveArr || undefined,
                 drawable: { shapes: [] },
                 movable: {
-                    color: newTurnColor as 'white' | 'black',
+                    color: userRole === 'teacher' ? 'both' : (turnColor),
                     dests: getDests(chessInstance)
                 }
             });
@@ -188,73 +290,75 @@ const Board: React.FC<BoardProps> = ({ teacherId, onGameStateChange }) => {
 
         await firebaseService.updateRoom(teacherId, {
             fen: newFen,
-            pgn: pgn,
-            history: history,
             lastMove: moveArr || undefined,
             orientation: orientation,
-            shapes: []
+            history: currentHistory,
+            fenHistory: currentFenHistory,
+            currentIndex: activeIdx,
+            shapes: [],
+            comment: currentComment
         });
     };
 
-    // 3. Sync from DB
     useEffect(() => {
         const unsubscribe = firebaseService.subscribeToRoom(teacherId, (data: RoomData) => {
             if (data) {
                 if (data.shapes && JSON.stringify(data.shapes) !== JSON.stringify(shapes)) {
                     setShapes(data.shapes);
-                    if (apiRef.current) {
-                        apiRef.current.set({ drawable: { shapes: data.shapes } });
-                    }
+                    apiRef.current?.set({ drawable: { shapes: data.shapes } });
                 }
 
                 if (data.fen) {
-                    const currentFen = chessRef.current.fen();
-
-                    if (data.fen !== currentFen) {
+                    const currentFen = chessopsFen.makeFen(chessRef.current.toSetup());
+                    // Sync history and currentIndex even if FEN is the same (navigation)
+                    if (data.fen !== currentFen || data.currentIndex !== currentIndexRef.current || data.history?.length !== historyRef.current.length) {
                         try {
-                            if (data.pgn) {
-                                chessRef.current.loadPgn(data.pgn);
-                            } else {
-                                chessRef.current.load(data.fen);
-                            }
+                            const setup = chessopsFen.parseFen(data.fen).unwrap();
+                            const newPos = Chess.fromSetup(setup).unwrap();
+                            chessRef.current = newPos;
+
+                            const newHistory = data.history || [];
+                            const newFenHistory = data.fenHistory || [chessopsFen.makeFen(Chess.default().toSetup())];
+                            const newIdx = data.currentIndex !== undefined ? data.currentIndex : (newHistory.length - 1);
+
+                            // Sync refs for immediate move handling
+                            historyRef.current = newHistory;
+                            fenHistoryRef.current = newFenHistory;
+                            currentIndexRef.current = newIdx;
 
                             setFen(data.fen);
                             setLastMove(data.lastMove as [Key, Key] || null);
-                            setTurn(chessRef.current.turn());
-                            setIsGameOver(chessRef.current.isGameOver());
+                            setTurn(newPos.turn === 'white' ? 'w' : 'b');
+                            setIsGameOver(newPos.isEnd());
                             if (data.orientation) setOrientation(data.orientation);
+                            setHistory(newHistory);
+                            setFenHistory(newFenHistory);
+                            setCurrentIndex(newIdx);
+
+                            apiRef.current?.set({
+                                fen: data.fen,
+                                lastMove: data.lastMove as [Key, Key] || undefined,
+                                orientation: data.orientation || orientation,
+                                turnColor: newPos.turn,
+                                check: newPos.isCheck(),
+                                movable: {
+                                    color: userRole === 'teacher' ? 'both' : newPos.turn,
+                                    dests: getDests(newPos)
+                                }
+                            });
 
                             if (onGameStateChange) {
                                 onGameStateChange({
                                     fen: data.fen,
-                                    history: data.history || chessRef.current.history(),
-                                    turn: chessRef.current.turn(),
-                                    isGameOver: chessRef.current.isGameOver(),
-                                    orientation: data.orientation || orientation
-                                });
-                            }
-
-                            if (apiRef.current) {
-                                const side = chessRef.current.turn() === 'w' ? 'white' : 'black';
-                                apiRef.current.set({
-                                    fen: data.fen,
-                                    lastMove: data.lastMove as [Key, Key] || undefined,
+                                    history: newHistory,
+                                    turn: newPos.turn === 'white' ? 'w' : 'b',
+                                    isGameOver: newPos.isEnd(),
                                     orientation: data.orientation || orientation,
-                                    turnColor: side,
-                                    check: chessRef.current.inCheck(),
-                                    movable: {
-                                        color: side,
-                                        dests: getDests(chessRef.current)
-                                    }
+                                    currentIndex: newIdx
                                 });
                             }
                         } catch (e) {
                             console.error("Remote sync error", e);
-                            try {
-                                chessRef.current.load(data.fen);
-                                setFen(data.fen);
-                                if (apiRef.current) apiRef.current.set({ fen: data.fen });
-                            } catch (err) { }
                         }
                     }
                 }
@@ -262,119 +366,139 @@ const Board: React.FC<BoardProps> = ({ teacherId, onGameStateChange }) => {
         });
         return () => unsubscribe();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [teacherId, play, onGameStateChange]);
+    }, [teacherId, isAnalysisActive]);
 
+    const handleGoToMove = (index: number) => {
+        const hist = historyRef.current;
+        const currentFenHist = fenHistoryRef.current;
 
-    const handlePromotionSelect = (type: string) => {
+        if (index < -1 || index >= hist.length) return;
+        const targetIndex = index === -1 ? 0 : index + 1;
+        const targetFen = currentFenHist[targetIndex];
+        if (!targetFen) return;
+
+        try {
+            const setup = chessopsFen.parseFen(targetFen).unwrap();
+            const newPos = Chess.fromSetup(setup).unwrap();
+            chessRef.current = newPos;
+
+            currentIndexRef.current = index;
+            setCurrentIndex(index);
+            setFen(targetFen);
+
+            apiRef.current?.set({
+                fen: targetFen,
+                turnColor: newPos.turn,
+                check: newPos.isCheck(),
+                lastMove: undefined,
+                movable: {
+                    color: userRole === 'teacher' ? 'both' : newPos.turn,
+                    dests: getDests(newPos)
+                }
+            });
+
+            if (userRole === 'teacher') {
+                firebaseService.updateRoom(teacherId, {
+                    fen: targetFen,
+                    lastMove: undefined,
+                    currentIndex: index
+                });
+            }
+        } catch (e) { console.error("Nav error", e); }
+    };
+
+    const handlePromotionSelect = (roleChar: string) => {
         if (!pendingPromotion) return;
         const chess = chessRef.current;
-        try {
-            const move = chess.move({
-                from: pendingPromotion.from,
-                to: pendingPromotion.to,
-                promotion: type
-            });
-            if (move) {
+        const from = parseSquare(pendingPromotion.from as SquareName)!;
+        const to = parseSquare(pendingPromotion.to as SquareName)!;
+        const role = charToRole(roleChar);
+
+        if (role) {
+            const move: Move = { from, to, promotion: role };
+            const newPos = chess.clone();
+            if (newPos.isLegal(move)) {
+                const sanMove = san.makeSan(chess, move);
+                newPos.play(move);
+                chessRef.current = newPos;
                 play('promote');
-                updateGameState(chess, [pendingPromotion.from as Key, pendingPromotion.to as Key]);
-            } else {
-                snapback();
+                const newHistory = history.concat(sanMove);
+                const newFen = chessopsFen.makeFen(newPos.toSetup());
+                const newFenHistory = fenHistory.concat(newFen);
+                const newIdx = newHistory.length - 1;
+
+                setHistory(newHistory);
+                setFenHistory(newFenHistory);
+                setCurrentIndex(newIdx);
+                updateGameState(newPos, [pendingPromotion.from, pendingPromotion.to], newHistory, newFenHistory, newIdx);
             }
-        } catch (e) {
-            snapback();
         }
         setPendingPromotion(null);
     };
 
-    const toggleOrientation = () => {
+    const handleToggleOrientation = () => {
         const newO = orientation === 'white' ? 'black' : 'white';
         setOrientation(newO);
-        if (apiRef.current) apiRef.current.set({ orientation: newO });
+        apiRef.current?.set({ orientation: newO });
         firebaseService.updateRoom(teacherId, { orientation: newO });
     };
 
     const handleReset = async () => {
-        if (confirm("¿Reiniciar partida?")) {
-            chessRef.current.reset();
-            await updateGameState(chessRef.current, null);
-            toast("Tablero reiniciado", { icon: '🔄' });
-        }
+        const newPos = Chess.default();
+        chessRef.current = newPos;
+        const initialFen = chessopsFen.makeFen(newPos.toSetup());
+
+        historyRef.current = [];
+        fenHistoryRef.current = [initialFen];
+        currentIndexRef.current = -1;
+
+        setHistory([]);
+        setFenHistory([initialFen]);
+        setCurrentIndex(-1);
+        await updateGameState(newPos, null, [], [initialFen], -1);
     };
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center relative select-none">
-            <Toaster position="top-center" toastOptions={{
-                style: {
-                    background: '#1A1A1A',
-                    color: '#EAEAEA',
-                    border: '1px solid #333',
-                }
-            }} />
+        <div className="w-full h-full relative group bg-[#161512]">
+            {/* Evaluation Bar Overlay */}
+            {isAnalysisActive && lilaResult && (
+                <div className="absolute top-0 left-[-32px] bottom-0 w-7 z-20">
+                    <EngineEval
+                        score={lilaResult.score}
+                        mate={lilaResult.mate}
+                        orientation={orientation}
+                    />
+                </div>
+            )}
 
-            <div className="absolute top-4 -right-16 z-50 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <button
-                    onClick={toggleOrientation}
-                    className="p-3 bg-dark-panel/90 text-white rounded-xl shadow-xl hover:scale-110 hover:bg-gold hover:text-black transition-all border border-white/10 backdrop-blur-sm tooltip-left"
-                    title="Girar Tablero"
-                >
-                    <RotateCw size={18} />
-                </button>
-                {(userRole === 'teacher' || isGameOver) && (
-                    <button
-                        onClick={handleReset}
-                        className="p-3 bg-dark-panel/90 text-red-500 rounded-xl shadow-xl hover:scale-110 hover:bg-red-500 hover:text-white transition-all border border-white/10 backdrop-blur-sm"
-                        title="Reiniciar Partida"
-                    >
-                        <RotateCcw size={18} />
-                    </button>
-                )}
-            </div>
+            <div ref={visualBoardRef} className="w-full h-full wood" />
 
-            <div className="w-full aspect-square relative shadow-2xl border-[4px] border-[#1a1a1a] rounded-sm bg-[#111] overflow-hidden">
-                <div className="absolute -inset-1 bg-gradient-to-br from-gold/10 to-transparent opacity-20 blur-sm rounded-lg pointer-events-none"></div>
-
-                <div ref={boardRef} className="w-full h-full relative z-10" />
-
-                {pendingPromotion && (
-                    <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm animate-fade-in">
-                        <div className="bg-dark-panel p-4 rounded-xl border border-gold/30 flex gap-4 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
-                            {['q', 'r', 'b', 'n'].map(p => (
-                                <button key={p} onClick={() => handlePromotionSelect(p)} className="w-14 h-14 bg-dark-bg hover:bg-gold/10 rounded-lg flex items-center justify-center text-4xl border border-white/10 hover:border-gold/50 transition-all hover:scale-105 active:scale-95 group">
-                                    <span className={`drop-shadow-lg ${turn === 'w' ? 'text-white' : 'text-gray-400 group-hover:text-gold'}`}>
-                                        {p === 'q' ? '♕' : p === 'r' ? '♖' : p === 'b' ? '♗' : '♘'}
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
+            {/* Promotion UI Overlay */}
+            {pendingPromotion && (
+                <div className="absolute inset-0 z-[60] bg-black/80 flex items-center justify-center backdrop-blur-sm animate-fade-in">
+                    <div className="bg-dark-panel p-4 rounded-xl border border-gold/30 flex gap-4">
+                        {['q', 'r', 'b', 'n'].map(p => (
+                            <button key={p} onClick={() => handlePromotionSelect(p)} className="w-14 h-14 bg-dark-bg hover:bg-gold/10 rounded-lg flex items-center justify-center text-4xl border border-white/10 transition-all hover:scale-110">
+                                <span className={turn === 'w' ? 'text-white' : 'text-gray-400'}>
+                                    {p === 'q' ? '♕' : p === 'r' ? '♖' : p === 'b' ? '♗' : '♘'}
+                                </span>
+                            </button>
+                        ))}
                     </div>
-                )}
+                </div>
+            )}
 
-                {showGameOverModal && (
-                    <div className="absolute inset-0 z-40 bg-dark-bg/85 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-500">
-                        <div className="bg-dark-panel px-10 py-8 rounded-2xl border border-gold/20 text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
-
-                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Partida Finalizada</h3>
-                            <div className="text-gold font-bold text-xl uppercase tracking-[0.2em] mb-6 drop-shadow-sm">
-                                {chessRef.current.isCheckmate() ? 'Jaque Mate' :
-                                    chessRef.current.isDraw() ? 'Tablas' :
-                                        chessRef.current.isStalemate() ? 'Ahogado' : 'Fin'}
-                            </div>
-
-                            <div className="flex gap-4 justify-center">
-                                <button onClick={() => setShowGameOverModal(false)} className="px-6 py-3 bg-white/5 text-gray-300 border border-white/10 rounded-lg font-bold hover:bg-white/10 hover:text-white transition-all uppercase text-xs tracking-widest">
-                                    Analizar
-                                </button>
-                                <button onClick={handleReset} className="px-6 py-3 bg-gold/10 text-gold border border-gold/30 rounded-lg font-bold hover:bg-gold hover:text-black transition-all uppercase text-xs tracking-widest shadow-lg hover:shadow-gold/20">
-                                    Nueva Partida
-                                </button>
-                            </div>
-                        </div>
+            {/* Analysis Mini-Info Overlay */}
+            {isAnalysisActive && !isLilaLoading && lilaResult && (
+                <div className="absolute top-2 right-2 z-[50] bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-3 animate-in fade-in zoom-in duration-300">
+                    <div className="flex flex-col">
+                        <span className="text-[8px] text-gold/60 uppercase font-black font-mono tracking-widest">Mejor Jugada</span>
+                        <span className="text-[10px] text-white font-mono font-bold">{lilaResult.bestMove}</span>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
-};
+});
 
 export default Board;

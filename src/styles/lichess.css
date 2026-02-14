@@ -1,0 +1,99 @@
+/* Chessground Lichess Professional Style */
+
+.cg-wrap {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.cg-wrap .cg-square {
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+/* Wood Theme override (mimicking Lichess) */
+.cg-wrap.wood {
+  background-image: url('https://lichess1.org/assets/images/board/svg/brown.svg') !important;
+  background-size: cover;
+}
+
+/* Coordinates Styling (Transparent & Integrated) */
+.cg-wrap coords {
+  font-weight: 900;
+  font-size: 10px;
+  text-transform: uppercase;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.5;
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.cg-wrap coords.ranks {
+  right: 2px;
+  top: 2px;
+}
+
+.cg-wrap coords.files {
+  left: 2px;
+  bottom: 2px;
+}
+
+/* Smart Contrast Coords */
+.cg-wrap coords.ranks {
+  color: #f0d9b5;
+}
+
+.cg-wrap .cg-square:nth-child(even) coords.ranks {
+  color: #b58863;
+}
+
+.cg-wrap coords.files {
+  color: #f0d9b5;
+}
+
+.cg-wrap .cg-square:nth-child(odd) coords.files {
+  color: #b58863;
+}
+
+/* Piece shadows for depth */
+.cg-wrap piece {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cg-wrap piece.dragging {
+  filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.6));
+  z-index: 1000;
+}
+
+/* Custom Scrollbar for Sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+/* Highlighting currently active move in history */
+.move-active {
+  background: #d4af37 !important;
+  color: #000 !important;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+}
+
+/* Best move arrow styling (if drawing) */
+.cg-wrap line {
+  stroke: rgba(212, 175, 55, 0.8) !important;
+  stroke-width: 0.12 !important;
+}

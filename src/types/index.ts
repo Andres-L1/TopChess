@@ -16,6 +16,9 @@ export interface Teacher {
     experienceYears: number;
     achievements: string[];
     isVerified?: boolean;
+    title?: string;
+    lichessUsername?: string;
+    lichessAccessToken?: string;
 }
 
 export interface TeacherAvailability {
@@ -29,6 +32,7 @@ export interface Request {
     status: 'pending' | 'approved' | 'rejected';
     timestamp: number;
     message?: string;
+    studentName?: string;
 }
 
 export interface Message {
@@ -49,7 +53,12 @@ export interface RoomData {
     orientation: 'white' | 'black';
     lastMove?: [string, string]; // Keeping string for now, will map to Key in Board
     history?: string[];
-    shapes?: any[]; // Chessground shapes are complex, 'any' is acceptable here for DTO or specific shape interface
+    fenHistory?: string[];
+    currentIndex?: number;
+    shapes?: any[];
+    chapters?: { name: string, pgn: string }[];
+    activeChapterIndex?: number;
+    comment?: string;
 }
 
 export interface WalletData {
@@ -93,6 +102,7 @@ export interface GameState {
     turn: 'w' | 'b';
     isGameOver: boolean;
     orientation?: 'white' | 'black';
+    currentIndex?: number;
 }
 
 export interface AppUser {

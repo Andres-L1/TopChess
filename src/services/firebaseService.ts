@@ -179,6 +179,10 @@ export const firebaseService = {
         await setDoc(doc(teachersRef, teacher.id), teacher);
     },
 
+    async updateTeacher(teacherId: string, data: Partial<Teacher>): Promise<void> {
+        await updateDoc(doc(teachersRef, teacherId), data);
+    },
+
     // --- REQUESTS ---
     async createRequest(request: Request): Promise<void> {
         await setDoc(doc(requestsRef, request.id), request);

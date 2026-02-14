@@ -6,12 +6,12 @@ import { useCallback } from 'react';
 // Here we use a few standard open-source sound effects commonly used in chess apps.
 
 const SOUNDS = {
-    move: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/move-self.mp3'),
-    capture: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/capture.mp3'),
-    check: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/move-check.mp3'),
-    castle: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/castle.mp3'),
-    promote: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/promote.mp3'),
-    gameEnd: new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_common/default/game-end.mp3'),
+    move: new Audio('https://lichess1.org/assets/sound/standard/Move.mp3'),
+    capture: new Audio('https://lichess1.org/assets/sound/standard/Capture.mp3'),
+    check: new Audio('https://lichess1.org/assets/sound/standard/Check.mp3'),
+    castle: new Audio('https://lichess1.org/assets/sound/standard/Move.mp3'),
+    promote: new Audio('https://lichess1.org/assets/sound/standard/Move.mp3'),
+    gameEnd: new Audio('https://lichess1.org/assets/sound/standard/GenericNotify.mp3'),
 };
 
 const useChessSound = () => {

@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
 import { Request, Teacher, Booking } from '../types/index';
+import { lichessService } from '../services/lichessService';
+import { generateCodeVerifier, generateCodeChallenge } from '../utils/pkce';
 
 interface DashboardStats {
     earnings: number;
@@ -38,7 +40,7 @@ const TeacherDashboard = () => {
 
                 // Fetch Availability, Requests and Bookings
                 const avail = await firebaseService.getTeacherAvailability(currentUserId);
-                const reqs = await firebaseService.getRequestsForTeacher(currentUserId);
+                const allReqs = await firebaseService.getRequestsForTeacher(currentUserId);
                 const bookings = await firebaseService.getBookingsForUser(currentUserId, 'teacher');
 
                 if (profile) {
@@ -49,11 +51,26 @@ const TeacherDashboard = () => {
                     });
                 }
 
-                setRequests(reqs);
+                // Filter pending requests and fetch student names
+                const pendingPromises = allReqs
+                    .filter((r: any) => r.status === 'pending')
+                    .map(async (r: any) => {
+                        const u = await firebaseService.getUser(r.studentId);
+                        return { ...r, studentName: u?.name || 'Usuario' };
+                    });
+                const pendingRequests = await Promise.all(pendingPromises);
+                setRequests(pendingRequests);
 
-                // Filter active students (approved requests)
-                const approvedPromises = reqs
-                    .filter((r: any) => r.status === 'approved')
+                // Filter active students (approved requests) and deduplicate by studentId
+                const approvedReqs = allReqs.filter((r: any) => r.status === 'approved');
+                const uniqueApprovedMap = new Map();
+                approvedReqs.forEach(r => {
+                    if (!uniqueApprovedMap.has(r.studentId)) {
+                        uniqueApprovedMap.set(r.studentId, r);
+                    }
+                });
+
+                const approvedPromises = Array.from(uniqueApprovedMap.values())
                     .map(async (r: any) => {
                         const u = await firebaseService.getUser(r.studentId);
                         return u ? { ...u, requestId: r.id } : null;
@@ -85,15 +102,46 @@ const TeacherDashboard = () => {
         }
     }, [currentUserId]);
 
-    const handleAcceptRequest = async (studentId: string) => {
-        const req = requests.find(r => r.studentId === studentId);
-        if (req) {
-            await firebaseService.updateRequestStatus(req.id, 'approved');
-            setRequests(prev => prev.filter(r => r.studentId !== studentId));
-            toast.success(`Solicitud de entrada aceptada`);
-            // Refresh teacher profile stats if needed
+    const handleAcceptRequest = async (requestId: string) => {
+        try {
+            await firebaseService.updateRequestStatus(requestId, 'approved');
+            setRequests(prev => prev.filter(r => r.id !== requestId));
+            toast.success(`Solicitud aceptada`);
+
+            // Re-fetch students and profile to update UI
+            const allReqs = await firebaseService.getRequestsForTeacher(currentUserId);
+            const approvedReqs = allReqs.filter((r: any) => r.status === 'approved');
+            const uniqueApprovedMap = new Map();
+            approvedReqs.forEach(r => {
+                if (!uniqueApprovedMap.has(r.studentId)) {
+                    uniqueApprovedMap.set(r.studentId, r);
+                }
+            });
+
+            const approvedPromises = Array.from(uniqueApprovedMap.values())
+                .map(async (r: any) => {
+                    const u = await firebaseService.getUser(r.studentId);
+                    return u ? { ...u, requestId: r.id } : null;
+                });
+            const approvedStudents = await Promise.all(approvedPromises);
+            setMyStudents(approvedStudents.filter(s => s !== null));
+
             const profile = await firebaseService.getTeacherById(currentUserId);
             setTeacherProfile(profile);
+        } catch (error) {
+            console.error("Error accepting request:", error);
+            toast.error("Error al procesar solicitud");
+        }
+    };
+
+    const handleRejectRequest = async (requestId: string) => {
+        try {
+            await firebaseService.updateRequestStatus(requestId, 'rejected');
+            setRequests(prev => prev.filter(r => r.id !== requestId));
+            toast.success(`Solicitud rechazada`);
+        } catch (error) {
+            console.error("Error rejecting request:", error);
+            toast.error("Error al rechazar solicitud");
         }
     };
 
@@ -229,6 +277,9 @@ const TeacherDashboard = () => {
                                         <div className="flex items-center gap-2 mb-2">
                                             <Trophy size={20} className="text-gold" />
                                             <span className="text-gold font-bold text-sm uppercase tracking-wider">Nivel {levelInfo.name}</span>
+                                            {teacherProfile?.title && (
+                                                <span className="ml-auto px-1.5 py-0.5 bg-gold text-black text-[8px] rounded font-black tracking-widest">{teacherProfile.title}</span>
+                                            )}
                                         </div>
                                         <div className="w-full bg-black/40 h-2 rounded-full mb-2 overflow-hidden relative">
                                             <div
@@ -278,20 +329,22 @@ const TeacherDashboard = () => {
                                             <div key={req.id} className="p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-3">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white flex-shrink-0">
-                                                        {req.studentId.substring(0, 2).toUpperCase()}
+                                                        {(req.studentName || 'U').substring(0, 1).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-bold text-white">ID Alumno: {req.studentId.substring(0, 8)}...</h4>
+                                                        <h4 className="font-bold text-white">{req.studentName || 'Alumno'}</h4>
                                                         <p className="text-xs text-text-muted">Interesado en tus clases</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2 w-full sm:w-auto justify-end">
                                                     <button
-                                                        onClick={() => handleAcceptRequest(req.studentId)}
+                                                        onClick={() => handleAcceptRequest(req.id)}
                                                         className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-all" title="Aceptar" aria-label="Aceptar">
                                                         <Check size={18} />
                                                     </button>
-                                                    <button className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Rechazar" aria-label="Rechazar">
+                                                    <button
+                                                        onClick={() => handleRejectRequest(req.id)}
+                                                        className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Rechazar" aria-label="Rechazar">
                                                         <X size={18} />
                                                     </button>
                                                 </div>
@@ -303,30 +356,106 @@ const TeacherDashboard = () => {
                         </div>
 
                         {/* Quick Classroom Link */}
-                        <div className="w-full lg:w-80 glass-panel rounded-2xl p-4 md:p-6 flex flex-col gap-4">
-                            <h2 className="text-lg md:text-xl font-bold text-white mb-2">{t('dashboard.quick_access')}</h2>
-                            <Link to={`/classroom/${currentUserId}`} className="group relative overflow-hidden rounded-xl aspect-video bg-black flex items-center justify-center border border-white/10 hover:border-gold/50 transition-all">
-                                <div className="absolute inset-0 bg-gradient-to-br from-dark-panel to-gold/20 opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
-                                <div className="relative z-10 flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.3)] group-hover:scale-110 transition-transform">
-                                        <Video size={24} />
-                                    </div>
-                                    <span className="font-bold text-white tracking-wide">{t('dashboard.enter_classroom')}</span>
-                                </div>
-                            </Link>
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
-                                <h4 className="font-bold text-sm text-gold">{t('dashboard.next_class')}</h4>
-                                {nextBooking ? (
-                                    <>
-                                        <p className="text-xs text-white">Clase el {nextBooking.date}</p>
-                                        <p className="text-[10px] text-text-muted">Hora: {nextBooking.time}</p>
-                                        <div className="h-1 w-full bg-black/50 rounded-full overflow-hidden mt-1">
-                                            <div className="h-full bg-green-500 w-full animate-pulse-slow"></div>
+                        <div className="w-full lg:w-80 flex flex-col gap-6">
+                            <div className="glass-panel rounded-2xl p-4 md:p-6 flex flex-col gap-4">
+                                <h2 className="text-lg md:text-xl font-bold text-white mb-2">{t('dashboard.quick_access')}</h2>
+                                <Link to={`/classroom/${currentUserId}`} className="group relative overflow-hidden rounded-xl aspect-video bg-black flex items-center justify-center border border-white/10 hover:border-gold/50 transition-all">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-dark-panel to-gold/20 opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
+                                    <div className="relative z-10 flex flex-col items-center gap-2">
+                                        <div className="w-12 h-12 rounded-full bg-gold/90 text-black flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.3)] group-hover:scale-110 transition-transform">
+                                            <Video size={24} />
                                         </div>
-                                    </>
-                                ) : (
-                                    <p className="text-xs text-text-muted italic">No tienes clases próximas agendadas.</p>
-                                )}
+                                        <span className="font-bold text-white tracking-wide">{t('dashboard.enter_classroom')}</span>
+                                    </div>
+                                </Link>
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                                    <h4 className="font-bold text-sm text-gold">{t('dashboard.next_class')}</h4>
+                                    {nextBooking ? (
+                                        <>
+                                            <p className="text-xs text-white">Clase el {nextBooking.date}</p>
+                                            <p className="text-[10px] text-text-muted">Hora: {nextBooking.time}</p>
+                                            <div className="h-1 w-full bg-black/50 rounded-full overflow-hidden mt-1">
+                                                <div className="h-full bg-green-500 w-full animate-pulse-slow"></div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p className="text-xs text-text-muted italic">No tienes clases próximas agendadas.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Lichess Integration */}
+                            <div className="glass-panel rounded-2xl p-4 md:p-6 flex flex-col gap-4 bg-gradient-to-br from-[#1b1a17] to-white/[0.05]">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                                        <img src="https://lichess.org/assets/images/favicon-32-white.png" alt="Lichess" className="w-5 h-5 opacity-80" />
+                                    </div>
+                                    <h2 className="text-lg font-bold text-white">Lichess Sync</h2>
+                                    {teacherProfile?.lichessAccessToken && (
+                                        <div className="ml-auto w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-white/50 leading-relaxed">
+                                    {teacherProfile?.lichessAccessToken
+                                        ? `Conectado como ${teacherProfile.lichessUsername}. Tus estudios privados ahora son visibles en el aula.`
+                                        : 'Conecta tu cuenta para importar estudios privados y públicos directamente en el Aula.'}
+                                </p>
+
+                                <div className="pt-2">
+                                    {!teacherProfile?.lichessAccessToken ? (
+                                        <button
+                                            onClick={async () => {
+                                                const verifier = await generateCodeVerifier();
+                                                const challenge = await generateCodeChallenge(verifier);
+
+                                                // Save verifier in session storage for the callback
+                                                sessionStorage.setItem('lichess_code_verifier', verifier);
+
+                                                const params = new URLSearchParams({
+                                                    response_type: 'code',
+                                                    client_id: lichessService.getLICHESS_CLIENT_ID(),
+                                                    redirect_uri: lichessService.getREDIRECT_URI(),
+                                                    scope: 'study:read',
+                                                    code_challenge_method: 'S256',
+                                                    code_challenge: challenge,
+                                                    state: Math.random().toString(36).substring(2)
+                                                });
+
+                                                window.location.href = `https://lichess.org/oauth?${params.toString()}`;
+                                            }}
+                                            className="w-full py-3 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gold transition-all hover:scale-[1.02] shadow-xl shadow-white/5"
+                                        >
+                                            Conectar con Lichess
+                                        </button>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <div className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-2 flex items-center gap-3">
+                                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-bold text-[10px] text-white">
+                                                    {teacherProfile.lichessUsername?.substring(0, 1).toUpperCase()}
+                                                </div>
+                                                <span className="text-xs text-white/90 font-bold">{teacherProfile.lichessUsername}</span>
+                                            </div>
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await firebaseService.updateTeacher(currentUserId, {
+                                                            lichessAccessToken: undefined,
+                                                            lichessUsername: undefined
+                                                        });
+                                                        setTeacherProfile(prev => prev ? { ...prev, lichessAccessToken: undefined, lichessUsername: undefined } : null);
+                                                        toast.success("Desconectado de Lichess");
+                                                    } catch (e) {
+                                                        toast.error("Error al desconectar");
+                                                    }
+                                                }}
+                                                className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-500 transition-all"
+                                                title="Desconectar"
+                                            >
+                                                <LogOut size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
