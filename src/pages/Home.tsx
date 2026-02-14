@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Sparkles, Users, Award, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -36,11 +36,37 @@ const itemVariants = {
 
 const Home = () => {
     const navigate = useNavigate();
-    const { currentUserId } = useAuth();
+    const { currentUserId, isAuthenticated, loginWithGoogle } = useAuth();
     const { t } = useTranslation();
     const [showWizard, setShowWizard] = useState(false);
     const [matchResult, setMatchResult] = useState<Teacher | null>(null);
     const [isMatching, setIsMatching] = useState(false);
+    const [realStats, setRealStats] = useState({ users: 0, teachers: 0, requests: 0 });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const stats = await firebaseService.getPlatformStats();
+                setRealStats({
+                    users: stats.users,
+                    teachers: stats.teachers,
+                    requests: stats.requests
+                });
+            } catch (error) {
+                console.error("Error fetching stats:", error);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const handleFindTeacher = () => {
+        if (!isAuthenticated) {
+            toast.error(t('login_to_find'));
+            loginWithGoogle();
+            return;
+        }
+        setShowWizard(true);
+    };
 
     const handleWizardComplete = async (answers: any) => {
         setIsMatching(true);
@@ -60,10 +86,10 @@ const Home = () => {
             }
 
             setMatchResult(matched);
-            toast.success("¡Hemos encontrado tu mentor ideal!");
+            toast.success("¡Hemos encontrado tu profesor ideal!");
         } catch (error) {
             console.error("Matching error:", error);
-            toast.error("Error al buscar mentores");
+            toast.error("Error al buscar profesores");
         } finally {
             setIsMatching(false);
         }
@@ -91,18 +117,30 @@ const Home = () => {
             navigate(`/chat/${matchResult.id}`);
         } catch (error) {
             console.error("Error sending request:", error);
-            toast.error("Error al conectar con el mentor");
+            toast.error("Error al conectar con el profesor");
         }
     };
 
-    const stats = [
-        { icon: <Users size={20} />, value: "2K+", label: t('stats.students') },
-        { icon: <Award size={20} />, value: "15+", label: t('stats.grandmasters') },
-        { icon: <Zap size={20} />, value: "24h", label: t('stats.response_time') }
+    const statsDisplaied = [
+        {
+            icon: <Users size={20} />,
+            value: realStats.users > 0 ? `${realStats.users}+` : "150+",
+            label: t('stats.students')
+        },
+        {
+            icon: <Award size={20} />,
+            value: realStats.teachers > 0 ? `${realStats.teachers}+` : "15+",
+            label: t('stats.grandmasters')
+        },
+        {
+            icon: <Zap size={20} />,
+            value: "24h",
+            label: t('stats.response_time')
+        }
     ];
 
     return (
-        <div className="relative min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-6 overflow-hidden">
+        <div className="relative min-h-[calc(100vh-160px)] flex flex-col items-center justify-center p-6 overflow-hidden mt-10">
 
             {/* Background Decor */}
             <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none animate-float" style={{ animationDelay: '0s' }}></div>
@@ -133,22 +171,22 @@ const Home = () => {
                     {/* Main Action */}
                     <motion.div variants={itemVariants} className="flex flex-col items-center gap-4">
                         <PremiumButton
-                            onClick={() => setShowWizard(true)}
+                            onClick={handleFindTeacher}
                             size="lg"
                             icon={Play}
                         >
-                            {t('find_mentor')}
+                            {!isAuthenticated ? t('login_to_find') : t('find_teacher')}
                         </PremiumButton>
                         <p className="text-sm text-text-muted opacity-60">{t('no_commitment')}</p>
                     </motion.div>
 
                     {/* Social Proof / Stats */}
-                    <motion.div variants={itemVariants} className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8 border-t border-white/5">
-                        {stats.map((stat, i) => (
+                    <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto pt-8 border-t border-white/5">
+                        {statsDisplaied.map((stat, i) => (
                             <div key={i} className="flex flex-col items-center space-y-1 group">
                                 <div className="p-3 rounded-full bg-white/5 text-gold mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
-                                <span className="text-2xl font-bold text-white">{stat.value}</span>
-                                <span className="text-xs text-text-muted uppercase tracking-wider">{stat.label}</span>
+                                <span className="text-2xl font-bold text-white transition-all group-hover:text-gold">{stat.value}</span>
+                                <span className="text-[10px] text-text-muted uppercase tracking-widest font-medium">{stat.label}</span>
                             </div>
                         ))}
                     </motion.div>
@@ -162,7 +200,7 @@ const Home = () => {
                         </div>
 
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">¡Match Encontrado!</h2>
+                            <h2 className="text-2xl font-bold text-white mb-2">¡Profesor Encontrado!</h2>
                             <p className="text-text-muted">Basado en tus objetivos, te recomendamos a:</p>
                         </div>
 
@@ -172,8 +210,8 @@ const Home = () => {
                                 <h3 className="text-lg font-bold text-white">{matchResult.name}</h3>
                                 <p className="text-gold font-mono text-sm">ELO {matchResult.elo}</p>
                                 <div className="flex gap-1 mt-1">
-                                    {matchResult.tags?.slice(0, 2).map((t: string) => (
-                                        <span key={t} className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-text-secondary">{t}</span>
+                                    {matchResult.tags?.slice(0, 2).map((tag: string) => (
+                                        <span key={tag} className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-text-secondary">{tag}</span>
                                     ))}
                                 </div>
                             </div>
@@ -208,7 +246,7 @@ const Home = () => {
                         {isMatching ? (
                             <div className="h-[500px] flex flex-col items-center justify-center p-12 text-center space-y-6">
                                 <div className="w-20 h-20 border-4 border-gold/10 border-t-gold rounded-full animate-spin"></div>
-                                <h3 className="text-xl font-bold text-white">Buscando tu mentor ideal...</h3>
+                                <h3 className="text-xl font-bold text-white">Buscando tu profesor ideal...</h3>
                                 <p className="text-text-muted italic">Analizando perfiles y estilos de enseñanza</p>
                             </div>
                         ) : (

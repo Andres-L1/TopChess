@@ -1,6 +1,7 @@
 {
     "welcome": "Bienvenido a TopChess",
-    "find_mentor": "ENCONTRAR MENTOR",
+    "find_teacher": "ENCONTRAR PROFESOR",
+    "login_to_find": "INICIA SESIÓN PARA BUSCAR",
     "premium_platform": "La plataforma #1 de Ajedrez Premium",
     "hero_title": "Domina el Tablero",
     "hero_subtitle": "Conecta con Grandes Maestros de élite. Clases personalizadas, análisis profundos y una experiencia visual de otro nivel.",
@@ -39,7 +40,7 @@
         "status_online": "ESTADO: ONLINE",
         "stats": {
             "users": "Usuarios",
-            "mentors": "Mentores",
+            "teachers": "Profesores",
             "requests": "Solicitudes",
             "revenue": "Ingresos Plataforma"
         },
@@ -50,7 +51,7 @@
         },
         "titles": {
             "users": "Directorio de Usuarios",
-            "teachers": "Gestión de Mentores",
+            "teachers": "Gestión de Profesores",
             "payments": "Registro de Pagos"
         },
         "filter": "Filtrar registros...",
@@ -60,7 +61,7 @@
             "wallet": "Cartera",
             "status": "Estado",
             "maintenance": "Mantenimiento",
-            "mentor": "Mentor",
+            "teacher": "Profesor",
             "region": "Región",
             "price_com": "Precio/Com",
             "classes_earnings": "Clases/Ganancias",

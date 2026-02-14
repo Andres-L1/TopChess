@@ -120,7 +120,7 @@ const AdminDashboard = () => {
                     />
                     <StatCard
                         icon={GraduationCap}
-                        label={t('admin.stats.mentors')}
+                        label={t('admin.stats.teachers')}
                         value={stats.teachers}
                         color="gold"
                     />
@@ -231,7 +231,7 @@ const AdminDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-[#262421] text-[#8b8982] text-[10px] uppercase font-black tracking-widest">
                                     <tr>
-                                        <th className="p-4">{t('admin.table.mentor')}</th>
+                                        <th className="p-4">{t('admin.table.teacher')}</th>
                                         <th className="p-4">{t('admin.table.region')}</th>
                                         <th className="p-4">{t('admin.table.price_com')}</th>
                                         <th className="p-4">{t('admin.table.classes_earnings')}</th>

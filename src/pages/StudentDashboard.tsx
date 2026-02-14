@@ -146,7 +146,7 @@ const StudentDashboard: React.FC = () => {
                     {/* Active Mentors */}
                     <section>
                         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <Trophy className="text-gold" size={20} /> Mis Mentores
+                            <Trophy className="text-gold" size={20} /> Mis Profesores
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -162,7 +162,7 @@ const StudentDashboard: React.FC = () => {
                                 <>
                                     {myTeachers.length === 0 && (
                                         <div className="col-span-2 p-8 rounded-2xl border border-dashed border-white/10 text-center text-text-muted">
-                                            <p>Aún no tienes mentores activos.</p>
+                                            <p>Aún no tienes profesores activos.</p>
                                             <Link to="/" className="text-gold hover:underline mt-2 inline-block">Buscar Profesor</Link>
                                         </div>
                                     )}

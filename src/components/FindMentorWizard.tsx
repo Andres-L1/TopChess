@@ -138,7 +138,7 @@ const FindMentorWizard = ({ onComplete, onCancel }: FindMentorWizardProps) => {
                             }
                         `}
                     >
-                        {currentStep === STEPS.length - 1 ? 'Encontrar Mentor' : 'Siguiente'}
+                        {currentStep === STEPS.length - 1 ? 'Encontrar Profesor' : 'Siguiente'}
                     </button>
                 </div>
             </div>

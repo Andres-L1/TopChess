@@ -73,7 +73,7 @@ const Onboarding = () => {
                     <div>
                         <h3 className="text-xl font-bold text-white mb-2">Quiero Aprender</h3>
                         <p className="text-[#8b8982] text-sm">
-                            Busco mentores, quiero tomar clases y mejorar mi nivel de ajedrez.
+                            Busco profesores, quiero tomar clases y mejorar mi nivel de ajedrez.
                         </p>
                     </div>
                     <div className="mt-auto w-full flex items-center justify-between text-blue-400 font-bold text-sm">

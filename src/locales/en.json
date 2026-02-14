@@ -1,6 +1,7 @@
 {
     "welcome": "Welcome to TopChess",
-    "find_mentor": "FIND MENTOR",
+    "find_teacher": "FIND TEACHER",
+    "login_to_find": "LOGIN TO FIND",
     "premium_platform": "The #1 Premium Chess Platform",
     "hero_title": "Master the Board",
     "hero_subtitle": "Connect with elite Grandmasters. Personalized lessons, deep analysis, and a next-level visual experience.",
@@ -39,7 +40,7 @@
         "status_online": "STATUS: ONLINE",
         "stats": {
             "users": "Users",
-            "mentors": "Mentors",
+            "teachers": "Teachers",
             "requests": "Requests",
             "revenue": "Platform Revenue"
         },
@@ -50,7 +51,7 @@
         },
         "titles": {
             "users": "User Directory",
-            "teachers": "Mentor Management",
+            "teachers": "Teacher Management",
             "payments": "Payment Logs"
         },
         "filter": "Filter records...",
@@ -60,7 +61,7 @@
             "wallet": "Wallet",
             "status": "Status",
             "maintenance": "Maintenance",
-            "mentor": "Mentor",
+            "teacher": "Teacher",
             "region": "Region",
             "price_com": "Price/Com",
             "classes_earnings": "Classes/Earnings",
