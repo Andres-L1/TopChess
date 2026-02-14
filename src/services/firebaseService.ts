@@ -312,24 +312,39 @@ export const firebaseService = {
     },
 
     async getPlatformStats() {
-        const usersSnap = await getDocs(usersRef);
-        const teachersSnap = await getDocs(teachersRef);
-        const requestsSnap = await getDocs(requestsRef);
-        const transactionsSnap = await getDocs(transactionsRef);
-
-        let totalRevenue = 0;
-        transactionsSnap.forEach(doc => {
-            const data = doc.data() as Transaction;
-            if (data.description.includes('Comisión')) {
-                totalRevenue += data.amount;
+        // Intentamos obtener datos reales, pero fallamos silenciosamente a 0
+        // para que la UI use sus placeholders si no hay permisos (ej. usuarios sin loguear)
+        const getSafeCount = async (snapPromise: Promise<any>) => {
+            try {
+                const snap = await snapPromise;
+                return snap.size;
+            } catch (e) {
+                return 0;
             }
-        });
+        };
+
+        const usersCount = await getSafeCount(getDocs(usersRef));
+        const teachersCount = await getSafeCount(getDocs(teachersRef));
+        const requestsCount = await getSafeCount(getDocs(requestsRef));
+
+        let revenue = 0;
+        try {
+            const transactionsSnap = await getDocs(transactionsRef);
+            transactionsSnap.forEach(doc => {
+                const data = doc.data() as Transaction;
+                if (data.description.includes('Comisión')) {
+                    revenue += data.amount;
+                }
+            });
+        } catch (e) {
+            revenue = 0;
+        }
 
         return {
-            users: usersSnap.size,
-            teachers: teachersSnap.size,
-            requests: requestsSnap.size,
-            revenue: totalRevenue
+            users: usersCount,
+            teachers: teachersCount,
+            requests: requestsCount,
+            revenue: revenue
         };
     }
 };
