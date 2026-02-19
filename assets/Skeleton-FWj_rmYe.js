@@ -1,1 +1,0 @@
-import{j as o}from"./index-CSGgDZS7.js";const d=({className:t="",variant:s="text",width:r,height:a})=>{const l="animate-pulse bg-white/5 rounded-md";let e="";return s==="circular"&&(e="rounded-full"),s==="text"&&(e="h-4 w-3/4 rounded"),o.jsx("div",{className:`${l} ${e} ${t}`,style:{width:r,height:a}})};export{d as S};
