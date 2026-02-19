@@ -186,13 +186,27 @@ export const useClassroom = (teacherId: string | undefined) => {
         }
     }, [userRole, teacherId, teacherProfile?.lichessAccessToken]);
 
+    const sanitizePgn = (pgn: string): string => {
+        // Remove standalone comment blocks that appear before the first move notation
+        // Lichess exports often have {[%clk ...]} before the first move
+        let sanitized = pgn.trim();
+        // Strip leading comments (text in {} before any move numbers)
+        sanitized = sanitized.replace(/^\s*\{[^}]*\}\s*/g, '');
+        // Strip clock annotations embedded in moves: e5 { [%clk 0:04:55] }
+        sanitized = sanitized.replace(/\{[^}]*\}/g, '');
+        // Strip result markers at the end if followed by nothing
+        sanitized = sanitized.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
+        return sanitized;
+    };
+
     const injectPgnFen = useCallback(async (val: string) => {
         if (!val || !teacherId) return;
         const loadingToast = toast.loading("Procesando...");
         try {
             const game = new ChessJS();
             try {
-                (game as any).loadPgn(val);
+                const cleaned = sanitizePgn(val);
+                (game as any).loadPgn(cleaned);
                 await firebaseService.updateRoom(teacherId, {
                     fen: game.fen(),
                     history: game.history(),
@@ -202,6 +216,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 });
                 toast.success("Cargado correctamente", { id: loadingToast });
             } catch (e) {
+                // Fallback: try as FEN
                 await firebaseService.updateRoom(teacherId, {
                     fen: val,
                     history: [],

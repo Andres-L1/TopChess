@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
 import Navbar from './components/Navbar';
 import { AnimatePresence, motion } from 'framer-motion';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
 
 
@@ -43,6 +43,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
+    // Handle redirect result first (Google sign-in redirect flow)
+    getRedirectResult(auth).catch(() => {
+      // Ignore redirect errors silently (e.g. no pending redirect)
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
@@ -55,7 +60,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } else {
             // New User -> Don't create yet, let them choose role in Onboarding
             setUserRole(null);
-            // We can't navigate here easily as we are in provider, but the routes will handle it
           }
         } catch (error) {
           console.error("Error syncing user:", error);
@@ -72,7 +76,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Login failed", error);
       toast.error("Error al iniciar sesión");

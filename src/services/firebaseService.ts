@@ -9,8 +9,7 @@ import {
     query,
     where,
     addDoc,
-    onSnapshot,
-    orderBy
+    onSnapshot
 } from 'firebase/firestore';
 import {
     Teacher,
@@ -301,17 +300,19 @@ export const firebaseService = {
     // --- CHAT & MESSAGING ---
     subscribeToChat(userId1: string, userId2: string, callback: (messages: Message[]) => void): () => void {
         const chatId = [userId1, userId2].sort().join('_');
+        // No orderBy to avoid requiring a composite index — sort client-side instead
         const q = query(
             messagesRef,
-            where("chatId", "==", chatId),
-            orderBy("timestamp", "asc")
+            where("chatId", "==", chatId)
         );
 
         return onSnapshot(q, (snapshot) => {
-            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+            const messages = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Message))
+                .sort((a, b) => a.timestamp - b.timestamp);
             callback(messages);
         }, (error) => {
-            console.error("Chat subscription error:", error);
+            console.warn("Chat subscription error:", error);
         });
     },
 
@@ -456,8 +457,8 @@ export const firebaseService = {
                 requests: requestsSnap.size,
                 revenue
             };
-        } catch (error) {
-            console.error('Error in getPlatformStats:', error);
+        } catch {
+            // Expected for non-admin users — return safe defaults silently
             return { users: 0, teachers: 0, requests: 0, revenue: 0 };
         }
     },
