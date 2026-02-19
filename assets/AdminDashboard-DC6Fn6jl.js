@@ -1,4 +1,4 @@
-import{c as b,a as Q,u as Y,r as d,f as w,j as e,S as U,z as v}from"./index-C5zu638Z.js";import{U as I}from"./users-DFSCEz06.js";import{G as V}from"./graduation-cap-Bs0k5wh8.js";import{D as ee}from"./dollar-sign-C2smdeAZ.js";import{C as te}from"./circle-check-big-CLWrN4xD.js";import{a as se,A as ae}from"./arrow-up-right-CfLCjv1A.js";import{C as re}from"./chevron-right-CaYjGwZ8.js";import{A as ne}from"./activity-B7VgOKxf.js";import{C as le}from"./check-BoSilshj.js";import{X as ie}from"./x-BNI3Xqt-.js";/**
+import{c as b,a as Q,u as Y,r as d,f as w,j as e,S as U,z as v}from"./index-s4AU-gz7.js";import{U as I}from"./users-BDwZSui8.js";import{G as V}from"./graduation-cap-BdlS4u-Y.js";import{D as ee}from"./dollar-sign-VJkNuiEp.js";import{C as te}from"./circle-check-big-AdnK98V2.js";import{a as se,A as ae}from"./arrow-up-right-D8GpkmqF.js";import{C as re}from"./chevron-right-CIDP-Eyc.js";import{A as ne}from"./activity-Ciaux3o2.js";import{C as le}from"./check-3znPC3Po.js";import{X as ie}from"./x-Dhap231G.js";/**
  * @license lucide-react v0.378.0 - ISC
  *
  * This source code is licensed under the ISC license.
