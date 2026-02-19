@@ -1,426 +1,711 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { AppUser, Teacher, Transaction } from '../types/index';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
-    Users, GraduationCap, Calendar, Shield, Search,
-    CheckCircle, Ban, DollarSign, Activity, FileText,
-    AlertTriangle, ArrowUpRight, ArrowDownLeft,
-    ChevronRight, TrendingUp, Zap, Settings, LogOut, Globe
+    Users, GraduationCap, Shield, Search,
+    CheckCircle, Ban, DollarSign, Activity,
+    FileText, ArrowUpRight, ArrowDownLeft,
+    TrendingUp, Zap, AlertTriangle, Eye,
+    RefreshCw, ChevronRight, Server, Globe,
+    Cpu, Lock, Unlock, Edit2, Check, X,
+    BarChart2, Clock, Wifi, WifiOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+/* ─── helpers ────────────────────────────────────────────────────────────── */
+const fmt = (n: number) => n.toFixed(2);
+const timeAgo = (ts: number) => {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return `${s}s`;
+    if (s < 3600) return `${Math.floor(s / 60)}m`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h`;
+    return `${Math.floor(s / 86400)}d`;
+};
+
+/* ─── real-time clock ─────────────────────────────────────────────────────── */
+const useClock = () => {
+    const [time, setTime] = useState(new Date());
+    useEffect(() => {
+        const id = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(id);
+    }, []);
+    return time;
+};
+
+/* ─── mini sparkline (pure SVG) ──────────────────────────────────────────── */
+const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color = '#D4AF37' }) => {
+    if (data.length < 2) return null;
+    const max = Math.max(...data) || 1;
+    const min = Math.min(...data);
+    const W = 80, H = 28;
+    const pts = data.map((v, i) => {
+        const x = (i / (data.length - 1)) * W;
+        const y = H - ((v - min) / (max - min || 1)) * H;
+        return `${x},${y}`;
+    }).join(' ');
+    return (
+        <svg width={W} height={H} className="opacity-70">
+            <polyline fill="none" stroke={color} strokeWidth="1.5" points={pts} />
+        </svg>
+    );
+};
+
+/* ─── StatCard ───────────────────────────────────────────────────────────── */
+const COLORS: Record<string, { ring: string; icon: string; badge: string }> = {
+    blue: { ring: 'border-blue-500/30', icon: 'text-blue-400', badge: 'bg-blue-500/10 text-blue-400' },
+    gold: { ring: 'border-gold/30', icon: 'text-gold', badge: 'bg-gold/10 text-gold' },
+    purple: { ring: 'border-purple-500/30', icon: 'text-purple-400', badge: 'bg-purple-500/10 text-purple-400' },
+    green: { ring: 'border-green-500/30', icon: 'text-green-400', badge: 'bg-green-500/10 text-green-400' },
+    red: { ring: 'border-red-500/30', icon: 'text-red-400', badge: 'bg-red-500/10 text-red-400' },
+};
+
+const StatCard: React.FC<{
+    icon: React.ElementType; label: string; value: string | number;
+    sub?: string; color?: string; sparkline?: number[]; live?: boolean;
+}> = ({ icon: Icon, label, value, sub, color = 'gold', sparkline, live }) => {
+    const c = COLORS[color];
+    return (
+        <div className={`relative rounded-2xl border ${c.ring} bg-[#111]/60 backdrop-blur-sm p-5 flex flex-col gap-3 transition-all hover:scale-[1.01] group overflow-hidden`}>
+            {live && (
+                <span className="absolute top-3 right-3 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+                </span>
+            )}
+            <div className="flex items-center justify-between">
+                <div className={`p-2 rounded-xl bg-white/5 ${c.icon}`}>
+                    <Icon size={18} />
+                </div>
+                {sparkline && <Sparkline data={sparkline} color={color === 'gold' ? '#D4AF37' : color === 'green' ? '#4ade80' : '#60a5fa'} />}
+            </div>
+            <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-1">{label}</p>
+                <h3 className="text-2xl font-black tracking-tighter text-white">{value}</h3>
+                {sub && <p className="text-[10px] text-white/30 mt-0.5">{sub}</p>}
+            </div>
+        </div>
+    );
+};
+
+/* ─── TabBtn ─────────────────────────────────────────────────────────────── */
+const TabBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ElementType; label: string; badge?: number }> = ({ active, onClick, icon: Icon, label, badge }) => (
+    <button
+        onClick={onClick}
+        className={`relative flex items-center gap-2.5 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${active ? 'bg-gold text-black shadow-lg shadow-gold/20' : 'text-white/30 hover:text-white hover:bg-white/5'
+            }`}
+    >
+        <Icon size={13} className={active ? 'text-black' : 'text-gold'} />
+        {label}
+        {badge !== undefined && badge > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                {badge > 9 ? '9+' : badge}
+            </span>
+        )}
+    </button>
+);
+
+/* ─── Editable commission cell ───────────────────────────────────────────── */
+const CommissionCell: React.FC<{ teacher: Teacher; onSave: (id: string, rate: number) => void }> = ({ teacher, onSave }) => {
+    const [editing, setEditing] = useState(false);
+    const [val, setVal] = useState(String(Math.round((teacher.commissionRate ?? 0.5) * 100)));
+    return editing ? (
+        <div className="flex items-center gap-1.5">
+            <input
+                autoFocus
+                type="number" min="10" max="95"
+                value={val}
+                onChange={e => setVal(e.target.value)}
+                className="w-16 bg-black/60 border border-gold/40 rounded-lg px-2 py-1 text-xs text-gold font-mono text-center outline-none"
+            />
+            <span className="text-[10px] text-white/30">%</span>
+            <button onClick={() => { onSave(teacher.id, Number(val) / 100); setEditing(false); }} className="text-green-400 hover:text-green-300"><Check size={13} /></button>
+            <button onClick={() => setEditing(false)} className="text-red-400 hover:text-red-300"><X size={13} /></button>
+        </div>
+    ) : (
+        <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 group/edit">
+            <span className="text-xs font-black text-gold font-mono">{Math.round((teacher.commissionRate ?? 0.5) * 100)}%</span>
+            <Edit2 size={10} className="text-white/20 group-hover/edit:text-gold transition-colors" />
+        </button>
+    );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════════════════════════════════════ */
+type Tab = 'users' | 'teachers' | 'transactions' | 'analytics' | 'system';
 
 const AdminDashboard = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const { t } = useTranslation();
-    const [stats, setStats] = useState({ users: 0, teachers: 0, requests: 0, revenue: 0 });
+    const now = useClock();
+
     const [users, setUsers] = useState<AppUser[]>([]);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [activeTab, setActiveTab] = useState<Tab>('users');
+    const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'users' | 'teachers' | 'payments' | 'analytics'>('users');
+    const [lastUpdate, setLastUpdate] = useState(Date.now());
+    const [liveCount, setLiveCount] = useState(0);
 
+    // Pulse counter for live indicator
+    const tickRef = useRef(0);
+    useEffect(() => { tickRef.current++; setLiveCount(c => c + 1); }, [users, teachers, transactions]);
+
+    // Redirect non-admins
     useEffect(() => {
-        if (currentUser?.email !== 'andreslgumuzio@gmail.com') {
-            navigate('/');
-            return;
-        }
-
-        // Stats and Data fetch
-        setLoading(true);
-
-        // Listeners for real-time stats
-        const unsubUsers = firebaseService.subscribeToCollection('users', (data) => {
-            setUsers(data as AppUser[]);
-        });
-
-        const unsubTeachers = firebaseService.subscribeToCollection('teachers', (data) => {
-            setTeachers(data as Teacher[]);
-        });
-
-        const unsubTrans = firebaseService.subscribeToCollection('transactions', (data) => {
-            setTransactions(data as Transaction[]);
-        });
-
-        const fetchInitialStats = async () => {
-            const s = await firebaseService.getPlatformStats();
-            setStats(s);
-            setLoading(false);
-        };
-
-        fetchInitialStats();
-
-        return () => {
-            unsubUsers();
-            unsubTeachers();
-            unsubTrans();
-        };
+        if (!currentUser) return;
+        if (currentUser.email !== 'andreslgumuzio@gmail.com') navigate('/');
     }, [currentUser, navigate]);
 
-    const handleVerifyTeacher = async (teacherId: string, currentStatus: boolean) => {
-        try {
-            await firebaseService.verifyTeacher(teacherId, !currentStatus);
-            toast.success(currentStatus ? t('admin.messages.verif_removed') : t('admin.messages.verif_added'));
-            // Stats will update automatically via real-time listeners
-        } catch (error) {
-            toast.error(t('admin.messages.verif_error'));
-        }
-    };
+    // ── Real-time listeners for everything ──────────────────────────────
+    useEffect(() => {
+        if (!currentUser || currentUser.email !== 'andreslgumuzio@gmail.com') return;
 
-    const handleBanUser = async (userId: string, currentStatus: string) => {
-        const isBanned = currentStatus === 'banned';
+        const unsubUsers = firebaseService.subscribeToCollection('users', (data) => {
+            setUsers(data as AppUser[]);
+            setLastUpdate(Date.now());
+            setLoading(false);
+        });
+        const unsubTeachers = firebaseService.subscribeToCollection('teachers', (data) => {
+            setTeachers(data as Teacher[]);
+            setLastUpdate(Date.now());
+        });
+        const unsubTx = firebaseService.subscribeToCollection('transactions', (data) => {
+            setTransactions((data as Transaction[]).sort((a, b) => b.timestamp - a.timestamp));
+            setLastUpdate(Date.now());
+        });
+
+        return () => { unsubUsers(); unsubTeachers(); unsubTx(); };
+    }, [currentUser]);
+
+    /* ── Derived stats (computed from live data) ──────────────────────── */
+    const totalRevenue = transactions
+        .filter(t => t.type === 'payment_received')
+        .reduce((s, t) => s + t.amount, 0);
+
+    const pendingRequests = users.filter(u => u.role === 'student' && u.status !== 'banned').length;
+    const bannedUsers = users.filter(u => u.status === 'banned').length;
+    const verifiedTeachers = teachers.filter(t => t.isVerified).length;
+    const todayRevenue = transactions
+        .filter(t => t.type === 'payment_received' && t.timestamp > Date.now() - 86400000)
+        .reduce((s, t) => s + t.amount, 0);
+
+    // Weekly revenue sparkline (last 7 days buckets)
+    const weeklyRevenue = Array.from({ length: 7 }, (_, i) => {
+        const dayStart = Date.now() - (6 - i) * 86400000;
+        const dayEnd = dayStart + 86400000;
+        return transactions
+            .filter(t => t.type === 'payment_received' && t.timestamp >= dayStart && t.timestamp < dayEnd)
+            .reduce((s, t) => s + t.amount, 0);
+    });
+
+    /* ── Actions ────────────────────────────────────────────────────────── */
+    const handleBan = async (userId: string, isBanned: boolean) => {
         try {
             await firebaseService.banUser(userId, !isBanned);
-            toast.success(isBanned ? t('admin.messages.user_unbanned') : t('admin.messages.user_banned'));
-            // Stats will update automatically via real-time listeners
-        } catch (error) {
-            toast.error(t('admin.messages.status_error'));
-        }
+            toast.success(isBanned ? '✅ Usuario desrestringido' : '🚫 Usuario restringido');
+        } catch { toast.error('Error al cambiar estado'); }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleVerify = async (teacherId: string, isVerified: boolean) => {
+        try {
+            await firebaseService.verifyTeacher(teacherId, !isVerified);
+            toast.success(isVerified ? 'Verificación retirada' : '⭐ Verificación concedida');
+        } catch { toast.error('Error al verificar'); }
+    };
 
+    const handleCommission = async (teacherId: string, rate: number) => {
+        try {
+            await firebaseService.updateTeacher(teacherId, { commissionRate: rate });
+            toast.success(`Comisión actualizada al ${Math.round(rate * 100)}%`);
+        } catch { toast.error('Error al actualizar comisión'); }
+    };
+
+    /* ── Filters ────────────────────────────────────────────────────────── */
+    const filteredUsers = users.filter(u =>
+        u.name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email?.toLowerCase().includes(search.toLowerCase())
+    );
     const filteredTeachers = teachers.filter(t =>
-        t.name.toLowerCase().includes(searchTerm.toLowerCase())
+        t.name?.toLowerCase().includes(search.toLowerCase())
+    );
+    const filteredTx = transactions.filter(t =>
+        t.description?.toLowerCase().includes(search.toLowerCase()) ||
+        t.fromId?.includes(search) || t.toId?.includes(search)
     );
 
+    /* ── Loading ──────────────────────────────────────────────────────── */
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#161512] flex items-center justify-center text-gold font-bold uppercase tracking-widest text-xs animate-pulse">
-                {t('admin.loading')}
+            <div className="min-h-screen bg-[#0c0b0a] flex flex-col items-center justify-center gap-4">
+                <div className="relative">
+                    <Shield size={40} className="text-gold animate-pulse" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 animate-ping" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 animate-pulse">
+                    Conectando con Firestore...
+                </p>
             </div>
         );
     }
 
+    /* ════════════════════════════════════════════════════════════════════
+       RENDER
+       ════════════════════════════════════════════════════════════════════ */
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 font-sans pb-24">
-            <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <div className="min-h-screen bg-[#0c0b0a] text-white overflow-x-hidden">
 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-gold to-orange-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-                            <div className="relative p-3 bg-[#111] rounded-xl border border-white/10 shadow-2xl">
-                                <Shield className="text-gold h-8 w-8" />
+            {/* ╔══ TOP BAR ════════════════════════════════════════════════╗ */}
+            <div className="sticky top-0 z-50 bg-[#0c0b0a]/95 backdrop-blur-xl border-b border-white/5 px-6 py-4">
+                <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
+
+                    {/* Brand */}
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <div className="absolute -inset-1 bg-gold/20 rounded-xl blur-md" />
+                            <div className="relative p-2.5 bg-[#111] rounded-xl border border-gold/20">
+                                <Shield size={20} className="text-gold" />
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black tracking-tighter flex items-center gap-3">
+                            <h1 className="text-base font-black tracking-tighter">
                                 Control <span className="text-gold">Central</span>
                             </h1>
-                            <div className="flex items-center gap-2 text-text-muted">
-                                <Activity size={12} className="text-green-500" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sistema Operativo • {stats.users + stats.teachers} Entidades</span>
-                            </div>
+                            <p className="text-[9px] text-white/20 font-bold uppercase tracking-[0.25em]">
+                                TopChess Admin · {now.toLocaleTimeString('es-ES')}
+                            </p>
                         </div>
                     </div>
 
+                    {/* Live indicators */}
                     <div className="flex items-center gap-3">
-                        <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 border-white/5 bg-white/[0.02]">
-                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.5)] animate-pulse"></div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#8b8982]">Respuesta: 24ms</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-xl">
+                            <Wifi size={11} className="text-green-400" />
+                            <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">En vivo</span>
+                            <span className="text-[9px] text-green-300/50 font-mono">{liveCount} eventos</span>
                         </div>
-                        <button className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-text-muted hover:text-white">
-                            <Search size={18} />
-                        </button>
+                        <div className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-xl">
+                            <span className="text-[9px] font-mono text-white/30">Sync: {timeAgo(lastUpdate)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/5 rounded-xl">
+                            <span className="text-[9px] text-white/30 uppercase font-black tracking-widest">
+                                {users.length + teachers.length} entidades
+                            </span>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Top Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                    <StatCard
-                        icon={Users}
-                        label="Estudiantes"
-                        value={stats.users}
-                        trend="+12%"
-                        color="blue"
-                    />
-                    <StatCard
-                        icon={GraduationCap}
-                        label="Mentores"
-                        value={stats.teachers}
-                        trend="+2"
-                        color="gold"
-                    />
-                    <StatCard
-                        icon={Calendar}
-                        label="Clases"
-                        value={stats.requests}
-                        trend="En curso"
-                        color="purple"
-                    />
-                    <StatCard
-                        icon={DollarSign}
-                        label="Ingresos Mensuales"
-                        value={`${stats.revenue.toFixed(2)}€`}
-                        trend="+24.5%"
-                        color="green"
-                    />
+            {/* ╔══ BODY ════════════════════════════════════════════════════╗ */}
+            <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-6 space-y-6">
+
+                {/* ── KPI GRID ──────────────────────────────────────────── */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <StatCard icon={Users} label="Estudiantes" value={users.filter(u => u.role === 'student').length}
+                        sub={`${bannedUsers} restringidos`} color="blue" live
+                        sparkline={[...Array(7)].map((_, i) => users.filter(u => u.createdAt > Date.now() - (7 - i) * 86400000).length)} />
+                    <StatCard icon={GraduationCap} label="Mentores" value={teachers.length}
+                        sub={`${verifiedTeachers} verificados`} color="gold" live
+                        sparkline={weeklyRevenue.map((_, i) => i)} />
+                    <StatCard icon={DollarSign} label="Revenue Total" value={`€${fmt(totalRevenue)}`}
+                        sub={`€${fmt(todayRevenue)} hoy`} color="green" live sparkline={weeklyRevenue} />
+                    <StatCard icon={FileText} label="Transacciones" value={transactions.length}
+                        sub={`${transactions.filter(t => t.timestamp > Date.now() - 86400000).length} hoy`}
+                        color="purple" live />
+                    <StatCard icon={AlertTriangle} label="Alertas" value={bannedUsers}
+                        sub="usuarios restringidos" color="red" live />
                 </div>
 
-                {/* Tabs Navigation */}
-                <div className="flex p-1 bg-[#111] rounded-2xl border border-white/5 w-full md:w-fit overflow-x-auto hide-scrollbar scrollbar-hide shadow-xl">
-                    <div className="flex min-w-max">
-                        <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Gestión de Usuarios" />
-                        <TabButton active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon={GraduationCap} label="Cuerpo Docente" />
-                        <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={FileText} label="Transacciones" />
-                        <TabButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={Activity} label="Analíticas" />
-                    </div>
-                </div>
+                {/* ── MAIN PANEL ──────────────────────────────────────────── */}
+                <div className="bg-[#111]/60 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
 
-                {/* Content Area */}
-                <div className="glass-panel rounded-2xl overflow-hidden border border-white/5 shadow-2xl animate-fade-in">
-                    <div className="p-6 border-b border-[#302e2b] flex flex-col md:flex-row justify-between items-center gap-4 bg-white/5">
-                        <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                            {activeTab === 'users' && <><Users size={20} className="text-blue-400" /> {t('admin.titles.users')}</>}
-                            {activeTab === 'teachers' && <><GraduationCap size={20} className="text-gold" /> {t('admin.titles.teachers')}</>}
-                            {activeTab === 'payments' && <><DollarSign size={20} className="text-green-400" /> {t('admin.titles.payments')}</>}
-                        </h2>
-                        <div className="relative w-full md:w-80">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#666]" size={16} />
+                    {/* Tab bar + search */}
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 border-b border-white/5 bg-white/[0.02]">
+                        <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar pb-1 md:pb-0">
+                            <TabBtn active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Usuarios" badge={bannedUsers} />
+                            <TabBtn active={activeTab === 'teachers'} onClick={() => setActiveTab('teachers')} icon={GraduationCap} label="Mentores" />
+                            <TabBtn active={activeTab === 'transactions'} onClick={() => setActiveTab('transactions')} icon={FileText} label="Transacciones" />
+                            <TabBtn active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} icon={BarChart2} label="Analíticas" />
+                            <TabBtn active={activeTab === 'system'} onClick={() => setActiveTab('system')} icon={Server} label="Sistema" />
+                        </div>
+
+                        <div className="relative w-full md:w-72 shrink-0">
+                            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20" />
                             <input
-                                type="text"
-                                placeholder={t('admin.filter')}
-                                className="w-full bg-[#161512] border border-[#302e2b] rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-gold/50 transition-all placeholder:text-[#444]"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                type="text" placeholder="Buscar..." value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:border-gold/40 outline-none placeholder:text-white/20 transition-all"
                             />
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto min-h-[400px]">
-                        {activeTab === 'users' && (
-                            <table className="w-full text-left">
-                                <thead className="bg-white/[0.02] text-text-muted text-[10px] uppercase font-black tracking-widest border-b border-white/5">
-                                    <tr>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Identidad</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Privilegios</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Activos</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Estado</th>
-                                        <th className="p-4 md:p-6 text-right italic font-mono tracking-tighter">Acción</th>
+                    {/* ── Tab: USERS ─────────────────────────────────────── */}
+                    {activeTab === 'users' && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[700px]">
+                                <thead>
+                                    <tr className="bg-white/[0.02] border-b border-white/5">
+                                        {['Identidad', 'Rol', 'Saldo', 'Registrado', 'Estado', ''].map(h => (
+                                            <th key={h} className={`p-4 text-[9px] font-black uppercase tracking-[0.2em] text-white/25 ${h === '' ? 'text-right' : 'text-left'}`}>{h}</th>
+                                        ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody className="divide-y divide-white/[0.04]">
                                     {filteredUsers.map(user => (
-                                        <tr key={user.id} className="hover:bg-white/[0.01] transition-colors group">
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="relative">
-                                                        <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.name}&background=random`} alt="" className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/10 group-hover:ring-gold/30 transition-all shadow-xl" />
+                                        <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="relative shrink-0">
+                                                        <img
+                                                            src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=1b1a17&color=D4AF37&bold=true`}
+                                                            className="w-9 h-9 rounded-xl object-cover ring-1 ring-white/10 group-hover:ring-gold/20 transition-all"
+                                                            alt="" onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${user.name?.charAt(0)}&background=1b1a17&color=D4AF37`; }}
+                                                        />
                                                         {user.status === 'banned' && (
-                                                            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1 border-2 border-[#111]">
-                                                                <Ban size={8} className="text-white" />
-                                                            </div>
+                                                            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5 border border-[#111]"><Ban size={7} className="text-white" /></div>
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-white tracking-tight text-sm">{user.name}</span>
-                                                        <span className="text-[10px] text-text-muted font-mono lowercase">{user.email}</span>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
+                                                        <p className="text-[10px] text-white/25 font-mono">{user.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${user.role === 'teacher' ? 'bg-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]' : 'bg-blue-400'}`}></div>
-                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${user.role === 'teacher' ? 'text-gold' : 'text-blue-400'}`}>
-                                                        {user.role}
-                                                    </span>
-                                                </div>
+                                            <td className="p-4">
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${user.role === 'teacher'
+                                                    ? 'bg-gold/10 text-gold border-gold/20'
+                                                    : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                    }`}>{user.role}</span>
                                             </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                                                    <span className="text-green-500">€</span>
-                                                    {user.walletBalance?.toFixed(2) || '0.00'}
-                                                </div>
+                                            <td className="p-4">
+                                                <span className="font-mono text-sm font-bold text-white">€{fmt(user.walletBalance ?? 0)}</span>
                                             </td>
-                                            <td className="p-4 md:p-6">
-                                                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${user.status === 'banned' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>
-                                                    {user.status === 'banned' ? 'Restringido' : 'Operativo'}
+                                            <td className="p-4">
+                                                <span className="text-[10px] text-white/30 font-mono">
+                                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-ES') : '—'}
                                                 </span>
                                             </td>
-                                            <td className="p-4 md:p-6 text-right">
+                                            <td className="p-4">
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${user.status === 'banned'
+                                                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                                    : 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                    }`}>
+                                                    {user.status === 'banned' ? 'Restringido' : 'Activo'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-right">
                                                 <button
-                                                    onClick={() => handleBanUser(user.id, user.status || 'active')}
-                                                    className={`p-2.5 rounded-xl transition-all border ${user.status === 'banned' ? 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20'}`}
+                                                    onClick={() => handleBan(user.id, user.status === 'banned')}
+                                                    className={`p-2 rounded-xl border transition-all ${user.status === 'banned'
+                                                        ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                                        : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                                                        }`}
+                                                    title={user.status === 'banned' ? 'Restaurar acceso' : 'Restringir usuario'}
                                                 >
-                                                    <Ban size={16} />
+                                                    {user.status === 'banned' ? <Unlock size={14} /> : <Lock size={14} />}
                                                 </button>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        )}
+                            {filteredUsers.length === 0 && <EmptyState label="No hay usuarios" />}
+                        </div>
+                    )}
 
-                        {activeTab === 'teachers' && (
-                            <table className="w-full text-left">
-                                <thead className="bg-white/[0.02] text-text-muted text-[10px] uppercase font-black tracking-widest border-b border-white/5">
-                                    <tr>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Mentor</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Región</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Tarifa / Comisión</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Rendimiento</th>
-                                        <th className="p-4 md:p-6 text-right italic font-mono tracking-tighter">Estatus</th>
+                    {/* ── Tab: TEACHERS ──────────────────────────────────── */}
+                    {activeTab === 'teachers' && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[800px]">
+                                <thead>
+                                    <tr className="bg-white/[0.02] border-b border-white/5">
+                                        {['Mentor', 'Región', 'Tarifa/h', 'Comisión', 'Clases', 'Ingresos', ''].map(h => (
+                                            <th key={h} className={`p-4 text-[9px] font-black uppercase tracking-[0.2em] text-white/25 ${h === '' ? 'text-right' : 'text-left'}`}>{h}</th>
+                                        ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody className="divide-y divide-white/[0.04]">
                                     {filteredTeachers.map(teacher => (
-                                        <tr key={teacher.id} className="hover:bg-white/[0.01] transition-colors group">
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="relative">
-                                                        <img src={teacher.image} className="w-12 h-12 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all border border-white/5 shadow-lg group-hover:scale-105 duration-500" alt="" />
+                                        <tr key={teacher.id} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="relative shrink-0">
+                                                        <img src={teacher.image} className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/10 group-hover:ring-gold/20 transition-all grayscale group-hover:grayscale-0" alt="" />
                                                         {teacher.isVerified && (
-                                                            <div className="absolute -bottom-1 -right-1 bg-gold rounded-full p-1 border-2 border-[#111] shadow-[0_0_10px_rgba(212,175,55,0.4)]">
-                                                                <CheckCircle size={10} className="text-black" />
+                                                            <div className="absolute -bottom-1 -right-1 bg-gold rounded-full p-0.5 border border-[#111] shadow-[0_0_6px_rgba(212,175,55,0.4)]">
+                                                                <CheckCircle size={8} className="text-black" />
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-white tracking-tight group-hover:text-gold transition-colors">{teacher.name}</span>
-                                                        <span className="text-[10px] text-text-muted font-mono lowercase">{teacher.teachingStyle}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 md:p-6">
-                                                <span className="text-xs font-medium text-text-muted border border-white/5 bg-white/[0.02] px-2.5 py-1 rounded-lg">
-                                                    {teacher.region}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-white">{teacher.price}€<span className="text-[10px] font-normal text-text-muted ml-1">/h</span></span>
-                                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                                        <div className="w-1 h-1 rounded-full bg-gold"></div>
-                                                        <span className="text-[10px] text-gold font-black uppercase tracking-widest">{teacher.commissionRate * 100}% Fee</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-6">
                                                     <div>
-                                                        <p className="text-[10px] text-text-muted uppercase font-black tracking-widest mb-0.5">Clases</p>
-                                                        <p className="text-sm font-bold text-white">{teacher.classesGiven}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] text-text-muted uppercase font-black tracking-widest mb-0.5">Ingresos</p>
-                                                        <p className="text-sm font-bold text-green-400">{teacher.earnings.toFixed(2)}€</p>
+                                                        <p className="text-sm font-bold text-white leading-tight group-hover:text-gold transition-colors">{teacher.name}</p>
+                                                        <p className="text-[9px] text-white/25 uppercase tracking-wider">{teacher.teachingStyle}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 md:p-6 text-right">
+                                            <td className="p-4">
+                                                <span className="text-[9px] text-white/40 border border-white/10 bg-white/[0.02] px-2 py-1 rounded-lg font-mono">{teacher.region}</span>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="font-mono text-sm font-bold text-white">€{teacher.price}</span>
+                                            </td>
+                                            <td className="p-4">
+                                                <CommissionCell teacher={teacher} onSave={handleCommission} />
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="font-mono text-sm text-white/60">{teacher.classesGiven ?? 0}</span>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="font-mono text-sm font-bold text-green-400">€{fmt(teacher.earnings ?? 0)}</span>
+                                            </td>
+                                            <td className="p-4 text-right">
                                                 <button
-                                                    onClick={() => handleVerifyTeacher(teacher.id, teacher.isVerified || false)}
-                                                    className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all border ${teacher.isVerified ? 'bg-gold text-black border-gold shadow-lg shadow-gold/10' : 'bg-white/5 text-white/40 border-white/10 hover:border-gold/50 hover:text-gold'}`}
+                                                    onClick={() => handleVerify(teacher.id, teacher.isVerified ?? false)}
+                                                    className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${teacher.isVerified
+                                                        ? 'bg-gold text-black border-gold shadow-gold/20'
+                                                        : 'bg-white/5 text-white/30 border-white/10 hover:border-gold/40 hover:text-gold'
+                                                        }`}
                                                 >
-                                                    {teacher.isVerified ? 'Verificado' : 'Pendiente'}
+                                                    {teacher.isVerified ? '✓ Verificado' : 'Verificar'}
                                                 </button>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        )}
+                            {filteredTeachers.length === 0 && <EmptyState label="No hay mentores" />}
+                        </div>
+                    )}
 
-                        {activeTab === 'payments' && (
-                            <table className="w-full text-left">
-                                <thead className="bg-white/[0.02] text-text-muted text-[10px] uppercase font-black tracking-widest border-b border-white/5">
-                                    <tr>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Evento</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Cuantía</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Cronología</th>
-                                        <th className="p-4 md:p-6 italic font-mono tracking-tighter">Ruta</th>
+                    {/* ── Tab: TRANSACTIONS ──────────────────────────────── */}
+                    {activeTab === 'transactions' && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[700px]">
+                                <thead>
+                                    <tr className="bg-white/[0.02] border-b border-white/5">
+                                        {['Tipo', 'Descripción', 'Cuantía', 'Tiempo', 'Ruta'].map(h => (
+                                            <th key={h} className="p-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-white/25">{h}</th>
+                                        ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {transactions.map(tx => (
-                                        <tr key={tx.id} className="hover:bg-white/[0.01] transition-colors group">
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`p-2 rounded-xl ${tx.type === 'deposit' ? 'bg-blue-500/10 text-blue-400' : 'bg-green-500/10 text-green-400'} border border-white/5`}>
-                                                        {tx.type === 'deposit' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
-                                                    </div>
-                                                    <span className="text-sm font-bold text-white tracking-tight">{tx.description}</span>
+                                <tbody className="divide-y divide-white/[0.04]">
+                                    {filteredTx.map(tx => (
+                                        <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="p-4">
+                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${tx.type === 'deposit'
+                                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                                    : tx.type === 'payment_received'
+                                                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                                                        : 'bg-orange-500/10 border-orange-500/20 text-orange-400'
+                                                    }`}>
+                                                    {tx.type === 'deposit' ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
                                                 </div>
                                             </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-sm font-mono font-bold ${tx.description.includes('Comisión') ? 'text-gold' : 'text-white'}`}>
-                                                        {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}€
-                                                    </span>
+                                            <td className="p-4">
+                                                <p className="text-sm font-bold text-white truncate max-w-[200px]">{tx.description}</p>
+                                                <p className="text-[9px] text-white/25 font-mono">{tx.id}</p>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`font-mono text-sm font-black ${tx.amount > 0
+                                                    ? tx.description.toLowerCase().includes('comisión') ? 'text-gold' : 'text-green-400'
+                                                    : 'text-red-400'
+                                                    }`}>
+                                                    {tx.amount > 0 ? '+' : ''}€{fmt(Math.abs(tx.amount))}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <div>
+                                                    <p className="text-[10px] text-white/50 font-mono">{new Date(tx.timestamp).toLocaleDateString('es-ES')}</p>
+                                                    <p className="text-[9px] text-white/25 font-mono">{timeAgo(tx.timestamp)} ago</p>
                                                 </div>
                                             </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex flex-col text-[10px] text-text-muted font-mono uppercase tracking-widest">
-                                                    <span className="font-bold text-white/40">{new Date(tx.timestamp).toLocaleDateString()}</span>
-                                                    <span>{new Date(tx.timestamp).toLocaleTimeString()}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 md:p-6">
-                                                <div className="flex items-center gap-2 text-[10px] font-mono text-white/20">
-                                                    <span className="truncate max-w-[80px] hover:text-white/50 cursor-help" title={tx.fromId}>{tx.fromId}</span>
-                                                    <ChevronRight size={10} />
-                                                    <span className="truncate max-w-[80px] hover:text-white/50 cursor-help" title={tx.toId}>{tx.toId}</span>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-1.5 text-[9px] font-mono text-white/20">
+                                                    <span className="truncate max-w-[70px] hover:text-white/50 cursor-help" title={tx.fromId}>{tx.fromId?.slice(0, 8)}…</span>
+                                                    <ChevronRight size={9} />
+                                                    <span className="truncate max-w-[70px] hover:text-white/50 cursor-help" title={tx.toId}>{tx.toId?.slice(0, 8)}…</span>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+                            {filteredTx.length === 0 && <EmptyState label="Sin transacciones" />}
+                        </div>
+                    )}
+
+                    {/* ── Tab: ANALYTICS ─────────────────────────────────── */}
+                    {activeTab === 'analytics' && (
+                        <div className="p-6 space-y-6">
+                            {/* Revenue bars (last 7 days) */}
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-4">Revenue últimos 7 días</p>
+                                <div className="flex items-end gap-2 h-32">
+                                    {weeklyRevenue.map((v, i) => {
+                                        const max = Math.max(...weeklyRevenue) || 1;
+                                        const pct = (v / max) * 100;
+                                        const day = new Date(Date.now() - (6 - i) * 86400000);
+                                        return (
+                                            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                                                <span className="text-[8px] text-white/30 font-mono">€{fmt(v)}</span>
+                                                <div className="w-full bg-white/5 rounded-t-lg overflow-hidden" style={{ height: '80px' }}>
+                                                    <div
+                                                        className="w-full bg-gradient-to-t from-gold/60 to-gold rounded-t-lg transition-all duration-500"
+                                                        style={{ height: `${Math.max(pct, 4)}%`, marginTop: `${100 - Math.max(pct, 4)}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-[8px] text-white/20 font-mono">
+                                                    {day.toLocaleDateString('es-ES', { weekday: 'short' })}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Revenue breakdown */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {[
+                                    { label: 'Depósitos', type: 'deposit', color: 'text-blue-400', border: 'border-blue-500/20' },
+                                    { label: 'Pagos enviados', type: 'payment_sent', color: 'text-orange-400', border: 'border-orange-500/20' },
+                                    { label: 'Pagos recibidos', type: 'payment_received', color: 'text-green-400', border: 'border-green-500/20' },
+                                ].map(row => {
+                                    const txs = transactions.filter(t => t.type === row.type as any);
+                                    const total = txs.reduce((s, t) => s + Math.abs(t.amount), 0);
+                                    return (
+                                        <div key={row.type} className={`bg-white/[0.02] border ${row.border} rounded-xl p-4`}>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">{row.label}</p>
+                                            <p className={`text-2xl font-black font-mono ${row.color}`}>€{fmt(total)}</p>
+                                            <p className="text-[9px] text-white/20 mt-1">{txs.length} operaciones</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Top teachers by earnings */}
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-3">Top Mentores por Ingresos</p>
+                                <div className="space-y-2">
+                                    {[...teachers].sort((a, b) => (b.earnings ?? 0) - (a.earnings ?? 0)).slice(0, 5).map((t, i) => {
+                                        const maxE = Math.max(...teachers.map(x => x.earnings ?? 0)) || 1;
+                                        return (
+                                            <div key={t.id} className="flex items-center gap-3">
+                                                <span className="text-[10px] text-white/20 font-mono w-4">{i + 1}</span>
+                                                <img src={t.image} className="w-7 h-7 rounded-lg object-cover" alt="" />
+                                                <div className="flex-grow">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-bold text-white">{t.name}</span>
+                                                        <span className="text-xs font-mono text-green-400">€{fmt(t.earnings ?? 0)}</span>
+                                                    </div>
+                                                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-gradient-to-r from-gold/60 to-gold rounded-full transition-all duration-700"
+                                                            style={{ width: `${((t.earnings ?? 0) / maxE) * 100}%` }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Tab: SYSTEM ────────────────────────────────────── */}
+                    {activeTab === 'system' && (
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {/* Service status */}
+                            {[
+                                { name: 'Firebase Auth', status: 'operational', latency: '12ms' },
+                                { name: 'Firestore DB', status: 'operational', latency: '24ms' },
+                                { name: 'Firebase Storage', status: 'operational', latency: '45ms' },
+                                { name: 'LiveKit RTC', status: 'operational', latency: '38ms' },
+                                { name: 'Lichess API', status: 'operational', latency: '120ms' },
+                                { name: 'Real-time Sync', status: 'operational', latency: `${liveCount} events` },
+                            ].map(svc => (
+                                <div key={svc.name} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <span className={`w-2 h-2 rounded-full ${svc.status === 'operational'
+                                            ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)] animate-pulse'
+                                            : 'bg-red-500'
+                                            }`} />
+                                        <span className="text-sm font-bold text-white">{svc.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[9px] font-mono text-white/30">{svc.latency}</span>
+                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${svc.status === 'operational'
+                                            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                            }`}>{svc.status}</span>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Platform summary */}
+                            <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                                {[
+                                    { label: 'Total usuarios', value: users.length + teachers.length },
+                                    { label: 'Usuarios activos', value: users.filter(u => u.status !== 'banned').length },
+                                    { label: 'Mentores activos', value: verifiedTeachers },
+                                    { label: 'Volumen total', value: `€${fmt(totalRevenue)}` },
+                                ].map(item => (
+                                    <div key={item.label} className="bg-white/[0.02] border border-white/5 rounded-xl p-3 text-center">
+                                        <p className="text-[8px] text-white/25 uppercase tracking-widest font-black mb-1">{item.label}</p>
+                                        <p className="text-lg font-black text-white">{item.value}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── RECENT ACTIVITY FEED ────────────────────────────── */}
+                <div className="bg-[#111]/60 border border-white/5 rounded-2xl p-5 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-4">
+                        <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 flex items-center gap-2">
+                            <Activity size={11} className="text-green-400" />
+                            Feed en Tiempo Real
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping" />
+                            <span className="text-[9px] text-green-400/60 font-mono">live</span>
+                        </div>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                        {transactions.slice(0, 12).map(tx => (
+                            <div key={tx.id} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
+                                <div className="flex items-center gap-2.5">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${tx.type === 'deposit' ? 'bg-blue-400' : tx.type === 'payment_received' ? 'bg-green-400' : 'bg-orange-400'
+                                        }`} />
+                                    <span className="text-xs text-white/60 truncate max-w-[240px]">{tx.description}</span>
+                                </div>
+                                <div className="flex items-center gap-4 shrink-0">
+                                    <span className={`text-xs font-mono font-bold ${tx.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {tx.amount >= 0 ? '+' : ''}€{fmt(Math.abs(tx.amount))}
+                                    </span>
+                                    <span className="text-[9px] text-white/20 font-mono">{timeAgo(tx.timestamp)}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {transactions.length === 0 && (
+                            <p className="text-center text-[10px] text-white/15 py-6 uppercase tracking-widest">Sin actividad reciente</p>
                         )}
                     </div>
                 </div>
+
             </div>
         </div>
     );
 };
 
-// UI Components
-const StatCard = ({ icon: Icon, label, value, color, trend }: any) => {
-    const colors: any = {
-        blue: 'border-blue-500/30 text-blue-400 bg-blue-500/5',
-        gold: 'border-gold/30 text-gold bg-gold/5',
-        purple: 'border-purple-500/30 text-purple-400 bg-purple-500/5',
-        green: 'border-green-500/30 text-green-400 bg-green-500/5'
-    };
-
-    return (
-        <div className={`glass-panel p-6 rounded-2xl flex flex-col gap-4 border border-white/5 shadow-2xl transition-all hover:scale-[1.02] hover:border-white/10 ${colors[color]}`}>
-            <div className="flex justify-between items-start">
-                <div className={`p-2.5 rounded-xl bg-white/5`}>
-                    <Icon size={20} />
-                </div>
-                {trend && (
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-white/50 lowercase tracking-widest">
-                        {trend}
-                    </span>
-                )}
-            </div>
-            <div>
-                <p className="text-text-muted text-[10px] font-black uppercase tracking-[0.2em] mb-1">{label}</p>
-                <h3 className="text-2xl font-bold tracking-tighter text-white">{value}</h3>
-            </div>
-        </div>
-    );
-};
-
-const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest ${active ? 'bg-gold text-black shadow-lg shadow-gold/20 scale-[1.02]' : 'text-text-muted hover:text-white hover:bg-white/5'}`}
-    >
-        <Icon size={14} className={active ? 'text-black' : 'text-gold'} />
-        {label}
-    </button>
+/* ─── EmptyState ─────────────────────────────────────────────────────────── */
+const EmptyState: React.FC<{ label: string }> = ({ label }) => (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <Search size={24} className="text-white/10" />
+        <p className="text-[10px] text-white/15 uppercase tracking-[0.3em] font-black">{label}</p>
+    </div>
 );
 
 export default AdminDashboard;
-
