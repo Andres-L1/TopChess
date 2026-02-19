@@ -18,7 +18,7 @@ export const useClassroom = (teacherId: string | undefined) => {
     const [roomChapters, setRoomChapters] = useState<{ name: string, pgn: string }[]>([]);
     const [activeChapterIndex, setActiveChapterIndex] = useState<number>(-1);
     const [currentComment, setCurrentComment] = useState<string>("");
-    const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
     const [isAnalysisEnabled, setIsAnalysisEnabled] = useState(false);
     const [gameState, setGameState] = useState<GameState>({
         fen: 'start',
@@ -186,17 +186,20 @@ export const useClassroom = (teacherId: string | undefined) => {
         }
     }, [userRole, teacherId, teacherProfile?.lichessAccessToken]);
 
+    // Sanitize PGN: remove only system annotations (clock, eval, arrows)
+    // but PRESERVE human-written text comments like { Great move! }
     const sanitizePgn = (pgn: string): string => {
-        // Remove standalone comment blocks that appear before the first move notation
-        // Lichess exports often have {[%clk ...]} before the first move
-        let sanitized = pgn.trim();
-        // Strip leading comments (text in {} before any move numbers)
-        sanitized = sanitized.replace(/^\s*\{[^}]*\}\s*/g, '');
-        // Strip clock annotations embedded in moves: e5 { [%clk 0:04:55] }
-        sanitized = sanitized.replace(/\{[^}]*\}/g, '');
-        // Strip result markers at the end if followed by nothing
-        sanitized = sanitized.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
-        return sanitized;
+        return pgn
+            .trim()
+            // Remove clock annotations: { [%clk 0:04:55] }
+            .replace(/\{\s*\[%clk[^\]]*\]\s*\}/g, '')
+            // Remove eval annotations: { [%eval 0.52] }
+            .replace(/\{\s*\[%eval[^\]]*\]\s*\}/g, '')
+            // Remove arrow/square annotations: { [%csl ...] } { [%cal ...] }
+            .replace(/\{\s*\[%c[sa]l[^\]]*\]\s*\}/g, '')
+            // Clean up extra whitespace left behind
+            .replace(/\s{2,}/g, ' ')
+            .trim();
     };
 
     const injectPgnFen = useCallback(async (val: string) => {
@@ -243,8 +246,8 @@ export const useClassroom = (teacherId: string | undefined) => {
         setActiveChapterIndex,
         currentComment,
         setCurrentComment,
-        isVideoEnabled,
-        setIsVideoEnabled,
+        isAudioEnabled,
+        setIsAudioEnabled,
         isAnalysisEnabled,
         setIsAnalysisEnabled,
         gameState,

@@ -20,8 +20,8 @@ const Classroom: React.FC = () => {
         roomChapters,
         activeChapterIndex,
         currentComment,
-        isVideoEnabled,
-        setIsVideoEnabled,
+        isAudioEnabled,
+        setIsAudioEnabled,
         isAnalysisEnabled,
         setIsAnalysisEnabled,
         gameState,
@@ -52,8 +52,8 @@ const Classroom: React.FC = () => {
     return (
         <div className="h-[100dvh] flex flex-col bg-[#0c0b0a] text-white overflow-hidden selection:bg-gold/30">
             <ClassroomHeader
-                isVideoEnabled={isVideoEnabled}
-                setIsVideoEnabled={setIsVideoEnabled}
+                isAudioEnabled={isAudioEnabled}
+                setIsAudioEnabled={setIsAudioEnabled}
                 userRole={userRole}
                 teacherId={teacherId || ""}
                 onResetStudy={resetStudy}
@@ -62,11 +62,11 @@ const Classroom: React.FC = () => {
             <div className="flex-grow flex flex-col lg:flex-row min-h-0 relative">
                 <div className="flex-grow flex flex-col min-w-0 bg-[#0c0b0a] relative">
                     <LiveKitRoom
-                        video={isVideoEnabled}
-                        audio={isVideoEnabled}
+                        video={false}
+                        audio={isAudioEnabled}
                         token={token}
                         serverUrl={import.meta.env.VITE_LIVEKIT_URL}
-                        connect={isVideoEnabled && !!token}
+                        connect={isAudioEnabled && !!token}
                         className="flex-grow flex flex-col min-w-0"
                     >
                         <main className="flex-grow p-4 md:p-6 lg:p-10 flex flex-col items-center justify-center relative overflow-hidden">
@@ -82,8 +82,8 @@ const Classroom: React.FC = () => {
                                 />
 
                                 {/* Interactive Board Section */}
-                                <div className="flex-grow flex items-center justify-center min-h-0 py-4">
-                                    <div className="w-full h-full max-w-[min(80vh,100%)] aspect-square relative group">
+                                <div className="flex-grow flex items-center justify-center min-h-0">
+                                    <div className="h-[min(68vh,68vw)] w-[min(68vh,68vw)] relative group flex-none">
                                         <div className="absolute -inset-4 bg-gold/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                                         <Board
                                             ref={boardRef}
@@ -115,8 +115,8 @@ const Classroom: React.FC = () => {
                     <button
                         onClick={() => setIsAnalysisEnabled(!isAnalysisEnabled)}
                         className={`absolute left-6 bottom-24 lg:bottom-10 z-50 p-3 rounded-2xl border transition-all flex items-center gap-2 group shadow-xl backdrop-blur-md font-black text-[10px] uppercase tracking-widest ${isAnalysisEnabled
-                                ? 'bg-gold text-black border-gold shadow-gold/20'
-                                : 'bg-black/40 text-white/40 border-white/5 hover:border-gold/30 hover:text-white'
+                            ? 'bg-gold text-black border-gold shadow-gold/20'
+                            : 'bg-black/40 text-white/40 border-white/5 hover:border-gold/30 hover:text-white'
                             }`}
                     >
                         <div className={`w-1.5 h-1.5 rounded-full ${isAnalysisEnabled ? 'bg-black animate-pulse' : 'bg-white/20'}`} />

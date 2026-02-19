@@ -1,20 +1,20 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, LogOut, RotateCcw } from 'lucide-react';
+import { LogOut, Mic, MicOff, RotateCcw } from 'lucide-react';
 import Logo from '../../../components/Logo';
 import toast from 'react-hot-toast';
 
 interface ClassroomHeaderProps {
-    isVideoEnabled: boolean;
-    setIsVideoEnabled: (val: boolean) => void;
+    isAudioEnabled: boolean;
+    setIsAudioEnabled: (val: boolean) => void;
     userRole: string;
     teacherId: string;
     onResetStudy: () => void;
 }
 
 const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
-    isVideoEnabled,
-    setIsVideoEnabled,
+    isAudioEnabled,
+    setIsAudioEnabled,
     userRole,
     teacherId,
     onResetStudy
@@ -36,14 +36,16 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
 
             <div className="flex items-center gap-4">
                 <button
-                    onClick={() => setIsVideoEnabled(!isVideoEnabled)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${isVideoEnabled
-                        ? 'bg-gold text-black border-gold shadow-lg shadow-gold/20'
-                        : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
+                    onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${isAudioEnabled
+                            ? 'bg-gold text-black border-gold shadow-lg shadow-gold/20'
+                            : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
                         }`}
                 >
-                    <Activity size={14} className={isVideoEnabled ? 'animate-bounce' : ''} />
-                    {isVideoEnabled ? 'Cámara ON' : 'Activar Cámara'}
+                    {isAudioEnabled
+                        ? <MicOff size={14} className="animate-pulse" />
+                        : <Mic size={14} />}
+                    {isAudioEnabled ? 'Mic ON' : 'Activar Micrófono'}
                 </button>
 
                 {userRole === 'teacher' && (
