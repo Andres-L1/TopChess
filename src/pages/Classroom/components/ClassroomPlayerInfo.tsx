@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Clock, Activity, Check } from 'lucide-react';
-import { Teacher, Message } from '../../../types/index';
+import { Teacher } from '../../../types/index';
 
 interface ClassroomPlayerInfoProps {
     type: 'top' | 'bottom';

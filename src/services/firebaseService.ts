@@ -93,7 +93,7 @@ export const firebaseService = {
                 const tx: Transaction = {
                     id: txId,
                     type: 'deposit',
-                    description: 'Recarga de saldo (Simulación)',
+                    description: 'Recarga de saldo',
                     amount: amount,
                     timestamp: Date.now(),
                     fromId: 'system',
@@ -438,11 +438,23 @@ export const firebaseService = {
 
     async getPlatformStats() {
         try {
+            const [usersSnap, teachersSnap, requestsSnap, txSnap] = await Promise.all([
+                getDocs(usersRef),
+                getDocs(teachersRef),
+                getDocs(requestsRef),
+                getDocs(transactionsRef)
+            ]);
+
+            const revenue = txSnap.docs
+                .map(d => d.data() as Transaction)
+                .filter(t => t.type === 'payment_received')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+
             return {
-                users: 0,
-                teachers: 0,
-                requests: 0,
-                revenue: 0
+                users: usersSnap.size,
+                teachers: teachersSnap.size,
+                requests: requestsSnap.size,
+                revenue
             };
         } catch (error) {
             console.error('Error in getPlatformStats:', error);

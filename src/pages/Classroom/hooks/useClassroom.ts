@@ -135,7 +135,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 activeChapterIndex: idx,
                 fen: game.fen(),
                 history: game.history(),
-                lastMove: null,
+                lastMove: undefined,
                 currentIndex: Math.max(0, game.history().length - 1),
                 comment: game.getComment() || ""
             });
@@ -174,7 +174,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 activeChapterIndex: 0,
                 fen: game.fen(),
                 history: game.history(),
-                lastMove: null,
+                lastMove: undefined,
                 currentIndex: Math.max(0, game.history().length - 1),
                 comment: game.getComment() || ""
             });
@@ -196,7 +196,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 await firebaseService.updateRoom(teacherId, {
                     fen: game.fen(),
                     history: game.history(),
-                    lastMove: null,
+                    lastMove: undefined,
                     currentIndex: game.history().length - 1,
                     comment: game.getComment() || ""
                 });
@@ -205,7 +205,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 await firebaseService.updateRoom(teacherId, {
                     fen: val,
                     history: [],
-                    lastMove: null,
+                    lastMove: undefined,
                     currentIndex: -1,
                     comment: ""
                 });

@@ -1,19 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockDB } from '../services/mockDatabase';
-import { MessageCircle, Check, ArrowRight } from 'lucide-react';
+import { firebaseService } from '../services/firebaseService';
+import { useAuth } from '../App';
+import { MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MatchResult = ({ teacher, onSlid, onClose }) => {
     const navigate = useNavigate();
+    const { currentUserId } = useAuth();
 
-    const handleConnect = () => {
-        // Create request and go to chat
-        // We'll simulate a student ID for now
-        const studentId = 'guest_student';
-        mockDB.createRequest(studentId, teacher.id, "Hi! I matched with you based on my goals.");
-        toast.success(`Conexión solicitada con ${teacher.name}`);
-        navigate(`/chat/${teacher.id}`);
+    const handleConnect = async () => {
+        try {
+            await firebaseService.createRequest({
+                id: `req_${Date.now()}`,
+                studentId: currentUserId,
+                teacherId: teacher.id,
+                status: 'pending',
+                timestamp: Date.now(),
+                message: "Hi! I matched with you based on my goals."
+            });
+            toast.success(`Conexón solicitada con ${teacher.name}`);
+            navigate(`/chat/${teacher.id}`);
+        } catch (error) {
+            toast.error('Error al enviar solicitud');
+        }
     };
 
     if (!teacher) return null;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
-import { mockDB } from '../services/mockDatabase';
-import { User, Save, Camera, Mail } from 'lucide-react';
+import { firebaseService } from '../services/firebaseService';
+import { User, Save, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const UserProfile = () => {
@@ -10,11 +10,25 @@ const UserProfile = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const data = mockDB.getProfile(currentUserId);
-        if (data) {
-            setProfile(data);
-        }
-        setLoading(false);
+        const loadProfile = async () => {
+            try {
+                const data = await firebaseService.getUser(currentUserId);
+                if (data) {
+                    setProfile({
+                        name: data.name || '',
+                        bio: (data as any).bio || '',
+                        image: data.photoURL || '',
+                        elo: (data as any).elo || 0
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                toast.error('Error al cargar el perfil');
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (currentUserId) loadProfile();
     }, [currentUserId]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -22,9 +36,18 @@ const UserProfile = () => {
         setProfile(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
-        mockDB.updateProfile(currentUserId, profile);
-        toast.success("Perfil actualizado correctamente");
+    const handleSave = async () => {
+        try {
+            await firebaseService.updateUser(currentUserId, {
+                name: profile.name,
+                photoURL: profile.image,
+                ...(profile.bio ? { bio: profile.bio } as any : {}),
+            });
+            toast.success('Perfil actualizado correctamente');
+        } catch (error) {
+            console.error('Error saving profile:', error);
+            toast.error('Error al guardar los cambios');
+        }
     };
 
     if (loading) return <div className="text-white p-8">Cargando perfil...</div>;
@@ -47,16 +70,12 @@ const UserProfile = () => {
                         </div>
                     </div>
                     <h2 className="text-xl font-bold text-white">{profile.name}</h2>
-                    <p className="text-gold font-mono text-sm mb-4">ELO {profile.elo}</p>
+                    {profile.elo > 0 && <p className="text-gold font-mono text-sm mb-4">ELO {profile.elo}</p>}
 
                     <div className="w-full pt-4 border-t border-white/5 space-y-2">
                         <div className="flex justify-between text-xs text-text-muted">
                             <span>ID Usuario</span>
-                            <span className="font-mono text-white opacity-50">{currentUserId}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-text-muted">
-                            <span>Miembro desde</span>
-                            <span className="text-white">Nov 2023</span>
+                            <span className="font-mono text-white opacity-50 truncate max-w-[100px]">{currentUserId}</span>
                         </div>
                     </div>
                 </div>

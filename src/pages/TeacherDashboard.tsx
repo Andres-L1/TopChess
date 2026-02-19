@@ -81,13 +81,17 @@ const TeacherDashboard = () => {
                 setAvailability(avail);
 
                 if (bookings.length > 0) {
-                    // Simple sort by date and time
-                    const sorted = [...bookings].sort((a, b) => {
+                    const today = new Date().toISOString().split('T')[0];
+                    // Only show future, non-cancelled bookings
+                    const upcoming = bookings.filter((b: Booking) =>
+                        b.status !== 'cancelled' && b.date >= today
+                    );
+                    const sorted = [...upcoming].sort((a, b) => {
                         const dateCompare = a.date.localeCompare(b.date);
                         if (dateCompare !== 0) return dateCompare;
                         return a.time.localeCompare(b.time);
                     });
-                    setNextBooking(sorted[0]);
+                    setNextBooking(sorted[0] ?? null);
                 }
             } catch (error) {
                 console.error("Error fetching dashboard data", error);

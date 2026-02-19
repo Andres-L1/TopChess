@@ -33,8 +33,13 @@ const StudentDashboard: React.FC = () => {
 
             try {
                 // Fetch data from Firestore
-                const requests = await firebaseService.getRequestsForStudent(currentUserId);
-                const bookings = await firebaseService.getBookingsForUser(currentUserId, 'student');
+                const [requests, bookings, wallet] = await Promise.all([
+                    firebaseService.getRequestsForStudent(currentUserId),
+                    firebaseService.getBookingsForUser(currentUserId, 'student'),
+                    firebaseService.getWallet(currentUserId)
+                ]);
+
+                setBalance(wallet.balance);
 
                 // Filter active teachers (approved requests) and deduplicate by teacherId
                 const approvedReqs = requests.filter((r: any) => r.status === 'approved');
@@ -124,8 +129,14 @@ const StudentDashboard: React.FC = () => {
         navigate('/');
     };
 
-    // Calculate next class
-    const nextClass = myBookings.length > 0 ? myBookings[0] : null; // Should sort by date
+    // Calculate next class — sorted by date then time, excluding cancelled
+    const nextClass = [...myBookings]
+        .filter(b => b.status !== 'cancelled')
+        .sort((a, b) => {
+            const dateCompare = a.date.localeCompare(b.date);
+            if (dateCompare !== 0) return dateCompare;
+            return a.time.localeCompare(b.time);
+        })[0] ?? null;
 
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in pb-24">

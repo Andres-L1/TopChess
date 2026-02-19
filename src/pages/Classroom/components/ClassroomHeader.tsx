@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, LogOut } from 'lucide-react';
+import { Activity, LogOut, RotateCcw } from 'lucide-react';
 import Logo from '../../../components/Logo';
 import toast from 'react-hot-toast';
 
@@ -38,8 +38,8 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
                 <button
                     onClick={() => setIsVideoEnabled(!isVideoEnabled)}
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${isVideoEnabled
-                            ? 'bg-gold text-black border-gold shadow-lg shadow-gold/20'
-                            : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
+                        ? 'bg-gold text-black border-gold shadow-lg shadow-gold/20'
+                        : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
                         }`}
                 >
                     <Activity size={14} className={isVideoEnabled ? 'animate-bounce' : ''} />
@@ -52,7 +52,7 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
                         className="p-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-xl border border-white/5 transition-all"
                         title="Reiniciar Tablero"
                     >
-                        <Activity size={18} />
+                        <RotateCcw size={18} />
                     </button>
                 )}
 
@@ -61,7 +61,7 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
                 <button
                     onClick={() => {
                         toast.success('Clase finalizada');
-                        navigate('/dashboard');
+                        navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard');
                     }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest border border-red-500/20 transition-all group"
                 >

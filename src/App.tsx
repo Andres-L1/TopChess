@@ -80,6 +80,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const loginAsTest = async (role: 'student' | 'teacher') => {
+    if (!import.meta.env.DEV) {
+      toast.error('Función solo disponible en desarrollo');
+      return;
+    }
     try {
       setLoading(true);
       const testUid = `test_${role}_123`;
@@ -169,6 +173,23 @@ const LoadingSpinner = () => (
   </div>
 );
 
+const NotFound = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+      <div className="text-8xl font-black text-gold/20 mb-4">404</div>
+      <h1 className="text-2xl font-bold text-white mb-2">Página no encontrada</h1>
+      <p className="text-white/40 mb-8 max-w-sm">La página que buscas no existe o ha sido movida.</p>
+      <button
+        onClick={() => navigate('/')}
+        className="px-6 py-3 bg-gold text-black font-black rounded-xl hover:bg-white transition-all"
+      >
+        Volver al inicio
+      </button>
+    </div>
+  );
+};
+
 // Page Transition Wrapper
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -219,6 +240,7 @@ const AnimatedRoutes = () => {
         <Route path="/profile" element={<PrivateRoute><PageTransition><UserProfile /></PageTransition></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><PageTransition><AdminDashboard /></PageTransition></AdminRoute>} />
         <Route path="/lichess-callback" element={<PageTransition><LichessCallback /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   );
