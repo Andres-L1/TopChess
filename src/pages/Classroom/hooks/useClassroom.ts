@@ -109,15 +109,34 @@ export const useClassroom = (teacherId: string | undefined) => {
         setGameState(newState);
     }, []);
 
+    // ── Sanitize PGN ─────────────────────────────────────────────────────
+    // Strips ALL Lichess system annotations while preserving human text.
+    // Handles: { [%clk 0:05:00] [%eval 0.32] }  → removed
+    //          { Nice move! [%clk 0:04:55] }     → { Nice move! }
+    const sanitizePgn = useCallback((pgn: string): string => {
+        return pgn
+            .replace(/\r/g, '')
+            // Strip Lichess metadata headers (cause chess.js parse failures)
+            .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime|ChapterMode) "[^"]*"\]\s*/g, '')
+            // Remove blocks that contain ONLY system annotations
+            .replace(/\{\s*(\[%[^\]]+\]\s*)+\}/g, '')
+            // Strip [%...] inside mixed comments that still have human text
+            .replace(/\[%[^\]]+\]/g, '')
+            // Normalize whitespace inside { }
+            .replace(/\{\s+/g, '{ ')
+            .replace(/\s+\}/g, ' }')
+            // Collapse whitespace / blank lines
+            .replace(/[ \t]{2,}/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }, []);
+
     const loadChapter = useCallback(async (idx: number) => {
         if (userRole !== 'teacher' || !teacherId || !roomChapters[idx]) return;
         const loadingToast = toast.loading(`Sincronizando capítulo ${idx + 1}...`);
         try {
             const game = new ChessJS();
-            const cleanPgn = roomChapters[idx].pgn
-                .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime) ".*"\]/g, "")
-                .replace(/\{(\[%clk [^\]]+\]|\[%eval [^\]]+\])\}/g, "")
-                .replace(/\r/g, "");
+            const cleanPgn = sanitizePgn(roomChapters[idx].pgn);
 
             try {
                 (game as any).loadPgn(cleanPgn);
@@ -135,7 +154,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 activeChapterIndex: idx,
                 fen: game.fen(),
                 history: game.history(),
-                lastMove: undefined,
+                lastMove: null,
                 currentIndex: Math.max(0, game.history().length - 1),
                 comment: game.getComment() || ""
             });
@@ -144,7 +163,7 @@ export const useClassroom = (teacherId: string | undefined) => {
             console.error("Error loading chapter:", error);
             toast.error("Error al cargar capítulo", { id: loadingToast });
         }
-    }, [userRole, teacherId, roomChapters]);
+    }, [userRole, teacherId, roomChapters, sanitizePgn]);
 
     const importStudy = useCallback(async (studyId: string, studyName: string) => {
         if (userRole !== 'teacher' || !teacherId) return;
@@ -157,10 +176,7 @@ export const useClassroom = (teacherId: string | undefined) => {
             if (chapters.length === 0) throw new Error("Empty study");
 
             const game = new ChessJS();
-            const firstClean = chapters[0].pgn
-                .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime) ".*"\]/g, "")
-                .replace(/\{(\[%clk [^\]]+\]|\[%eval [^\]]+\])\}/g, "")
-                .replace(/\r/g, "");
+            const firstClean = sanitizePgn(chapters[0].pgn);
 
             try {
                 (game as any).loadPgn(firstClean);
@@ -174,7 +190,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 activeChapterIndex: 0,
                 fen: game.fen(),
                 history: game.history(),
-                lastMove: undefined,
+                lastMove: null,
                 currentIndex: Math.max(0, game.history().length - 1),
                 comment: game.getComment() || ""
             });
@@ -184,23 +200,8 @@ export const useClassroom = (teacherId: string | undefined) => {
             console.error("Error importing study:", error);
             toast.error("Error al importar estudio", { id: loadingToast });
         }
-    }, [userRole, teacherId, teacherProfile?.lichessAccessToken]);
+    }, [userRole, teacherId, teacherProfile?.lichessAccessToken, sanitizePgn]);
 
-    // Sanitize PGN: remove only system annotations (clock, eval, arrows)
-    // but PRESERVE human-written text comments like { Great move! }
-    const sanitizePgn = (pgn: string): string => {
-        return pgn
-            .trim()
-            // Remove clock annotations: { [%clk 0:04:55] }
-            .replace(/\{\s*\[%clk[^\]]*\]\s*\}/g, '')
-            // Remove eval annotations: { [%eval 0.52] }
-            .replace(/\{\s*\[%eval[^\]]*\]\s*\}/g, '')
-            // Remove arrow/square annotations: { [%csl ...] } { [%cal ...] }
-            .replace(/\{\s*\[%c[sa]l[^\]]*\]\s*\}/g, '')
-            // Clean up extra whitespace left behind
-            .replace(/\s{2,}/g, ' ')
-            .trim();
-    };
 
     const injectPgnFen = useCallback(async (val: string) => {
         if (!val || !teacherId) return;
@@ -213,7 +214,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 await firebaseService.updateRoom(teacherId, {
                     fen: game.fen(),
                     history: game.history(),
-                    lastMove: undefined,
+                    lastMove: null,
                     currentIndex: game.history().length - 1,
                     comment: game.getComment() || ""
                 });
@@ -223,7 +224,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                 await firebaseService.updateRoom(teacherId, {
                     fen: val,
                     history: [],
-                    lastMove: undefined,
+                    lastMove: null,
                     currentIndex: -1,
                     comment: ""
                 });

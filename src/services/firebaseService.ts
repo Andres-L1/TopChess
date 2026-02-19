@@ -348,7 +348,11 @@ export const firebaseService = {
     // --- CLASSROOM ROOMS ---
     async updateRoom(roomId: string, data: Partial<RoomData>): Promise<void> {
         try {
-            await setDoc(doc(db, 'rooms', roomId), data, { merge: true });
+            // Firestore rejects `undefined` values — replace with null before writing
+            const sanitized = Object.fromEntries(
+                Object.entries(data).map(([k, v]) => [k, v === undefined ? null : v])
+            ) as Partial<RoomData>;
+            await setDoc(doc(db, 'rooms', roomId), sanitized, { merge: true });
         } catch (error) {
             console.error(`Error in updateRoom(${roomId}):`, error);
             throw error;

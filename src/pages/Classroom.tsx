@@ -40,6 +40,7 @@ const Classroom: React.FC = () => {
 
     const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
     const boardRef = useRef<BoardHandle>(null);
+    const boardAreaRef = useRef<HTMLDivElement>(null);
 
     // ── Keyboard navigation (← →, Home, End) ─────────────────────────────
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -57,14 +58,23 @@ const Classroom: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
+
     // ── Scroll-wheel on board to navigate moves (like Lichess) ───────────
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-        e.preventDefault();
-        const len = gameState.history.length;
-        const cur = gameState.currentIndex ?? len - 1;
-        if (e.deltaY > 0) boardRef.current?.goToMove(Math.min(len - 1, cur + 1));
-        else boardRef.current?.goToMove(Math.max(-1, cur - 1));
+    // Must register with { passive: false } — React's onWheel is passive in modern browsers
+    useEffect(() => {
+        const el = boardAreaRef.current;
+        if (!el) return;
+        const handler = (e: WheelEvent) => {
+            e.preventDefault();
+            const len = gameState.history.length;
+            const cur = gameState.currentIndex ?? len - 1;
+            if (e.deltaY > 0) boardRef.current?.goToMove(Math.min(len - 1, cur + 1));
+            else boardRef.current?.goToMove(Math.max(-1, cur - 1));
+        };
+        el.addEventListener('wheel', handler, { passive: false });
+        return () => el.removeEventListener('wheel', handler);
     }, [gameState.history.length, gameState.currentIndex]);
+
 
     const resetStudy = () => boardRef.current?.reset();
 
@@ -104,8 +114,8 @@ const Classroom: React.FC = () => {
 
                         {/* Board — square, Lichess style */}
                         <div
+                            ref={boardAreaRef}
                             className="flex-grow relative min-h-0"
-                            onWheel={handleWheel}
                         >
                             {/* Size wrapper: fills available height staying square */}
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -184,8 +194,8 @@ const Classroom: React.FC = () => {
                             <button
                                 onClick={() => setIsAnalysisEnabled(!isAnalysisEnabled)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all text-[10px] font-black uppercase tracking-widest ${isAnalysisEnabled
-                                        ? 'bg-gold text-black border-gold shadow-gold/20'
-                                        : 'bg-white/5 text-white/40 border-white/5 hover:border-gold/30 hover:text-white'
+                                    ? 'bg-gold text-black border-gold shadow-gold/20'
+                                    : 'bg-white/5 text-white/40 border-white/5 hover:border-gold/30 hover:text-white'
                                     }`}
                             >
                                 <div className={`w-1.5 h-1.5 rounded-full ${isAnalysisEnabled ? 'bg-black animate-pulse' : 'bg-white/20'}`} />
