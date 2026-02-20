@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+       return request.auth.token.admin == true || 
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow read: if isAuthenticated(); 
+      allow write: if isOwner(userId) || isAdmin();
+    }
+    
+    // --- Teachers Collection ---
+    match /teachers/{teacherId} {
+      allow read: if true; // Public profiles
+      allow write: if isOwner(teacherId) || isAdmin();
+    }
+
+    // --- Requests (Matchmaking) ---
+    match /requests/{requestId} {
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow update: if isAuthenticated() && (resource.data.teacherId == request.auth.uid || resource.data.studentId == request.auth.uid || isAdmin());
+    }
+    
+    // --- Bookings ---
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated(); // Students/Teachers creating bookings
+      allow update: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
+    }
+
+    // --- Homeworks (SOLUCIONA EL ERROR DE PERMISOS) ---
+    match /homeworks/{homeworkId} {
+      // Allow read if you are the assigned student or the creator teacher
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
+      // Teachers create homework
+      allow create: if isAuthenticated() && request.resource.data.teacherId == request.auth.uid;
+      // Students update status (mark as complete), Teachers update content, Admins overview
+      allow update: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
+    }
+
+    // --- Transactions (Wallet) ---
+    match /transactions/{txId} {
+      // Users can only see their own transactions (sent or received)
+      allow read: if isAuthenticated() && (resource.data.fromId == request.auth.uid || resource.data.toId == request.auth.uid || isAdmin());
+      // System or User creating payment intent (simplified for MVP, secure via backend ideally)
+      allow create: if isAuthenticated() && request.resource.data.fromId == request.auth.uid;
+    }
+    
+    // --- Chat Messages ---
+    match /messages/{messageId} {
+       // Only participants of a chat (identified by chatId 'uidA_uidB') can read/write their messages
+       allow read: if isAuthenticated() && (resource.data.chatId.matches('.*'+request.auth.uid+'.*') || isAdmin());
+       allow write: if isAuthenticated() && request.resource.data.chatId.matches('.*'+request.auth.uid+'.*');
+    }
+
+    // --- Rooms (LiveKit/Classroom state) ---
+    match /rooms/{roomId} {
+      // Room names are normally built with the teacher's ID
+      allow read, write: if isAuthenticated() && (roomId.matches('.*'+request.auth.uid+'.*') || isAdmin()); 
+    }
+    
+    // --- Clubs ---
+    match /clubs/{clubId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.directorId == request.auth.uid;
+      allow update: if isAuthenticated() && (resource.data.directorId == request.auth.uid || isAdmin());
+    }
+
+    // --- Notifications ---
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated(); 
+    }
+    
+    // --- Platform Stats ---
+    match /platform/stats {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

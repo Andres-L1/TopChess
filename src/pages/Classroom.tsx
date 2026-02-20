@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { LiveKitRoom } from '@livekit/components-react';
-import '@livekit/components-styles';
-
+import { usePeerAudio } from '../hooks/usePeerAudio';
 import Board, { BoardHandle } from '../components/Board';
 import { useClassroom } from './Classroom/hooks/useClassroom';
+import { useWakeLock } from '../hooks/useWakeLock';
 import ClassroomHeader from './Classroom/components/ClassroomHeader';
 import ClassroomPlayerInfo from './Classroom/components/ClassroomPlayerInfo';
 import ClassroomSidebar from './Classroom/components/ClassroomSidebar';
 import {
     ChevronLeft, ChevronRight,
     ChevronsLeft, ChevronsRight,
-    FlipHorizontal2
+    FlipHorizontal2,
+    BookOpen
 } from 'lucide-react';
+import { firebaseService } from '../services/firebaseService';
 
 const Classroom: React.FC = () => {
     const { teacherId } = useParams<{ teacherId: string }>();
@@ -28,6 +29,7 @@ const Classroom: React.FC = () => {
         setIsAudioEnabled,
         isAnalysisEnabled,
         setIsAnalysisEnabled,
+        roomData,
         gameState,
         handleGameStateChange,
         handleSendMessage,
@@ -35,28 +37,67 @@ const Classroom: React.FC = () => {
         importStudy,
         injectPgnFen,
         userRole,
-        currentUserId
+        currentUserId,
+        comments
     } = useClassroom(teacherId);
 
     const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
     const boardRef = useRef<BoardHandle>(null);
     const boardAreaRef = useRef<HTMLDivElement>(null);
 
-    // ── Keyboard navigation (← →, Home, End) ─────────────────────────────
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-        const len = gameState.history.length;
-        const cur = gameState.currentIndex ?? len - 1;
-        if (e.key === 'ArrowLeft') { e.preventDefault(); boardRef.current?.goToMove(Math.max(-1, cur - 1)); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); boardRef.current?.goToMove(Math.min(len - 1, cur + 1)); }
-        if (e.key === 'Home') { e.preventDefault(); boardRef.current?.goToMove(-1); }
-        if (e.key === 'End') { e.preventDefault(); boardRef.current?.goToMove(len - 1); }
-    }, [gameState.history.length, gameState.currentIndex]);
+    useWakeLock();
 
+    // ── Presence Tracking ──────────────────────────────────────────────────
     useEffect(() => {
+        if (currentUserId) {
+            firebaseService.updateUserPresence(currentUserId, 'in_class').catch(console.error);
+        }
+        return () => {
+            if (currentUserId) {
+                firebaseService.updateUserPresence(currentUserId, 'online').catch(console.error);
+            }
+        };
+    }, [currentUserId]);
+
+    // ── Keyboard navigation (← →, Home, End) ─────────────────────────────
+    // Keep a ref to gameState to access latest state inside event listeners without re-binding
+    const gameStateRef = useRef(gameState);
+
+    // Update ref on every render
+    useEffect(() => {
+        gameStateRef.current = gameState;
+    }, [gameState]);
+
+    // ── Keyboard navigation (← →, Home, End) ─────────────────────────────
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            const currentGameState = gameStateRef.current;
+            const len = currentGameState.history.length;
+            const cur = currentGameState.currentIndex ?? len - 1;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                boardRef.current?.goToMove(Math.max(-1, cur - 1));
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                boardRef.current?.goToMove(Math.min(len - 1, cur + 1));
+            }
+            if (e.key === 'Home') {
+                e.preventDefault();
+                boardRef.current?.goToMove(-1);
+            }
+            if (e.key === 'End') {
+                e.preventDefault();
+                boardRef.current?.goToMove(len - 1);
+            }
+        };
+
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleKeyDown]);
+    }, []); // Empty dependency array = stable listener
 
 
     // ── Scroll-wheel on board to navigate moves (like Lichess) ───────────
@@ -81,12 +122,23 @@ const Classroom: React.FC = () => {
     const len = gameState.history.length;
     const cur = gameState.currentIndex ?? len - 1;
 
+    // ── PeerJS Audio ─────────────────────────────────────────────────────
+    const { isConnected, isMuted, toggleMute } = usePeerAudio(
+        userRole === 'teacher' ? `teacher-${teacherId}` : `student-${currentUserId}`,
+        userRole === 'student' ? `teacher-${teacherId}` : undefined,
+        userRole as 'teacher' | 'student',
+        isAudioEnabled
+    );
+
     return (
         <div className="h-[100dvh] flex flex-col bg-[#161512] text-white overflow-hidden selection:bg-gold/30">
             {/* ── Top bar ────────────────────────────────────────────────── */}
             <ClassroomHeader
                 isAudioEnabled={isAudioEnabled}
                 setIsAudioEnabled={setIsAudioEnabled}
+                isConnected={isConnected}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
                 userRole={userRole}
                 teacherId={teacherId || ""}
                 onResetStudy={resetStudy}
@@ -96,14 +148,7 @@ const Classroom: React.FC = () => {
             <div className="flex-grow flex flex-col lg:flex-row min-h-0 overflow-hidden">
 
                 {/* ── LEFT: board column ─────────────────────────────────── */}
-                <LiveKitRoom
-                    video={false}
-                    audio={isAudioEnabled}
-                    token={token}
-                    serverUrl={import.meta.env.VITE_LIVEKIT_URL}
-                    connect={isAudioEnabled && !!token}
-                    className="flex-grow flex flex-col min-w-0 min-h-0 overflow-hidden"
-                >
+                <div className="flex-grow flex flex-col min-w-0 min-h-0 overflow-hidden">
                     {/* ── Board area (fills left column) ─────────────────── */}
                     <div className="flex-grow flex flex-col min-h-0 px-4 pt-4 pb-0 lg:px-6 lg:pt-6">
 
@@ -125,6 +170,7 @@ const Classroom: React.FC = () => {
                                         teacherId={teacherId!}
                                         onGameStateChange={handleGameStateChange}
                                         isAnalysisEnabled={isAnalysisEnabled}
+                                        roomData={roomData}
                                     />
                                 </div>
                             </div>
@@ -202,22 +248,26 @@ const Classroom: React.FC = () => {
                                 {isAnalysisEnabled ? 'Análisis ON' : 'Análisis'}
                             </button>
 
-                            {/* Sidebar toggle (desktop) */}
+                            {/* Sidebar toggle (all screens) */}
                             <button
                                 onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
                                 title={isSidePanelOpen ? 'Cerrar panel' : 'Abrir panel'}
-                                className="hidden lg:flex p-2.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                                className={`p-2.5 rounded-lg transition-all ${isSidePanelOpen ? 'text-gold bg-gold/10' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
                             >
-                                {isSidePanelOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                                {isSidePanelOpen ? <ChevronRight size={16} /> : <BookOpen size={16} />}
                             </button>
                         </div>
                     </div>
-                </LiveKitRoom>
+                </div>
 
                 {/* ── RIGHT: sidebar ─────────────────────────────────────── */}
-                {isSidePanelOpen && (
+                {/* On mobile: fixed height or flex-grow? 
+                    We want it to take remaining space. 
+                    If closed, it renders null (handled by component).
+                */}
+                <div className={`flex-none lg:flex-none lg:w-[320px] xl:w-[360px] bg-[#1b1a17] border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${isSidePanelOpen ? 'h-[40vh] lg:h-auto' : 'h-0 lg:h-auto lg:w-0 lg:hidden'}`}>
                     <ClassroomSidebar
-                        isSidePanelOpen={isSidePanelOpen}
+                        isSidePanelOpen={true} // Always render internal content if this wrapper is visible
                         messages={messages}
                         userRole={userRole}
                         onSendMessage={handleSendMessage}
@@ -231,8 +281,9 @@ const Classroom: React.FC = () => {
                         teacherProfile={teacherProfile}
                         onInjectPgnFen={injectPgnFen}
                         onMoveClick={(idx) => boardRef.current?.goToMove(idx)}
+                        comments={comments}
                     />
-                )}
+                </div>
             </div>
         </div>
     );

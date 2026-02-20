@@ -168,10 +168,6 @@ body::after {
 @keyframes float {
 
   0%,
-  100% {
-    transform: translateY(0);
-  }
-
   50% {
     transform: translateY(-5px);
   }
@@ -179,4 +175,15 @@ body::after {
 
 .animate-float {
   animation: float 4s ease-in-out infinite;
+}
+
+/* Soporte para Safe Areas en móviles (Notch/Home Indicator) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .h-safe-area-bottom {
+    height: env(safe-area-inset-bottom);
+  }
 }

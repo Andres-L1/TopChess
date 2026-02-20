@@ -20,6 +20,7 @@ interface ClassroomSidebarProps {
     teacherProfile: Teacher | null;
     onInjectPgnFen: (val: string) => Promise<void>;
     onMoveClick: (index: number) => void;
+    comments?: Record<number, string>;
 }
 
 const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
@@ -36,7 +37,8 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
     onImportStudy,
     teacherProfile,
     onInjectPgnFen,
-    onMoveClick
+    onMoveClick,
+    comments
 }) => {
     const [activeTab, setActiveTab] = useState<'moves' | 'chapters' | 'chat'>('moves');
     const [studyId, setStudyId] = useState('');
@@ -59,8 +61,8 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === tab.id
-                                ? 'border-gold text-gold bg-gold/5'
-                                : 'border-transparent text-white/30 hover:text-white/60 hover:bg-white/5'
+                            ? 'border-gold text-gold bg-gold/5'
+                            : 'border-transparent text-white/30 hover:text-white/60 hover:bg-white/5'
                             }`}
                     >
                         <tab.icon size={12} />
@@ -87,6 +89,7 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
                                 currentIndex={gameState.currentIndex}
                                 onMoveClick={onMoveClick}
                                 currentComment={currentComment}
+                                comments={comments}
                             />
                         </div>
 
@@ -144,8 +147,8 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
                                             disabled={userRole !== 'teacher'}
                                             onClick={() => onLoadChapter(idx)}
                                             className={`w-full p-3 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between border ${activeChapterIndex === idx
-                                                    ? 'bg-gold text-black border-gold'
-                                                    : 'bg-white/5 text-white/60 border-white/5 hover:bg-white/10 hover:text-white'
+                                                ? 'bg-gold text-black border-gold'
+                                                : 'bg-white/5 text-white/60 border-white/5 hover:bg-white/10 hover:text-white'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2.5">

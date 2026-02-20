@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const Chat: React.FC = () => {
     const { teacherId } = useParams<{ teacherId: string }>();
-    const { userRole, currentUserId } = useAuth();
+    const { userRole, currentUserId, currentUser } = useAuth();
     const navigate = useNavigate();
 
     const targetId = teacherId!;
@@ -74,7 +74,7 @@ const Chat: React.FC = () => {
                 studentId: userRole === 'student' ? currentUserId : targetId,
                 teacherId: userRole === 'student' ? targetId : currentUserId,
                 text: inputText,
-                sender: userRole || 'student',
+                sender: (userRole as any) || 'student',
                 timestamp: Date.now(),
                 type: 'text'
             };
@@ -83,10 +83,10 @@ const Chat: React.FC = () => {
                 await firebaseService.createRequest({
                     id: `req_${Date.now()}`,
                     studentId: currentUserId,
+                    studentName: currentUser?.displayName || 'Estudiante',
                     teacherId: targetId,
                     status: 'pending',
-                    timestamp: Date.now(),
-                    message: inputText
+                    timestamp: Date.now()
                 });
                 setStatus('pending');
             }
@@ -212,35 +212,39 @@ const Chat: React.FC = () => {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {messages.map((msg, i) => {
-                            const isMe = msg.sender === userRole;
-                            return (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    key={msg.id || i}
-                                    className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    <div className={`group relative max-w-[75%] px-5 py-3 shadow-2xl transition-all duration-300 ${isMe
-                                        ? 'bg-gold text-black rounded-3xl rounded-tr-none'
-                                        : 'bg-white/5 backdrop-blur-md text-white border border-white/10 rounded-3xl rounded-tl-none'
-                                        }`}>
-                                        <p className="text-sm leading-relaxed font-medium whitespace-pre-wrap">{msg.text}</p>
-                                        <div className={`text-[10px] font-bold mt-1.5 opacity-40 flex items-center gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            {isMe && <CheckCircle size={10} />}
+                        <AnimatePresence>
+                            {messages.map((msg, i) => {
+                                const isMe = msg.sender === userRole;
+                                return (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        layout
+                                        key={msg.id || i}
+                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div className={`group relative max-w-[85%] md:max-w-[70%] px-5 py-3 shadow-lg transition-all duration-300 ${isMe
+                                            ? 'bg-gradient-to-br from-gold/90 to-gold text-black rounded-3xl rounded-tr-sm'
+                                            : 'bg-[#1a1917]/80 backdrop-blur-md text-white border border-white/5 rounded-3xl rounded-tl-sm'
+                                            }`}>
+                                            <p className={`text-[13px] md:text-sm leading-relaxed font-medium whitespace-pre-wrap ${isMe ? 'text-black/90' : 'text-white/90'}`}>{msg.text}</p>
+                                            <div className={`text-[9px] font-bold mt-1.5 flex items-center gap-1 ${isMe ? 'opacity-60 justify-end text-black' : 'opacity-40 justify-start text-white'}`}>
+                                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {isMe && <CheckCircle size={10} />}
+                                            </div>
                                         </div>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-b-3xl p-4 flex gap-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+            <div className="bg-[#111]/90 backdrop-blur-xl border border-white/5 rounded-2xl md:rounded-b-3xl p-3 md:p-4 flex gap-2 md:gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] mt-2 mx-1 md:mx-0 mb-4 md:mb-0">
                 <div className="relative flex-grow">
                     <input
                         type="text"
@@ -248,16 +252,16 @@ const Chat: React.FC = () => {
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder={status === 'approved' ? "Escribe un mensaje..." : "Escribe para presentarte..."}
-                        className="w-full bg-black/40 border border-white/10 text-white text-sm rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-transparent transition-all placeholder:text-white/20 shadow-inner"
+                        className="w-full bg-white/5 border border-white/10 text-white text-[13px] md:text-sm rounded-xl px-4 py-3 md:px-5 md:py-3.5 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all placeholder:text-white/30 shadow-inner"
                     />
                 </div>
                 <PremiumButton
                     onClick={handleSend}
                     disabled={!inputText.trim()}
-                    className="!rounded-2xl shadow-xl shadow-gold/10"
+                    className="!rounded-xl shadow-xl shadow-gold/10 px-3 md:px-6"
                     icon={Send}
                 >
-                    <span className="hidden sm:inline">Enviar</span>
+                    <span className="hidden sm:inline font-bold">Enviar</span>
                 </PremiumButton>
             </div>
 

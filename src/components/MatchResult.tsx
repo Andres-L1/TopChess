@@ -7,13 +7,14 @@ import toast from 'react-hot-toast';
 
 const MatchResult = ({ teacher, onSlid, onClose }) => {
     const navigate = useNavigate();
-    const { currentUserId } = useAuth();
+    const { currentUserId, currentUser } = useAuth();
 
     const handleConnect = async () => {
         try {
             await firebaseService.createRequest({
                 id: `req_${Date.now()}`,
                 studentId: currentUserId,
+                studentName: currentUser?.displayName || 'Estudiante',
                 teacherId: teacher.id,
                 status: 'pending',
                 timestamp: Date.now(),

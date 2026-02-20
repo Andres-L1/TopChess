@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X, LogOut, Search, MessageCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X, LogOut, Search, MessageCircle, TrendingUp, DollarSign, BookOpen, ExternalLink } from 'lucide-react';
 import Calendar from '../components/Calendar';
 import toast from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
-import { Booking } from '../types/index';
+import { Booking, Homework } from '../types/index';
+import PaymentModal from '../components/PaymentModal';
 
 interface Slot {
     dayIndex: number;
@@ -15,79 +16,135 @@ interface Slot {
 
 const StudentDashboard: React.FC = () => {
     const auth = useAuth();
-    const { currentUserId, logout } = auth!;
+    const { currentUserId, logout, currentUser } = auth!; // Added currentUser
     const navigate = useNavigate();
     const [balance, setBalance] = useState(0); // This should come from a real Wallet service eventually
     const [myTeachers, setMyTeachers] = useState<any[]>([]);
     const [pendingRequests, setPendingRequests] = useState<any[]>([]);
     const [myBookings, setMyBookings] = useState<Booking[]>([]);
+    const [myHomeworks, setMyHomeworks] = useState<Homework[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     // Booking Modal State
-    const [bookingTeacher, setBookingTeacher] = useState<any>(null);
+    const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
     const [teacherAvailability, setTeacherAvailability] = useState<string[]>([]);
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
 
     useEffect(() => {
-        const fetchData = async () => {
+        if (!currentUserId) return;
+        let isMounted = true;
+        let unsubRequests: () => void;
+        let unsubBookings: () => void;
+        let unsubWallet: () => void;
+
+        const loadStaticData = async () => {
             setIsLoading(true);
-
             try {
-                // Fetch data from Firestore
-                const [requests, bookings, wallet] = await Promise.all([
-                    firebaseService.getRequestsForStudent(currentUserId),
-                    firebaseService.getBookingsForUser(currentUserId, 'student'),
-                    firebaseService.getWallet(currentUserId)
-                ]);
-
-                setBalance(wallet.balance);
-
-                // Filter active teachers (approved requests) and deduplicate by teacherId
-                const approvedReqs = requests.filter((r: any) => r.status === 'approved');
-                const uniqueApprovedMap = new Map();
-                approvedReqs.forEach(r => {
-                    if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
-                });
-
-                const approvedPromises = Array.from(uniqueApprovedMap.values())
-                    .map((r: any) => firebaseService.getTeacherById(r.teacherId));
-
-                const approvedTeachers = await Promise.all(approvedPromises);
-
-                // Pending requests and deduplicate
-                const pendingReqs = requests.filter((r: any) => r.status === 'pending');
-                const uniquePendingMap = new Map();
-                pendingReqs.forEach(r => {
-                    if (!uniquePendingMap.has(r.teacherId)) uniquePendingMap.set(r.teacherId, r);
-                });
-
-                const pendingPromises = Array.from(uniquePendingMap.values())
-                    .map(async (r: any) => {
-                        const t = await firebaseService.getTeacherById(r.teacherId);
-                        return t ? { ...t, requestDate: r.timestamp } : null;
-                    });
-
-                const pendingTeachers = await Promise.all(pendingPromises);
-
-                setMyTeachers(approvedTeachers.filter(t => t !== null));
-                setPendingRequests(pendingTeachers.filter(t => t !== null));
-                setMyBookings(bookings);
+                const homeworks = await firebaseService.getHomeworksForStudent(currentUserId);
+                if (isMounted) setMyHomeworks(homeworks);
             } catch (error) {
-                console.error("Error fetching dashboard data", error);
-                toast.error("Error al cargar datos");
+                console.error("Error loading static student data", error);
             } finally {
-                setIsLoading(false);
+                if (isMounted) setIsLoading(false);
             }
         };
 
-        if (currentUserId) {
-            fetchData();
-        }
+        loadStaticData();
+
+        unsubWallet = firebaseService.observeWallet(currentUserId, (wallet) => {
+            if (isMounted) setBalance(wallet.balance);
+        });
+
+        unsubRequests = firebaseService.observeRequestsForStudent(currentUserId, async (requests) => {
+            if (!isMounted) return;
+
+            // Filter active teachers (approved)
+            const approvedReqs = requests.filter((r: any) => r.status === 'approved');
+            const uniqueApprovedMap = new Map();
+            approvedReqs.forEach(r => {
+                if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
+            });
+
+            const approvedPromises = Array.from(uniqueApprovedMap.values())
+                .map(async (r: any) => {
+                    const t = await firebaseService.getTeacherById(r.teacherId);
+                    return t ? { ...t, classCredits: r.classCredits || 0 } : null;
+                });
+            const approvedTeachers = await Promise.all(approvedPromises);
+            if (isMounted) setMyTeachers(approvedTeachers.filter(t => t !== null));
+
+            // Pending requests
+            const pendingReqs = requests.filter((r: any) => r.status === 'pending');
+            const uniquePendingMap = new Map();
+            pendingReqs.forEach(r => {
+                if (!uniquePendingMap.has(r.teacherId)) uniquePendingMap.set(r.teacherId, r);
+            });
+
+            const pendingPromises = Array.from(uniquePendingMap.values())
+                .map(async (r: any) => {
+                    const t = await firebaseService.getTeacherById(r.teacherId);
+                    return t ? { ...t, requestDate: r.timestamp } : null;
+                });
+            const pendingTeachers = await Promise.all(pendingPromises);
+            if (isMounted) setPendingRequests(pendingTeachers.filter(t => t !== null));
+        });
+
+        unsubBookings = firebaseService.observeBookingsForUser(currentUserId, 'student', (bookings) => {
+            if (isMounted) setMyBookings(bookings);
+        });
+
+        return () => {
+            isMounted = false;
+            if (unsubRequests) unsubRequests();
+            if (unsubBookings) unsubBookings();
+            if (unsubWallet) unsubWallet();
+        };
     }, [currentUserId]);
 
     const openBookingModal = async (teacher: any) => {
         const avail = await firebaseService.getTeacherAvailability(teacher.id);
         setTeacherAvailability(avail);
-        setBookingTeacher(teacher);
+        setSelectedTeacher(teacher);
+        setIsBookingModalOpen(true);
+    };
+
+    const handleOpenPaymentModal = (teacher: any) => {
+        setSelectedTeacher(teacher);
+        setIsPaymentModalOpen(true);
+    };
+
+    const handlePaymentSuccess = async (method: 'stripe' | 'mercadopago') => {
+        if (!selectedTeacher) return;
+        try {
+            const res = await firebaseService.buySubscription(currentUserId, selectedTeacher, method);
+            if (res.success) {
+                toast.success(res.message);
+                setIsPaymentModalOpen(false);
+                setSelectedTeacher(null);
+
+                // Refresh teachers to get updated credits
+                const requests = await firebaseService.getRequestsForStudent(currentUserId);
+                const approvedReqs = requests.filter((r: any) => r.status === 'approved');
+                const uniqueApprovedMap = new Map();
+                approvedReqs.forEach(r => {
+                    if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
+                });
+                const approvedPromises = Array.from(uniqueApprovedMap.values())
+                    .map(async (r: any) => {
+                        const t = await firebaseService.getTeacherById(r.teacherId);
+                        return t ? { ...t, classCredits: r.classCredits || 0 } : null;
+                    });
+                const approvedTeachers = await Promise.all(approvedPromises);
+                setMyTeachers(approvedTeachers.filter(t => t !== null));
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            console.error("Error processing subscription:", error);
+            toast.error("Error al procesar la suscripción");
+        }
     };
 
     const handleSlotBook = async (slot: Slot) => {
@@ -102,22 +159,43 @@ const StudentDashboard: React.FC = () => {
         const newBooking: Booking = {
             id: bookingId,
             studentId: currentUserId,
-            teacherId: bookingTeacher.id,
+            teacherId: selectedTeacher.id,
             slotId: slotId,
             date: new Date().toISOString().split('T')[0],
             time: slot.hour,
             status: 'confirmed',
             timestamp: Date.now(),
-            meetingLink: `/classroom/${bookingTeacher.id}`
+            meetingLink: `/classroom/${selectedTeacher.id}`
         };
 
         try {
-            await firebaseService.createBooking(newBooking);
-            toast.success(`Clase reservada para el ${dateStr} a las ${slot.hour}`);
-            setBookingTeacher(null);
-            // Refresh bookings
-            const bookings = await firebaseService.getBookingsForUser(currentUserId, 'student');
-            setMyBookings(bookings);
+            const res = await firebaseService.bookClass(currentUserId, selectedTeacher.id, newBooking);
+            if (res.success) {
+                toast.success(res.message);
+                setSelectedTeacher(null);
+                setIsBookingModalOpen(false);
+
+                // Refresh bookings
+                const bookings = await firebaseService.getBookingsForUser(currentUserId, 'student');
+                setMyBookings(bookings);
+
+                // Refresh teachers credits
+                const requests = await firebaseService.getRequestsForStudent(currentUserId);
+                const approvedReqs = requests.filter((r: any) => r.status === 'approved');
+                const uniqueApprovedMap = new Map();
+                approvedReqs.forEach(r => {
+                    if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
+                });
+                const approvedPromises = Array.from(uniqueApprovedMap.values())
+                    .map(async (r: any) => {
+                        const t = await firebaseService.getTeacherById(r.teacherId);
+                        return t ? { ...t, classCredits: r.classCredits || 0 } : null;
+                    });
+                const approvedTeachers = await Promise.all(approvedPromises);
+                setMyTeachers(approvedTeachers.filter((t: any) => t !== null));
+            } else {
+                toast.error(res.message);
+            }
         } catch (error) {
             console.error("Error creating booking", error);
             toast.error("Error al reservar la clase");
@@ -146,13 +224,13 @@ const StudentDashboard: React.FC = () => {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-gold to-orange-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                         <div className="relative w-16 h-16 rounded-full bg-dark-panel border-2 border-gold/30 flex items-center justify-center font-bold text-2xl text-gold shadow-2xl">
-                            A
+                            {currentUser?.displayName?.charAt(0) || 'A'}
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-dark-panel rounded-full"></div>
                     </div>
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold font-display text-white">
-                            Hola, <span className="text-gold">Alumno</span> <span className="text-white/20">.</span>
+                            Hola, <span className="text-gold">{currentUser?.displayName || 'Alumno'}</span> <span className="text-white/20">.</span>
                         </h1>
                         <p className="text-sm md:text-base text-text-muted flex items-center gap-2">
                             <TrendingUp size={14} className="text-green-400" />
@@ -163,15 +241,16 @@ const StudentDashboard: React.FC = () => {
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <div className="flex-1 md:flex-none glass-panel px-4 py-2 rounded-xl flex items-center gap-3 border-gold/10">
                         <div className="p-2 rounded-lg bg-gold/10 text-gold">
-                            <DollarSign size={18} />
+                            <Trophy size={18} />
                         </div>
                         <div>
-                            <p className="text-[10px] text-text-muted uppercase font-black tracking-widest">Balance</p>
-                            <p className="text-sm font-bold text-white">{balance.toFixed(2)}€</p>
+                            <p className="text-[10px] text-text-muted uppercase font-black tracking-widest">Activo</p>
+                            <p className="text-sm font-bold text-white">TopChess</p>
                         </div>
                     </div>
                     <button
                         onClick={handleLogout}
+                        aria-label="Cerrar Sesión"
                         className="p-3 text-text-muted hover:text-red-400 transition-all rounded-xl border border-white/5 hover:border-red-500/20 bg-white/2"
                         title="Cerrar Sesión"
                     >
@@ -267,22 +346,44 @@ const StudentDashboard: React.FC = () => {
                                         myTeachers.map(teacher => (
                                             <div key={teacher.id} className="glass-panel p-6 rounded-2xl bg-[#1b1a17] border border-white/5 group hover:border-gold/30 transition-all duration-500">
                                                 <div className="flex items-center gap-5 mb-6">
-                                                    <img src={teacher.image || 'https://ui-avatars.com/api/?name=Profesor+Chess&background=random'} alt={teacher.name} className="w-16 h-16 rounded-2xl object-cover border border-white/10" />
+                                                    <img
+                                                        src={teacher.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name)}&background=random`}
+                                                        alt={teacher.name}
+                                                        className="w-16 h-16 rounded-2xl object-cover border border-white/10"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name)}&background=random`;
+                                                        }}
+                                                    />
                                                     <div className="min-w-0">
                                                         <h3 className="font-bold text-white text-lg truncate group-hover:text-gold transition-colors">{teacher.name}</h3>
                                                         <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mt-0.5">{teacher.elo} ELO • Mentor</p>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <Link to={`/classroom/${teacher.id}`} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all border border-white/5">
-                                                        <Video size={14} className="text-gold" /> Aula
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => openBookingModal(teacher)}
-                                                        className="flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5"
-                                                    >
-                                                        <CalendarIcon size={14} /> Agendar
-                                                    </button>
+                                                <div className="grid grid-cols-2 gap-3 mt-4">
+                                                    <div className="col-span-2 flex justify-between items-center bg-black/40 px-4 py-2 rounded-lg border border-white/5 mb-2">
+                                                        <span className="text-xs text-text-muted font-bold">Clases Disponibles:</span>
+                                                        <span className="text-lg font-black text-gold">{teacher.classCredits || 0}</span>
+                                                    </div>
+                                                    {teacher.classCredits > 0 ? (
+                                                        <>
+                                                            <Link to={`/classroom/${teacher.id}`} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all border border-white/5">
+                                                                <Video size={14} className="text-gold" /> Aula
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => openBookingModal(teacher)}
+                                                                className="flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5"
+                                                            >
+                                                                <CalendarIcon size={14} /> Agendar
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleOpenPaymentModal(teacher)}
+                                                            className="col-span-2 flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5"
+                                                        >
+                                                            <DollarSign size={14} /> Pagar Mensualidad
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))
@@ -316,6 +417,41 @@ const StudentDashboard: React.FC = () => {
                         )}
                     </div>
 
+                    {/* Homework Section */}
+                    <div className="glass-panel p-6 rounded-3xl border-white/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all"></div>
+                        <h3 className="font-bold text-white mb-6 flex items-center gap-3 relative z-10">
+                            <div className="p-2 rounded-lg bg-blue-500/10">
+                                <BookOpen className="text-blue-400" size={18} />
+                            </div>
+                            Mis Tareas
+                        </h3>
+                        <div className="space-y-3 relative z-10">
+                            {myHomeworks.length === 0 ? (
+                                <p className="text-xs text-text-muted italic opacity-50 text-center py-4">No tienes tareas asignadas</p>
+                            ) : (
+                                myHomeworks.map(hw => (
+                                    <a
+                                        key={hw.id}
+                                        href={hw.type === 'lichess_study' ? hw.referenceData : '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block p-4 bg-white/[0.02] hover:bg-white/[0.05] rounded-2xl border border-white/5 hover:border-blue-400/30 transition-all group/item"
+                                    >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${hw.status === 'completed' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                                                {hw.status === 'completed' ? 'Completado' : 'Pendiente'}
+                                            </span>
+                                            {hw.type === 'lichess_study' && <ExternalLink size={12} className="text-text-muted group-hover/item:text-white" />}
+                                        </div>
+                                        <h4 className="font-bold text-white text-sm mb-1 truncate">{hw.title}</h4>
+                                        <p className="text-xs text-text-muted line-clamp-1">{hw.description || "Sin descripción"}</p>
+                                    </a>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
                     {/* Pending */}
                     <div className="glass-panel p-6 rounded-3xl border-white/5">
                         <h3 className="font-bold text-white mb-6 flex items-center gap-3">
@@ -346,15 +482,15 @@ const StudentDashboard: React.FC = () => {
             </div>
 
             {/* Booking Modal */}
-            {bookingTeacher && (
+            {selectedTeacher && isBookingModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                     <div className="bg-dark-panel border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative">
-                        <button onClick={() => setBookingTeacher(null)} className="absolute top-4 right-4 text-text-muted hover:text-white">
+                        <button onClick={() => { setSelectedTeacher(null); setIsBookingModalOpen(false); }} className="absolute top-4 right-4 text-text-muted hover:text-white" aria-label="Cerrar Modal">
                             <X size={24} />
                         </button>
                         <div className="p-6 border-b border-white/5">
                             <h2 className="text-xl font-bold text-white">Reservar Clase</h2>
-                            <p className="text-sm text-text-muted">con <span className="text-gold">{bookingTeacher.name}</span></p>
+                            <p className="text-sm text-text-muted">con <span className="text-gold">{selectedTeacher.name}</span></p>
                         </div>
                         <div className="p-6">
                             <Calendar mode="view" availability={teacherAvailability} onSlotClick={handleSlotBook} />
@@ -362,6 +498,13 @@ const StudentDashboard: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                onSuccess={handlePaymentSuccess}
+                teacher={selectedTeacher}
+            />
         </div>
     );
 };

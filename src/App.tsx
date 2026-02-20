@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocat
 import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
 import Navbar from './components/Navbar';
+import MobileNavbar from './components/MobileNavbar';
 import { AnimatePresence, motion } from 'framer-motion';
-import { onAuthStateChanged, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
 
 
@@ -20,52 +21,53 @@ const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const LichessCallback = lazy(() => import('./pages/LichessCallback'));
+const ClubOffice = lazy(() => import('./pages/ClubOffice'));
 
 // Types
 interface AuthContextType {
-  userRole: 'student' | 'teacher' | null;
-  setUserRole: (role: 'student' | 'teacher' | null) => void;
+  userRole: 'student' | 'teacher' | 'admin' | 'club_director' | null;
+  setUserRole: (role: 'student' | 'teacher' | 'admin' | 'club_director' | null) => void;
   currentUserId: string;
   isAuthenticated: boolean;
   currentUser: FirebaseUser | null;
   loginWithGoogle: () => Promise<void>;
-  loginAsTest: (role: 'student' | 'teacher') => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  authError: string | null;
 }
 
 // Mock Auth Context
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [userRole, setUserRole] = useState<'student' | 'teacher' | null>(null); // Default to null to force check
+  const [userRole, setUserRole] = useState<'student' | 'teacher' | 'admin' | 'club_director' | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   React.useEffect(() => {
-    // Handle redirect result first (Google sign-in redirect flow)
-    getRedirectResult(auth).catch(() => {
-      // Ignore redirect errors silently (e.g. no pending redirect)
-    });
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
+      setAuthError(null); // Reset error on state change
       if (user) {
+        setCurrentUser(user);
         // Sync with Firestore
         try {
           const dbUser = await firebaseService.getUser(user.uid);
+
           if (dbUser) {
             setUserRole(dbUser.role);
-            toast.success(`Bienvenido de nuevo, ${dbUser.name}`);
           } else {
-            // New User -> Don't create yet, let them choose role in Onboarding
+            // If getUser returns null (NOT error), it means user is authenticated but has no profile -> Onboarding
+            console.warn("User exists in Auth but not in Firestore");
             setUserRole(null);
           }
         } catch (error) {
-          console.error("Error syncing user:", error);
-          toast.error("Error al sincronizar perfil");
+          console.error("Error syncing user profile:", error);
+          setAuthError("Error de conexión al cargar tu perfil. Revisa tu internet.");
+          // Do NOT set userRole to null here blindly if it's a connection error
         }
       } else {
+        setCurrentUser(null);
         setUserRole(null);
       }
       setLoading(false);
@@ -73,65 +75,28 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
+  // Presence Tracking moved to AnimatedRoutes to be route-aware
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("Login failed", error);
       toast.error("Error al iniciar sesión");
     }
   };
 
-  const loginAsTest = async (role: 'student' | 'teacher') => {
-    if (!import.meta.env.DEV) {
-      toast.error('Función solo disponible en desarrollo');
-      return;
-    }
-    try {
-      setLoading(true);
-      const testUid = `test_${role}_123`;
-      const mockUser = {
-        uid: testUid,
-        email: `${role}@test.com`,
-        displayName: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        photoURL: `https://ui-avatars.com/api/?name=Test+${role}&background=random`
-      } as FirebaseUser;
 
-      // Mock the successful login
-      setCurrentUser(mockUser);
-
-      // Ensure the user exists in Firestore mock-wise or real-wise
-      const dbUser = await firebaseService.getUser(testUid);
-      if (!dbUser) {
-        await firebaseService.createUser({
-          id: testUid,
-          name: mockUser.displayName || 'Test User',
-          email: mockUser.email || '',
-          role: role,
-          photoURL: mockUser.photoURL || '',
-          walletBalance: 100,
-          status: 'active',
-          createdAt: Date.now(),
-          currency: 'EUR'
-        });
-      }
-
-      setUserRole(role);
-      toast.success(`Iniciado como ${role} de prueba`);
-    } catch (error) {
-      console.error("Test login failed", error);
-      toast.error("Error en login de prueba");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const logout = async () => {
     try {
+      if (currentUser) {
+        await firebaseService.updateUserPresence(currentUser.uid, 'offline');
+      }
       await signOut(auth);
       setUserRole(null);
       setCurrentUser(null);
+      setAuthError(null);
       toast.success("Sesión cerrada");
     } catch (error) {
       console.error("Logout failed", error);
@@ -144,7 +109,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated, currentUser, loginWithGoogle, loginAsTest, logout, loading }}>
+    <AuthContext.Provider value={{ userRole, setUserRole, currentUserId, isAuthenticated, currentUser, loginWithGoogle, logout, loading, authError }}>
       {children}
     </AuthContext.Provider>
   );
@@ -165,15 +130,48 @@ const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
 
 const AdminRoute = ({ children }: { children: React.ReactElement }) => {
   const { currentUser } = useAuth();
-  if (currentUser?.email === 'andreslgumuzio@gmail.com') {
-    return children;
-  }
-  return <Navigate to="/" />;
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    const checkAdmin = async () => {
+      if (currentUser) {
+        const adminStatus = await firebaseService.isAdmin(currentUser.uid);
+        setIsAdmin(adminStatus);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+  }, [currentUser]);
+
+  if (isAdmin === null) return <LoadingSpinner />;
+
+  return isAdmin ? children : <Navigate to="/" />;
 };
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen bg-[#161512] text-gold">
     <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin"></div>
+  </div>
+);
+
+const ErrorScreen = ({ message }: { message: string }) => (
+  <div className="flex flex-col items-center justify-center min-h-screen bg-[#161512] text-center px-6">
+    <div className="text-red-500 mb-4 animate-pulse">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <h1 className="text-xl font-bold text-white mb-2">Error de conexión</h1>
+    <p className="text-white/50 mb-6 max-w-sm">{message}</p>
+    <button
+      onClick={() => window.location.reload()}
+      className="px-6 py-3 bg-gold text-black font-bold rounded-xl hover:bg-white transition-all uppercase tracking-widest text-xs"
+    >
+      Reintentar
+    </button>
   </div>
 );
 
@@ -208,14 +206,50 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Separate component to use useLocation hook
 const AnimatedRoutes = () => {
   const location = useLocation();
-  const { isAuthenticated, userRole, loading } = useAuth(); // Need loading state from AuthContext
+  const { isAuthenticated, userRole, loading, authError, currentUser } = useAuth();
   const navigate = useNavigate();
 
+  // Presence Tracking (Route Aware)
   React.useEffect(() => {
-    if (!loading) {
+    if (!currentUser) return;
+
+    const isClassroom = location.pathname.startsWith('/classroom') || location.pathname.startsWith('/room');
+
+    const updatePresence = (status: 'online' | 'offline') => {
+      firebaseService.updateUserPresence(currentUser.uid, status).catch(console.error);
+    };
+
+    if (!isClassroom) {
+      updatePresence('online');
+    }
+
+    const handleVisibilityChange = () => {
+      if (isClassroom) return; // Prevent overwriting in_class state
+
+      if (document.visibilityState === 'visible') {
+        updatePresence('online');
+      } else {
+        updatePresence('offline');
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      updatePresence('offline');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentUser, location.pathname]);
+
+  React.useEffect(() => {
+    if (!loading && !authError) {
       if (!isAuthenticated) {
         if (location.pathname === '/onboarding') {
           navigate('/');
@@ -228,7 +262,11 @@ const AnimatedRoutes = () => {
         }
       }
     }
-  }, [loading, isAuthenticated, userRole, location.pathname, navigate]);
+  }, [loading, isAuthenticated, userRole, location.pathname, navigate, authError]);
+
+  if (authError) {
+    return <ErrorScreen message={authError} />;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -242,11 +280,48 @@ const AnimatedRoutes = () => {
         <Route path="/student-dashboard" element={<PrivateRoute><PageTransition><StudentDashboard /></PageTransition></PrivateRoute>} />
         <Route path="/wallet" element={<PrivateRoute><PageTransition><Wallet /></PageTransition></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><PageTransition><UserProfile /></PageTransition></PrivateRoute>} />
+        <Route path="/office" element={<PrivateRoute><PageTransition><ClubOffice /></PageTransition></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><PageTransition><AdminDashboard /></PageTransition></AdminRoute>} />
         <Route path="/lichess-callback" element={<PageTransition><LichessCallback /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
+  );
+};
+
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isClassroom = location.pathname.includes('/classroom/') || location.pathname.includes('/room/');
+
+  return (
+    <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
+      {!isClassroom && <Navbar />}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#1b1a17',
+            color: '#fff',
+            border: '1px solid rgba(212, 175, 55, 0.2)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#D4AF37', // Gold 
+              secondary: '#1b1a17',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#1b1a17',
+            },
+          },
+        }}
+      />
+      <main className={isClassroom ? '' : 'pt-16'}>
+        {children}
+      </main>
+    </div>
   );
 };
 
@@ -260,15 +335,11 @@ function App() {
       }}
     >
       <AuthProvider>
-        <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
-          <Navbar />
-          <Toaster position="top-center" />
-          <main className="pt-16">
-            <Suspense fallback={<LoadingSpinner />}>
-              <AnimatedRoutes />
-            </Suspense>
-          </main>
-        </div>
+        <Layout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <AnimatedRoutes />
+          </Suspense>
+        </Layout>
       </AuthProvider>
     </Router>
   );

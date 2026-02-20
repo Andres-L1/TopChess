@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Sparkles, Users, Award, Zap, LayoutDashboard } from 'lucide-react';
+import { Play, Sparkles, Users, Award, Zap, LayoutDashboard, Monitor, Globe, ShieldCheck, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FindMentorWizard from '../components/FindMentorWizard';
 import PremiumButton from '../components/PremiumButton';
+import FeatureCard from '../components/FeatureCard';
 
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
@@ -16,8 +17,8 @@ const containerVariants = {
     visible: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.2,
-            delayChildren: 0.3
+            staggerChildren: 0.15,
+            delayChildren: 0.2
         }
     }
 };
@@ -36,25 +37,20 @@ const itemVariants = {
 
 const Home = () => {
     const navigate = useNavigate();
-    const { currentUserId, isAuthenticated, loginWithGoogle, userRole } = useAuth();
+    const { currentUserId, isAuthenticated, loginWithGoogle, userRole, currentUser } = useAuth();
     const { t } = useTranslation();
     const [showWizard, setShowWizard] = useState(false);
-    const [matchResult, setMatchResult] = useState<Teacher | null>(null);
     const [isMatching, setIsMatching] = useState(false);
-    const [realStats, setRealStats] = useState({ users: 0, teachers: 0, requests: 0 });
+    const [stats, setStats] = useState({ users: 0, teachers: 0, requests: 0 });
 
     useEffect(() => {
         const fetchStats = async () => {
-            try {
-                const stats = await firebaseService.getPlatformStats();
-                setRealStats({
-                    users: stats.users,
-                    teachers: stats.teachers,
-                    requests: stats.requests
-                });
-            } catch (error) {
-                console.error("Error fetching stats:", error);
-            }
+            const data = await firebaseService.getPlatformStats();
+            setStats({
+                users: data.users || 0,
+                teachers: data.teachers || 0,
+                requests: data.requests || 0
+            });
         };
         fetchStats();
     }, []);
@@ -72,205 +68,222 @@ const Home = () => {
         setIsMatching(true);
         try {
             const allTeachers = await firebaseService.getTeachers();
-
             if (allTeachers.length === 0) {
                 toast.error("No hay profesores disponibles en este momento");
                 setShowWizard(false);
+                setIsMatching(false);
                 return;
             }
 
+            // Simple matching logic
             let matched = allTeachers.find(t => t.teachingStyle === answers.style);
+            if (!matched) matched = allTeachers[0]; // Fallback
 
-            if (!matched) {
-                matched = allTeachers[Math.floor(Math.random() * allTeachers.length)];
+            if (!currentUserId || !currentUser) {
+                toast.error("Error: Sesión no válida");
+                return;
             }
 
-            setMatchResult(matched);
-            toast.success("¡Hemos encontrado tu profesor ideal!");
+            // Create automatic approved request
+            const requestId = `req_${Date.now()}_${currentUserId.substring(0, 5)}`;
+            const req: Request = {
+                id: requestId,
+                studentId: currentUserId,
+                studentName: currentUser.displayName || 'Estudiante',
+                teacherId: matched.id,
+                status: 'approved', // Automatically approved
+                timestamp: Date.now(),
+                message: "¡Hola! El sistema nos ha emparejado automáticamente."
+            };
+
+            await firebaseService.createRequest(req);
+
+            // Notify Teacher
+            await firebaseService.createNotification({
+                id: `notif_${Date.now()}_${matched.id.substring(0, 5)}`,
+                userId: matched.id,
+                title: '¡Nuevo Alumno Asignado!',
+                message: `${currentUser.displayName} se ha unido a tus clases.`,
+                type: 'match',
+                read: false,
+                timestamp: Date.now(),
+                link: `/chat/${currentUserId}`
+            });
+
+            toast.success("¡Match exitoso! Hemos encontrado a tu mentor.");
+            navigate(`/chat/${matched.id}`); // Proceed directly to chat
+
         } catch (error) {
             console.error("Matching error:", error);
-            toast.error("Error al buscar profesores");
+            toast.error("Error durante el emparejamiento.");
         } finally {
             setIsMatching(false);
         }
     };
 
-    const confirmMatch = async () => {
-        if (!matchResult || !currentUserId) {
-            if (!currentUserId) toast.error("Por favor, inicia sesión");
-            return;
-        }
-
-        try {
-            const requestId = `req_${Date.now()}_${currentUserId.substring(0, 5)}`;
-            const req: Request = {
-                id: requestId,
-                studentId: currentUserId,
-                teacherId: matchResult.id,
-                status: 'pending',
-                timestamp: Date.now(),
-                message: "Hola, me gustaría empezar mis clases contigo."
-            };
-
-            await firebaseService.createRequest(req);
-            toast.success("Solicitud enviada. ¡Ve al chat!");
-            navigate(`/chat/${matchResult.id}`);
-        } catch (error) {
-            console.error("Error sending request:", error);
-            toast.error("Error al conectar con el profesor");
-        }
-    };
-
-    const statsDisplaied = [
-        {
-            icon: <Users size={20} />,
-            value: realStats.users > 0 ? `${realStats.users}+` : "150+",
-            label: t('stats.students')
-        },
-        {
-            icon: <Award size={20} />,
-            value: realStats.teachers > 0 ? `${realStats.teachers}+` : "15+",
-            label: t('stats.grandmasters')
-        },
-        {
-            icon: <Zap size={20} />,
-            value: "24h",
-            label: t('stats.response_time')
-        }
-    ];
-
-    return (
-        <div className="relative min-h-[calc(100vh-160px)] flex flex-col items-center justify-center p-6 overflow-hidden mt-10">
-
-            {/* Background Decor */}
-            <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none animate-float" style={{ animationDelay: '0s' }}></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-gold/5 rounded-full blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
-
-            {!showWizard && !matchResult ? (
-                <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={containerVariants}
-                    className="max-w-4xl w-full text-center z-10 space-y-12"
-                >
-                    {/* Hero Text */}
-                    <div className="space-y-6">
-                        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-gold/20 text-gold/90 text-xs font-bold uppercase tracking-widest shadow-lg shadow-gold/5 mb-4">
-                            <Sparkles size={14} /> {t('premium_platform')}
-                        </motion.div>
-
-                        <motion.h1 variants={itemVariants} className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter leading-tight text-white mb-6">
-                            {t('hero_title')}
-                        </motion.h1>
-
-                        <motion.p variants={itemVariants} className="text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
-                            {t('hero_subtitle')}
-                        </motion.p>
-                    </div>
-
-                    {/* Main Action */}
-                    <motion.div variants={itemVariants} className="flex flex-col items-center gap-4">
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                            <PremiumButton
-                                onClick={handleFindTeacher}
-                                size="lg"
-                                icon={Play}
-                            >
-                                {!isAuthenticated ? t('login_to_find') : t('find_teacher')}
-                            </PremiumButton>
-
-                            {isAuthenticated && userRole && (
-                                <PremiumButton
-                                    variant="outline"
-                                    size="lg"
-                                    onClick={() => navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard')}
-                                    icon={LayoutDashboard}
-                                >
-                                    {t('nav.panel')}
-                                </PremiumButton>
-                            )}
-                        </div>
-                        <p className="text-sm text-text-muted opacity-60">{t('no_commitment')}</p>
-                    </motion.div>
-
-                    {/* Social Proof / Stats */}
-                    <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto pt-8 border-t border-white/5">
-                        {statsDisplaied.map((stat, i) => (
-                            <div key={i} className="flex flex-col items-center space-y-1 group">
-                                <div className="p-3 rounded-full bg-white/5 text-gold mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
-                                <span className="text-2xl font-bold text-white transition-all group-hover:text-gold">{stat.value}</span>
-                                <span className="text-[10px] text-text-muted uppercase tracking-widest font-medium">{stat.label}</span>
-                            </div>
-                        ))}
-                    </motion.div>
-
-                </motion.div>
-            ) : matchResult ? (
-                <div className="max-w-md w-full animate-enter z-20">
-                    <div className="glass-panel p-8 rounded-3xl text-center space-y-6 border border-gold/30 shadow-[0_0_50px_rgba(212,175,55,0.1)]">
-                        <div className="inline-block p-4 rounded-full bg-gold/10 border border-gold/30 mb-2">
-                            <Award size={48} className="text-gold" />
-                        </div>
-
-                        <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">¡Profesor Encontrado!</h2>
-                            <p className="text-text-muted">Basado en tus objetivos, te recomendamos a:</p>
-                        </div>
-
-                        <div className="bg-black/30 p-4 rounded-xl border border-white/10 flex items-center gap-4 text-left hover:border-gold/30 transition-colors cursor-pointer" onClick={confirmMatch}>
-                            <img src={matchResult.image} alt={matchResult.name} className="w-16 h-16 rounded-full object-cover border-2 border-gold/50" />
-                            <div>
-                                <h3 className="text-lg font-bold text-white">{matchResult.name}</h3>
-                                <p className="text-gold font-mono text-sm">ELO {matchResult.elo}</p>
-                                <div className="flex gap-1 mt-1">
-                                    {matchResult.tags?.slice(0, 2).map((tag: string) => (
-                                        <span key={tag} className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-text-secondary">{tag}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 pt-4">
-                            <PremiumButton
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => setMatchResult(null)}
-                            >
-                                Volver
-                            </PremiumButton>
-                            <PremiumButton
-                                className="flex-1"
-                                onClick={confirmMatch}
-                            >
-                                Conectar
-                            </PremiumButton>
-                        </div>
-                    </div>
+    // If Wizard is active, show it exclusively
+    if (showWizard) {
+        return (
+            <div className="min-h-screen pt-24 px-4 flex items-center justify-center relative overflow-hidden bg-[#1b1a17]">
+                {/* Background Blobs */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute top-20 left-10 w-96 h-96 bg-gold/10 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-[120px]" />
                 </div>
-            ) : (
-                <div className="w-full max-w-2xl animate-enter relative z-20">
-                    <button
-                        onClick={() => setShowWizard(false)}
-                        className="mb-8 text-text-muted hover:text-white flex items-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors"
-                    >
-                        ← Volver al inicio
-                    </button>
-                    <div className="glass-panel rounded-3xl p-1 overflow-hidden shadow-2xl">
+
+                <div className="relative z-10 w-full max-w-4xl animate-enter">
+                    <>
+                        <button
+                            onClick={() => setShowWizard(false)}
+                            className="mb-8 text-white/50 hover:text-white flex items-center gap-2 transition-colors"
+                        >
+                            ← Volver
+                        </button>
                         {isMatching ? (
-                            <div className="h-[500px] flex flex-col items-center justify-center p-12 text-center space-y-6">
-                                <div className="w-20 h-20 border-4 border-gold/10 border-t-gold rounded-full animate-spin"></div>
-                                <h3 className="text-xl font-bold text-white">Buscando tu profesor ideal...</h3>
-                                <p className="text-text-muted italic">Analizando perfiles y estilos de enseñanza</p>
+                            <div className="glass-panel h-[500px] flex flex-col items-center justify-center p-12 text-center bg-[#262421]">
+                                <div className="w-20 h-20 border-4 border-gold/10 border-t-gold rounded-full animate-spin mb-6"></div>
+                                <h3 className="text-2xl font-bold text-white mb-2">Analizando Perfil...</h3>
+                                <p className="text-[#8b8982]">Buscando al maestro perfecto para ti en nuestra red</p>
                             </div>
                         ) : (
                             <FindMentorWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />
                         )}
+                    </>
+                </div>
+            </div>
+        );
+    }
+
+    // Default Landing Page View
+    return (
+        <div className="relative min-h-screen">
+            {/* Hero Section */}
+            <div className="relative pt-32 pb-20 px-4 overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none z-0" />
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gold/5 rounded-full blur-[150px] pointer-events-none z-0" />
+
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                    className="max-w-6xl mx-auto text-center relative z-10"
+                >
+                    <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gold text-xs font-bold uppercase tracking-widest mb-8 backdrop-blur-sm">
+                        <Sparkles size={14} /> La Élite del Ajedrez Hispano
+                    </motion.div>
+
+                    <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white mb-8 leading-[1.1]">
+                        Encontramos al <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-200 to-gold">Gran Maestro perfecto</span> para ti
+                    </motion.h1>
+
+                    <motion.p variants={itemVariants} className="text-xl text-[#8b8982] max-w-2xl mx-auto mb-10 leading-relaxed">
+                        No pierdas tiempo buscando. Nuestro sistema te empareja automáticamente con el mentor ideal según tu nivel y objetivos. Únete a la plataforma más premium.
+                    </motion.p>
+
+                    <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <PremiumButton onClick={handleFindTeacher} size="lg" icon={Play} className="w-full sm:w-auto min-w-[200px]">
+                            {isAuthenticated ? 'Encontrar Inmediatamente' : 'Comienza tu Camino'}
+                        </PremiumButton>
+                        {!isAuthenticated && (
+                            <PremiumButton variant="outline" size="lg" onClick={() => navigate('/onboarding')} className="w-full sm:w-auto min-w-[200px]">
+                                Quiero ser Profesor
+                            </PremiumButton>
+                        )}
+                        {isAuthenticated && (
+                            <PremiumButton variant="outline" size="lg" onClick={() => navigate('/dashboard')} icon={LayoutDashboard} className="w-full sm:w-auto min-w-[200px]">
+                                Ir a mi Panel
+                            </PremiumButton>
+                        )}
+                    </motion.div>
+
+                    {/* Stats */}
+                    <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 pt-10 border-t border-white/5 max-w-4xl mx-auto">
+                        <div className="text-center">
+                            <div className="text-3xl font-bold text-white mb-1">{stats.users}+</div>
+                            <div className="text-xs text-[#8b8982] uppercase tracking-widest">Estudiantes</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl font-bold text-white mb-1">{stats.teachers}+</div>
+                            <div className="text-xs text-[#8b8982] uppercase tracking-widest">Grandes Maestros</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl font-bold text-white mb-1">100%</div>
+                            <div className="text-xs text-[#8b8982] uppercase tracking-widest">Match Perfecto</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl font-bold text-white mb-1">4.9/5</div>
+                            <div className="text-xs text-[#8b8982] uppercase tracking-widest">Satisfacción</div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            </div>
+
+            {/* Features Section */}
+            <div className="py-24 px-4 bg-[#1a1917]/50 border-t border-white/5">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Todo en un solo lugar</h2>
+                        <p className="text-[#8b8982]">Nos encargamos del aburrido proceso logístico. Tú dedícate a jugar.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <FeatureCard
+                            icon={Monitor}
+                            title="Aula Integrada"
+                            description="Tablero, videollamada y análisis integrados en una misma pantalla."
+                            delay="0s"
+                        />
+                        <FeatureCard
+                            icon={Zap}
+                            title="Emparejamiento IA"
+                            description="Encontramos al profesor perfecto en segundos analizando tu estilo de juego."
+                            delay="0.1s"
+                        />
+                        <FeatureCard
+                            icon={Globe}
+                            title="Pagos Globales"
+                            description="Tarifas estandarizadas con Stripe. Todo se gestiona automáticamente."
+                            delay="0.2s"
+                        />
+                        <FeatureCard
+                            icon={Users}
+                            title="Chat y Comunidad"
+                            description="Mantente conectado y pide revisión de partidas."
+                            delay="0.3s"
+                        />
+                        <FeatureCard
+                            icon={Award}
+                            title="Calendario Nativo"
+                            description="Reserva con 1 click. Los créditos mensuales se descuentan al instante."
+                            delay="0.4s"
+                        />
+
+                        <FeatureCard
+                            icon={ShieldCheck}
+                            title="Comunidad Verificada"
+                            description="Solo aceptamos Grandes Maestros con título verificado internacionalmente."
+                            delay="0.5s"
+                        />
                     </div>
                 </div>
-            )}
+            </div>
+
+            {/* CTA Section */}
+            <div className="py-24 px-4 text-center relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/5 rounded-full blur-[100px] pointer-events-none" />
+
+                <div className="relative z-10 max-w-3xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">
+                        ¿Listo para alcanzar la <br /><span className="text-gold">Maestría</span>?
+                    </h2>
+                    <PremiumButton onClick={handleFindTeacher} size="xl" className="px-12 py-6 text-xl shadow-2xl shadow-gold/20 hover:shadow-gold/40">
+                        Empieza Ahora <ChevronRight className="ml-2" />
+                    </PremiumButton>
+                </div>
+            </div>
         </div>
     );
 };
 
 export default Home;
-

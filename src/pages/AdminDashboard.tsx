@@ -10,7 +10,7 @@ import {
     TrendingUp, Zap, AlertTriangle, Eye,
     RefreshCw, ChevronRight, Server, Globe,
     Cpu, Lock, Unlock, Edit2, Check, X,
-    BarChart2, Clock, Wifi, WifiOff
+    BarChart2, Clock, Wifi, WifiOff, Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -105,10 +105,18 @@ const TabBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.Eleme
     </button>
 );
 
-/* ─── Editable commission cell ───────────────────────────────────────────── */
-const CommissionCell: React.FC<{ teacher: Teacher; onSave: (id: string, rate: number) => void }> = ({ teacher, onSave }) => {
+const CommissionCell: React.FC<{ teacher: Teacher; onSave: (id: string, rate: number) => Promise<void> }> = ({ teacher, onSave }) => {
     const [editing, setEditing] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [val, setVal] = useState(String(Math.round((teacher.commissionRate ?? 0.5) * 100)));
+
+    const handleSave = async () => {
+        setLoading(true);
+        await onSave(teacher.id, Number(val) / 100);
+        setLoading(false);
+        setEditing(false);
+    };
+
     return editing ? (
         <div className="flex items-center gap-1.5">
             <input
@@ -117,13 +125,20 @@ const CommissionCell: React.FC<{ teacher: Teacher; onSave: (id: string, rate: nu
                 value={val}
                 onChange={e => setVal(e.target.value)}
                 className="w-16 bg-black/60 border border-gold/40 rounded-lg px-2 py-1 text-xs text-gold font-mono text-center outline-none"
+                disabled={loading}
             />
             <span className="text-[10px] text-white/30">%</span>
-            <button onClick={() => { onSave(teacher.id, Number(val) / 100); setEditing(false); }} className="text-green-400 hover:text-green-300"><Check size={13} /></button>
-            <button onClick={() => setEditing(false)} className="text-red-400 hover:text-red-300"><X size={13} /></button>
+            {loading ? (
+                <Loader2 size={13} className="text-gold animate-spin" />
+            ) : (
+                <>
+                    <button onClick={handleSave} className="text-green-400 hover:text-green-300 transition-colors"><Check size={13} /></button>
+                    <button onClick={() => setEditing(false)} className="text-red-400 hover:text-red-300 transition-colors"><X size={13} /></button>
+                </>
+            )}
         </div>
     ) : (
-        <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 group/edit">
+        <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 group/edit px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
             <span className="text-xs font-black text-gold font-mono">{Math.round((teacher.commissionRate ?? 0.5) * 100)}%</span>
             <Edit2 size={10} className="text-white/20 group-hover/edit:text-gold transition-colors" />
         </button>
@@ -148,6 +163,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState(Date.now());
     const [liveCount, setLiveCount] = useState(0);
+    const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
     // Pulse counter for live indicator
     const tickRef = useRef(0);
@@ -203,17 +219,21 @@ const AdminDashboard = () => {
 
     /* ── Actions ────────────────────────────────────────────────────────── */
     const handleBan = async (userId: string, isBanned: boolean) => {
+        setProcessingIds(prev => new Set(prev).add(userId));
         try {
             await firebaseService.banUser(userId, !isBanned);
             toast.success(isBanned ? '✅ Usuario desrestringido' : '🚫 Usuario restringido');
         } catch { toast.error('Error al cambiar estado'); }
+        finally { setProcessingIds(prev => { const n = new Set(prev); n.delete(userId); return n; }); }
     };
 
     const handleVerify = async (teacherId: string, isVerified: boolean) => {
+        setProcessingIds(prev => new Set(prev).add(teacherId));
         try {
             await firebaseService.verifyTeacher(teacherId, !isVerified);
             toast.success(isVerified ? 'Verificación retirada' : '⭐ Verificación concedida');
         } catch { toast.error('Error al verificar'); }
+        finally { setProcessingIds(prev => { const n = new Set(prev); n.delete(teacherId); return n; }); }
     };
 
     const handleCommission = async (teacherId: string, rate: number) => {
@@ -343,7 +363,7 @@ const AdminDashboard = () => {
 
                     {/* ── Tab: USERS ─────────────────────────────────────── */}
                     {activeTab === 'users' && (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto overflow-y-hidden custom-scrollbar">
                             <table className="w-full min-w-[700px]">
                                 <thead>
                                     <tr className="bg-white/[0.02] border-b border-white/5">
@@ -398,13 +418,14 @@ const AdminDashboard = () => {
                                             <td className="p-4 text-right">
                                                 <button
                                                     onClick={() => handleBan(user.id, user.status === 'banned')}
-                                                    className={`p-2 rounded-xl border transition-all ${user.status === 'banned'
+                                                    disabled={processingIds.has(user.id)}
+                                                    className={`p-2 rounded-xl border transition-all flex items-center justify-center ml-auto ${user.status === 'banned'
                                                         ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
                                                         : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
-                                                        }`}
+                                                        } ${processingIds.has(user.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     title={user.status === 'banned' ? 'Restaurar acceso' : 'Restringir usuario'}
                                                 >
-                                                    {user.status === 'banned' ? <Unlock size={14} /> : <Lock size={14} />}
+                                                    {processingIds.has(user.id) ? <Loader2 size={14} className="animate-spin" /> : (user.status === 'banned' ? <Unlock size={14} /> : <Lock size={14} />)}
                                                 </button>
                                             </td>
                                         </tr>
@@ -417,7 +438,7 @@ const AdminDashboard = () => {
 
                     {/* ── Tab: TEACHERS ──────────────────────────────────── */}
                     {activeTab === 'teachers' && (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto overflow-y-hidden custom-scrollbar">
                             <table className="w-full min-w-[800px]">
                                 <thead>
                                     <tr className="bg-white/[0.02] border-b border-white/5">
@@ -463,12 +484,13 @@ const AdminDashboard = () => {
                                             <td className="p-4 text-right">
                                                 <button
                                                     onClick={() => handleVerify(teacher.id, teacher.isVerified ?? false)}
-                                                    className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${teacher.isVerified
+                                                    disabled={processingIds.has(teacher.id)}
+                                                    className={`px-3 flex items-center justify-center gap-2 ml-auto py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${teacher.isVerified
                                                         ? 'bg-gold text-black border-gold shadow-gold/20'
                                                         : 'bg-white/5 text-white/30 border-white/10 hover:border-gold/40 hover:text-gold'
-                                                        }`}
+                                                        } ${processingIds.has(teacher.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 >
-                                                    {teacher.isVerified ? '✓ Verificado' : 'Verificar'}
+                                                    {processingIds.has(teacher.id) ? <Loader2 size={12} className="animate-spin" /> : (teacher.isVerified ? '✓ Verificado' : 'Verificar')}
                                                 </button>
                                             </td>
                                         </tr>
@@ -481,7 +503,7 @@ const AdminDashboard = () => {
 
                     {/* ── Tab: TRANSACTIONS ──────────────────────────────── */}
                     {activeTab === 'transactions' && (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto overflow-y-hidden custom-scrollbar">
                             <table className="w-full min-w-[700px]">
                                 <thead>
                                     <tr className="bg-white/[0.02] border-b border-white/5">

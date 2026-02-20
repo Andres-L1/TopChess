@@ -17,8 +17,12 @@ export interface Teacher {
     achievements: string[];
     isVerified?: boolean;
     title?: string;
+    role?: 'student' | 'teacher' | 'admin' | 'club_director';
     lichessUsername?: string;
     lichessAccessToken?: string;
+    onlineStatus?: 'offline' | 'online' | 'in_class';
+    lastActive?: number;
+    clubId?: string;
 }
 
 export interface TeacherAvailability {
@@ -28,11 +32,27 @@ export interface TeacherAvailability {
 export interface Request {
     id: string;
     studentId: string;
+    studentName: string;
     teacherId: string;
     status: 'pending' | 'approved' | 'rejected';
     timestamp: number;
     message?: string;
-    studentName?: string;
+    classCredits?: number;
+}
+
+export interface Homework {
+    id: string;
+    teacherId: string;
+    studentId: string;
+    studentName?: string; // Optional for display
+    title: string;
+    description?: string;
+    type: 'lichess_study' | 'custom_fen' | 'puzzle';
+    referenceData: string; // URL, ID, or FEN string
+    status: 'pending' | 'completed';
+    assignedAt: number;
+    completedAt?: number;
+    dueDate?: number;
 }
 
 export interface Message {
@@ -40,7 +60,7 @@ export interface Message {
     studentId: string;
     teacherId: string;
     text: string;
-    sender: 'student' | 'teacher';
+    sender: 'student' | 'teacher' | 'admin' | 'club_director';
     timestamp: number;
     type?: 'text' | 'payment_request' | 'game_invite';
     amount?: number;
@@ -59,6 +79,7 @@ export interface RoomData {
     chapters?: { name: string, pgn: string }[];
     activeChapterIndex?: number;
     comment?: string;
+    comments?: Record<number, string>;
 }
 
 export interface WalletData {
@@ -109,14 +130,36 @@ export interface AppUser {
     id: string;
     email: string;
     name: string;
-    role: 'student' | 'teacher';
+    role: 'student' | 'teacher' | 'admin' | 'club_director';
     status?: 'active' | 'banned';
     photoURL?: string;
     createdAt: number;
     walletBalance: number;
     currency: string;
+    // Presence
+    onlineStatus?: 'offline' | 'online' | 'in_class';
+    lastActive?: number;
     // Student specific fields
     elo?: number;
     learningGoals?: string[];
     preferredStyle?: string;
+}
+
+export interface AppNotification {
+    id: string;
+    userId: string;
+    title: string;
+    message: string;
+    type: 'match' | 'message' | 'booking' | 'system';
+    read: boolean;
+    timestamp: number;
+    link?: string;
+}
+
+export interface Club {
+    id: string;
+    name: string;
+    directorId: string;
+    teacherIds: string[];
+    createdAt: number;
 }

@@ -12,7 +12,9 @@ import '../styles/lichess.css';
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
 import useChessSound from '../hooks/useChessSound';
+import { lichessService } from '../services/lichessService';
 import { useLilaEval } from '../hooks/useLilaEval';
+import { useVibration } from '../hooks/useVibration';
 import { RoomData, GameState } from '../types/index';
 import EngineEval from './EngineEval';
 import { Chess as ChessJS } from 'chess.js';
@@ -23,6 +25,7 @@ interface BoardProps {
     isAnalysisEnabled?: boolean;
     onAnalysisToggle?: (enabled: boolean) => void;
     chapterPgn?: string;
+    roomData?: RoomData | null;
 }
 
 export interface BoardHandle {
@@ -31,7 +34,7 @@ export interface BoardHandle {
     toggleOrientation: () => void;
 }
 
-const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChange, isAnalysisEnabled: externalAnalysisEnabled, chapterPgn }, ref) => {
+const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChange, isAnalysisEnabled: externalAnalysisEnabled, chapterPgn, roomData }, ref) => {
     // Logic State (Chessops)
     const chessRef = useRef<Chess>(Chess.default());
 
@@ -62,6 +65,7 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
 
     const { userRole } = useAuth();
     const { play } = useChessSound();
+    const { vibrate } = useVibration();
 
     // Lila (Lichess Cloud Eval) Hook
     const { result: lilaResult, isLoading: isLilaLoading, analyze, stop: stopLila } = useLilaEval();
@@ -133,8 +137,13 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
                 newPos.play(move);
                 const captured = chess.board.has(to);
                 chessRef.current = newPos;
-                if (captured) play('capture');
-                else play('move');
+                if (captured) {
+                    play('capture');
+                    vibrate([10]); // Slight stronger for capture
+                } else {
+                    play('move');
+                    vibrate(5); // Very subtle for move
+                }
 
                 // Truncate if moving from historical position, otherwise append
                 const updatedHistory = isAtEnd ? [...currentHist, sanMove] : currentHist.slice(0, currentIdx + 1).concat(sanMove);
@@ -234,10 +243,7 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
         if (userRole === 'teacher' && chapterPgn) {
             try {
                 const tempGame = new ChessJS();
-                const cleanPgn = chapterPgn
-                    .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime) ".*"\]/g, "")
-                    .replace(/\{(\[%clk [^\]]+\]|\[%eval [^\]]+\])\}/g, "")
-                    .replace(/\r/g, "");
+                const cleanPgn = lichessService.sanitizePgn(chapterPgn);
 
                 try {
                     (tempGame as any).loadPgn(cleanPgn);
@@ -300,73 +306,71 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
         });
     };
 
+    // ── Sync with Remote Room Data (Prop based) ──────────────────────────
     useEffect(() => {
-        const unsubscribe = firebaseService.subscribeToRoom(teacherId, (data: RoomData) => {
-            if (data) {
-                if (data.shapes && JSON.stringify(data.shapes) !== JSON.stringify(shapes)) {
-                    setShapes(data.shapes);
-                    apiRef.current?.set({ drawable: { shapes: data.shapes } });
-                }
+        if (!roomData) return;
 
-                if (data.fen) {
-                    const currentFen = chessopsFen.makeFen(chessRef.current.toSetup());
-                    // Sync history and currentIndex even if FEN is the same (navigation)
-                    if (data.fen !== currentFen || data.currentIndex !== currentIndexRef.current || data.history?.length !== historyRef.current.length) {
-                        try {
-                            const setup = chessopsFen.parseFen(data.fen).unwrap();
-                            const newPos = Chess.fromSetup(setup).unwrap();
-                            chessRef.current = newPos;
+        const data = roomData;
+        if (data.shapes && JSON.stringify(data.shapes) !== JSON.stringify(shapes)) {
+            setShapes(data.shapes);
+            apiRef.current?.set({ drawable: { shapes: data.shapes } });
+        }
 
-                            const newHistory = data.history || [];
-                            const newFenHistory = data.fenHistory || [chessopsFen.makeFen(Chess.default().toSetup())];
-                            const newIdx = data.currentIndex !== undefined ? data.currentIndex : (newHistory.length - 1);
+        if (data.fen) {
+            const currentFen = chessopsFen.makeFen(chessRef.current.toSetup());
+            // Sync history and currentIndex even if FEN is the same (navigation)
+            if (data.fen !== currentFen || data.currentIndex !== currentIndexRef.current || data.history?.length !== historyRef.current.length) {
+                try {
+                    const setup = chessopsFen.parseFen(data.fen).unwrap();
+                    const newPos = Chess.fromSetup(setup).unwrap();
+                    chessRef.current = newPos;
 
-                            // Sync refs for immediate move handling
-                            historyRef.current = newHistory;
-                            fenHistoryRef.current = newFenHistory;
-                            currentIndexRef.current = newIdx;
+                    const newHistory = data.history || [];
+                    const newFenHistory = data.fenHistory || [chessopsFen.makeFen(Chess.default().toSetup())];
+                    const newIdx = data.currentIndex !== undefined ? data.currentIndex : (newHistory.length - 1);
 
-                            setFen(data.fen);
-                            setLastMove(data.lastMove as [Key, Key] || null);
-                            setTurn(newPos.turn === 'white' ? 'w' : 'b');
-                            setIsGameOver(newPos.isEnd());
-                            if (data.orientation) setOrientation(data.orientation);
-                            setHistory(newHistory);
-                            setFenHistory(newFenHistory);
-                            setCurrentIndex(newIdx);
+                    // Sync refs for immediate move handling
+                    historyRef.current = newHistory;
+                    fenHistoryRef.current = newFenHistory;
+                    currentIndexRef.current = newIdx;
 
-                            apiRef.current?.set({
-                                fen: data.fen,
-                                lastMove: data.lastMove as [Key, Key] || undefined,
-                                orientation: data.orientation || orientation,
-                                turnColor: newPos.turn,
-                                check: newPos.isCheck(),
-                                movable: {
-                                    color: userRole === 'teacher' ? 'both' : newPos.turn,
-                                    dests: getDests(newPos)
-                                }
-                            });
+                    setFen(data.fen);
+                    setLastMove(data.lastMove as [Key, Key] || null);
+                    setTurn(newPos.turn === 'white' ? 'w' : 'b');
+                    setIsGameOver(newPos.isEnd());
+                    if (data.orientation) setOrientation(data.orientation);
+                    setHistory(newHistory);
+                    setFenHistory(newFenHistory);
+                    setCurrentIndex(newIdx);
 
-                            if (onGameStateChange) {
-                                onGameStateChange({
-                                    fen: data.fen,
-                                    history: newHistory,
-                                    turn: newPos.turn === 'white' ? 'w' : 'b',
-                                    isGameOver: newPos.isEnd(),
-                                    orientation: data.orientation || orientation,
-                                    currentIndex: newIdx
-                                });
-                            }
-                        } catch (e) {
-                            console.error("Remote sync error", e);
+                    apiRef.current?.set({
+                        fen: data.fen,
+                        lastMove: data.lastMove as [Key, Key] || undefined,
+                        orientation: data.orientation || orientation,
+                        turnColor: newPos.turn,
+                        check: newPos.isCheck(),
+                        movable: {
+                            color: userRole === 'teacher' ? 'both' : newPos.turn,
+                            dests: getDests(newPos)
                         }
+                    });
+
+                    if (onGameStateChange) {
+                        onGameStateChange({
+                            fen: data.fen,
+                            history: newHistory,
+                            turn: newPos.turn === 'white' ? 'w' : 'b',
+                            isGameOver: newPos.isEnd(),
+                            orientation: data.orientation || orientation,
+                            currentIndex: newIdx
+                        });
                     }
+                } catch (e) {
+                    console.error("Remote sync error", e);
                 }
             }
-        });
-        return () => unsubscribe();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [teacherId, isAnalysisActive]);
+        }
+    }, [roomData]);
 
     const handleGoToMove = (index: number) => {
         const hist = historyRef.current;
@@ -422,6 +426,7 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
                 newPos.play(move);
                 chessRef.current = newPos;
                 play('promote');
+                vibrate([20]); // Distinct vibration for promotion
                 const newHistory = history.concat(sanMove);
                 const newFen = chessopsFen.makeFen(newPos.toSetup());
                 const newFenHistory = fenHistory.concat(newFen);

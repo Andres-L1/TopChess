@@ -1,9 +1,8 @@
-
 import React from 'react';
 
 interface SkeletonProps {
     className?: string;
-    variant?: 'text' | 'circular' | 'rectangular';
+    variant?: 'text' | 'rectangular' | 'circular';
     width?: string | number;
     height?: string | number;
 }
@@ -14,22 +13,16 @@ const Skeleton: React.FC<SkeletonProps> = ({
     width,
     height
 }) => {
-    const baseClasses = "animate-pulse bg-white/10 rounded";
-    const variantClasses = {
-        text: "h-4 w-full",
-        circular: "rounded-full",
-        rectangular: "h-full w-full"
-    };
+    const baseClasses = "animate-pulse bg-white/5 rounded-md";
 
-    const style = {
-        width,
-        height
-    };
+    let variantClasses = "";
+    if (variant === 'circular') variantClasses = "rounded-full";
+    if (variant === 'text') variantClasses = "h-4 w-3/4 rounded";
 
     return (
         <div
-            className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-            style={style}
+            className={`${baseClasses} ${variantClasses} ${className}`}
+            style={{ width, height }}
         />
     );
 };

@@ -1,55 +1,52 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import { firebaseService } from '../services/firebaseService';
 import { User, GraduationCap, ArrowRight } from 'lucide-react';
-import MatchWizard from '../components/MatchWizard';
-import StudentWizard from '../components/StudentWizard';
-import toast from 'react-hot-toast';
+import TeacherRegistrationForm from '../components/TeacherRegistrationForm';
+import StudentRegistrationForm from '../components/StudentRegistrationForm';
 
 const Onboarding = () => {
-    const { currentUser, userRole, setUserRole } = useAuth();
+    const { userRole } = useAuth();
     const navigate = useNavigate();
-    const [view, setView] = useState<'selection' | 'student_wizard' | 'teacher_wizard'>('selection');
+    const [view, setView] = useState<'selection' | 'student_form' | 'teacher_form'>('selection');
 
     React.useEffect(() => {
         if (userRole === 'teacher') navigate('/dashboard');
         if (userRole === 'student') navigate('/student-dashboard');
     }, [userRole, navigate]);
 
-    const handleStudentSelect = () => {
-        setView('student_wizard');
-    };
-
-    const handleStudentWizardComplete = () => {
+    const handleStudentComplete = () => {
         navigate('/student-dashboard');
     };
 
-    const handleTeacherSelect = () => {
-        setView('teacher_wizard');
-    };
-
-    const handleWizardComplete = () => {
-        setUserRole('teacher');
+    const handleTeacherComplete = () => {
         navigate('/dashboard');
     };
 
-    if (view === 'student_wizard') {
+    if (view === 'student_form') {
         return (
-            <div className="min-h-screen bg-[#161512] flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full">
-                    <StudentWizard onComplete={handleStudentWizardComplete} />
-                </div>
+            <div className="min-h-screen bg-[#161512] py-12 px-4">
+                <button
+                    onClick={() => setView('selection')}
+                    className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2"
+                >
+                    ← Volver
+                </button>
+                <StudentRegistrationForm onComplete={handleStudentComplete} />
             </div>
         );
     }
 
-    if (view === 'teacher_wizard') {
+    if (view === 'teacher_form') {
         return (
-            <div className="min-h-screen bg-[#161512] flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full">
-                    <MatchWizard onComplete={handleWizardComplete} />
-                </div>
+            <div className="min-h-screen bg-[#161512] py-12 px-4">
+                <button
+                    onClick={() => setView('selection')}
+                    className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2"
+                >
+                    ← Volver
+                </button>
+                <TeacherRegistrationForm onComplete={handleTeacherComplete} />
             </div>
         );
     }
@@ -66,7 +63,7 @@ const Onboarding = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl animate-enter delay-200">
                 {/* Student Card */}
                 <button
-                    onClick={handleStudentSelect}
+                    onClick={() => setView('student_form')}
                     className="group bg-[#262421] hover:bg-[#302e2b] border border-white/5 hover:border-gold/30 rounded-2xl p-8 transition-all flex flex-col items-center gap-6 text-left relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
@@ -89,7 +86,7 @@ const Onboarding = () => {
 
                 {/* Teacher Card */}
                 <button
-                    onClick={handleTeacherSelect}
+                    onClick={() => setView('teacher_form')}
                     className="group bg-[#262421] hover:bg-[#302e2b] border border-white/5 hover:border-gold/30 rounded-2xl p-8 transition-all flex flex-col items-center gap-6 text-left relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">

@@ -21,24 +21,25 @@ const Wallet: React.FC = () => {
     const [depositAmount, setDepositAmount] = useState(50);
     const [isLoading, setIsLoading] = useState(true);
 
-    const loadData = async () => {
+    const loadData = () => {
         setIsLoading(true);
-        try {
-            const walletData = await firebaseService.getWallet(currentUserId);
-            const txs = await firebaseService.getTransactions(currentUserId);
+        const unsubWallet = firebaseService.observeWallet(currentUserId, (walletData) => {
             setWallet(walletData);
+        });
+        const unsubTxs = firebaseService.observeTransactions(currentUserId, (txs) => {
             setTransactions(txs);
-        } catch (error) {
-            console.error("Error loading wallet data", error);
-            toast.error("Error al cargar datos del monedero");
-        } finally {
             setIsLoading(false);
-        }
+        });
+
+        return () => {
+            unsubWallet();
+            unsubTxs();
+        };
     };
 
     useEffect(() => {
         if (currentUserId) {
-            loadData();
+            return loadData();
         }
     }, [currentUserId]);
 
@@ -47,7 +48,7 @@ const Wallet: React.FC = () => {
             await firebaseService.addFunds(currentUserId, Number(depositAmount));
             setShowDepositModal(false);
             toast.success(`Recarga de ${depositAmount}€ completada`);
-            loadData(); // Refresh
+            // Transaction and balance update automatically via snapshot listeners
         } catch (error) {
             console.error("Error depositing funds", error);
             toast.error("Error en la recarga");

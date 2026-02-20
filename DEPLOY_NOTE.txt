@@ -1,0 +1,9 @@
+He corregido el problema al cargar capítulos.
+
+1.  **Causa**: El error `SyntaxError` ocurría porque se estaba intentando cargar datos inválidos (probablemente JSON) como si fueran una partida PGN.
+2.  **Solución**: He mejorado `sanitizePgn` para manejar JSON y he protegido `loadChapter` contra fallos.
+3.  **Deploy**: Despliegue completado correctamente.
+
+URL: https://Andres-L1.github.io/TopChess/
+
+Nota: El error de LiveKit en consola es porque falta `VITE_LIVEKIT_URL` en `.env`.

@@ -1,91 +1,78 @@
 {
-    "welcome": "Welcome to TopChess",
-    "find_teacher": "FIND TEACHER",
-    "login_to_find": "LOGIN TO FIND",
-    "premium_platform": "The #1 Premium Chess Platform",
-    "hero_title": "Master the Board",
-    "hero_subtitle": "Connect with elite Grandmasters. Personalized lessons, deep analysis, and a next-level visual experience.",
-    "no_commitment": "No commitment • Free cancellation",
-    "stats": {
-        "students": "Students",
-        "grandmasters": "Grandmasters",
-        "response_time": "Avg Response"
+    "app": {
+        "title": "TopChess",
+        "tagline": "Master Chess"
     },
     "nav": {
-        "student_mode": "I'm a Student",
-        "teacher_mode": "I'm a Teacher",
+        "home": "Home",
+        "login": "Login",
+        "test_student": "Test Student",
+        "test_teacher": "Test Teacher",
         "panel": "Dashboard",
-        "profile": "My Profile",
-        "classroom": "Classroom",
-        "exit": "Exit"
+        "admin": "Admin",
+        "profile": "Profile",
+        "logout": "Logout"
     },
-    "dashboard": {
-        "title": "Teacher Dashboard",
-        "subtitle": "Manage your students and earnings.",
-        "my_classroom": "My Classroom",
-        "overview": "Overview",
-        "schedule": "Schedule",
-        "total_earnings": "Total Earnings",
-        "active_students": "Active Students",
-        "classes_given": "Classes Given",
-        "pending_requests": "Pending Requests",
-        "quick_access": "Quick Access",
-        "enter_classroom": "Enter Classroom",
-        "next_class": "Next Class"
+    "hero": {
+        "badge": "The Premium Chess Platform",
+        "title": "Master the Board",
+        "subtitle": "No Limits",
+        "description": "Connect with Grandmasters, access live classes, and improve your game with next-gen analysis tools.",
+        "cta_find": "Find Mentor",
+        "cta_start": "Start Now",
+        "cta_teach": "I'm a Teacher",
+        "cta_dashboard": "Dashboard"
     },
-    "admin": {
-        "loading": "Initializing Central Command Center...",
-        "title": "ADMIN SYSTEM",
-        "subtitle": "TopChess Operations Center",
-        "status_online": "STATUS: ONLINE",
-        "stats": {
-            "users": "Users",
-            "teachers": "Teachers",
-            "requests": "Requests",
-            "revenue": "Platform Revenue"
+    "stats": {
+        "students": "Students",
+        "teachers": "Masters",
+        "support": "Support",
+        "rating": "Rating"
+    },
+    "features": {
+        "title": "Everything you need",
+        "subtitle": "Professional tools for students and masters.",
+        "classroom": {
+            "title": "Advanced Virtual Classroom",
+            "desc": "Real-time synchronized interactive board, voice/video chat, and drawing tools."
         },
-        "tabs": {
-            "users": "Users",
-            "teachers": "Teachers",
-            "transactions": "Transactions"
+        "analysis": {
+            "title": "AI Analysis",
+            "desc": "Identify mistakes instantly with Stockfish 16 and get improvement suggestions."
         },
-        "titles": {
-            "users": "User Directory",
-            "teachers": "Teacher Management",
-            "payments": "Payment Logs"
+        "payments": {
+            "title": "Global Payments",
+            "desc": "Manage payments securely from anywhere in the world."
         },
-        "filter": "Filter records...",
-        "table": {
-            "identity": "Identity",
-            "role": "Role",
-            "wallet": "Wallet",
-            "status": "Status",
-            "maintenance": "Maintenance",
-            "teacher": "Teacher",
-            "region": "Region",
-            "price_com": "Price/Com",
-            "classes_earnings": "Classes/Earnings",
-            "verification": "Verification",
-            "type": "Type",
-            "concept": "Concept",
-            "amount": "Amount",
-            "date_time": "Date/Time",
-            "participants": "Participants"
+        "community": {
+            "title": "Active Community",
+            "desc": "Join tournaments, clubs, and connect with other chess enthusiasts."
         },
-        "status": {
-            "banned": "BANNED",
-            "active": "ACTIVE",
-            "verified": "VERIFIED",
-            "pending": "PENDING"
+        "cert": {
+            "title": "Certification",
+            "desc": "Get level certificates by completing courses and reaching ELO goals."
         },
-        "messages": {
-            "verif_removed": "Verification removed",
-            "verif_added": "Teacher verified",
-            "verif_error": "Error updating verification",
-            "user_unbanned": "User unbanned",
-            "user_banned": "User banned",
-            "status_error": "Error updating status",
-            "load_error": "Error loading admin data"
+        "verified": {
+            "title": "Verified Teachers",
+            "desc": "All our masters undergo a rigorous identity and skill verification process."
         }
+    },
+    "cta_footer": {
+        "title": "Ready to take your chess to the",
+        "highlight": "next level",
+        "button": "Start Now"
+    },
+    "wizard": {
+        "back": "Back to Home",
+        "analyzing": "Analyzing your profile...",
+        "searching": "Searching for the best mentor for your playstyle.",
+        "match_title": "Perfect Match!",
+        "match_desc": "Based on your goals, we recommend:",
+        "back_btn": "Back",
+        "connect_btn": "Connect",
+        "login_toast": "Logging in..."
+    },
+    "toasts": {
+        "login_required": "You must login to find a mentor"
     }
 }

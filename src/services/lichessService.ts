@@ -112,6 +112,37 @@ export const lichessService = {
         });
     },
 
+    sanitizePgn(pgn: string): string {
+        if (!pgn) return '';
+
+        // Handle potential nested JSON string
+        if (pgn.trim().startsWith('{') && pgn.trim().endsWith('}')) {
+            try {
+                const parsed = JSON.parse(pgn);
+                if (parsed && typeof parsed === 'object' && parsed.pgn) {
+                    return this.sanitizePgn(parsed.pgn);
+                }
+                return '';
+            } catch (e) { }
+        }
+
+        return pgn
+            .replace(/\r/g, '')
+            // Strip Lichess metadata headers (cause chess.js parse failures)
+            .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime|ChapterMode) "[^"]*"\]\s*/g, '')
+            // Remove blocks that contain ONLY system annotations
+            .replace(/\{\s*(\[%[^\]]+\]\s*)+\}/g, '')
+            // Strip [%...] inside mixed comments that still have human text
+            .replace(/\[%[^\]]+\]/g, '')
+            // Normalize whitespace inside { }
+            .replace(/\{\s+/g, '{ ')
+            .replace(/\s+\}/g, ' }')
+            // Collapse whitespace / blank lines
+            .replace(/[ \t]{2,}/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    },
+
     getLICHESS_CLIENT_ID() { return LICHESS_CLIENT_ID; },
     getREDIRECT_URI() { return REDIRECT_URI; }
 };

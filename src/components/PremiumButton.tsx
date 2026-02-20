@@ -9,7 +9,7 @@ interface PremiumButtonProps {
     className?: string;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const PremiumButton: React.FC<PremiumButtonProps> = ({
@@ -27,7 +27,8 @@ const PremiumButton: React.FC<PremiumButtonProps> = ({
     const sizeStyles = {
         sm: "px-4 py-2 text-[10px] rounded-lg",
         md: "px-6 py-3 text-xs rounded-xl",
-        lg: "px-10 py-5 text-base rounded-2xl"
+        lg: "px-10 py-5 text-base rounded-2xl",
+        xl: "px-12 py-6 text-xl rounded-3xl"
     };
 
     const variantStyles = {

@@ -1,91 +1,78 @@
 {
-    "welcome": "Bienvenido a TopChess",
-    "find_teacher": "ENCONTRAR PROFESOR",
-    "login_to_find": "INICIA SESIÓN PARA BUSCAR",
-    "premium_platform": "La plataforma #1 de Ajedrez Premium",
-    "hero_title": "Domina el Tablero",
-    "hero_subtitle": "Conecta con Grandes Maestros de élite. Clases personalizadas, análisis profundos y una experiencia visual de otro nivel.",
-    "no_commitment": "Sin compromiso • Cancelación gratuita",
-    "stats": {
-        "students": "Alumnos",
-        "grandmasters": "Grandes Maestros",
-        "response_time": "Respuesta media"
+    "app": {
+        "title": "TopChess",
+        "tagline": "Domina el Ajedrez"
     },
     "nav": {
-        "student_mode": "Soy Alumno",
-        "teacher_mode": "Soy Profesor",
-        "panel": "Panel",
+        "home": "Inicio",
+        "login": "Iniciar Sesión",
+        "test_student": "Test Alumno",
+        "test_teacher": "Test Profesor",
+        "panel": "Mi Panel",
+        "admin": "Admin",
         "profile": "Mi Perfil",
-        "classroom": "Aula",
-        "exit": "Salir"
+        "logout": "Cerrar Sesión"
     },
-    "dashboard": {
-        "title": "Panel de Profesor",
-        "subtitle": "Gestiona tus alumnos y ganancias.",
-        "my_classroom": "Mi Aula",
-        "overview": "Resumen",
-        "schedule": "Horario",
-        "total_earnings": "Ganancias Totales",
-        "active_students": "Estudiantes Activos",
-        "classes_given": "Clases Impartidas",
-        "pending_requests": "Solicitudes Pendientes",
-        "quick_access": "Acceso Rápido",
-        "enter_classroom": "Entrar al Aula",
-        "next_class": "Próxima Clase"
+    "hero": {
+        "badge": "La Plataforma Premium de Ajedrez",
+        "title": "Domina el Tablero",
+        "subtitle": "Sin Límites",
+        "description": "Conecta con Grandes Maestros, accede a clases en vivo y mejora tu juego con herramientas de análisis de última generación.",
+        "cta_find": "Encontrar Mentor",
+        "cta_start": "Empezar Ahora",
+        "cta_teach": "Soy Profesor",
+        "cta_dashboard": "Mi Panel"
     },
-    "admin": {
-        "loading": "Iniciando Panel de Control Central...",
-        "title": "SISTEMA ADMIN",
-        "subtitle": "Centro de Operaciones TopChess",
-        "status_online": "ESTADO: ONLINE",
-        "stats": {
-            "users": "Usuarios",
-            "teachers": "Profesores",
-            "requests": "Solicitudes",
-            "revenue": "Ingresos Plataforma"
+    "stats": {
+        "students": "Estudiantes",
+        "teachers": "Maestros",
+        "support": "Soporte",
+        "rating": "Valoración"
+    },
+    "features": {
+        "title": "Todo lo que necesitas",
+        "subtitle": "Herramientas profesionales para estudiantes y maestros.",
+        "classroom": {
+            "title": "Aula Virtual Avanzada",
+            "desc": "Tablero interactivo sincronizado en tiempo real, chat de voz/video y herramientas de dibujo."
         },
-        "tabs": {
-            "users": "Usuarios",
-            "teachers": "Profesores",
-            "transactions": "Transacciones"
+        "analysis": {
+            "title": "Análisis con IA",
+            "desc": "Identifica tus errores al instante con Stockfish 16 y recibe sugerencias de mejora."
         },
-        "titles": {
-            "users": "Directorio de Usuarios",
-            "teachers": "Gestión de Profesores",
-            "payments": "Registro de Pagos"
+        "payments": {
+            "title": "Pagos Globales",
+            "desc": "Gestiona tus cobros y pagos de forma segura desde cualquier parte del mundo."
         },
-        "filter": "Filtrar registros...",
-        "table": {
-            "identity": "Identidad",
-            "role": "Rol",
-            "wallet": "Cartera",
-            "status": "Estado",
-            "maintenance": "Mantenimiento",
-            "teacher": "Profesor",
-            "region": "Región",
-            "price_com": "Precio/Com",
-            "classes_earnings": "Clases/Ganancias",
-            "verification": "Verificación",
-            "type": "Tipo",
-            "concept": "Concepto",
-            "amount": "Importe",
-            "date_time": "Fecha/Hora",
-            "participants": "Participantes"
+        "community": {
+            "title": "Comunidad Activa",
+            "desc": "Participa en torneos, únete a clubes y conecta con otros apasionados del ajedrez."
         },
-        "status": {
-            "banned": "BLOQUEADO",
-            "active": "ACTIVO",
-            "verified": "VERIFICADO",
-            "pending": "PENDIENTE"
+        "cert": {
+            "title": "Certificación",
+            "desc": "Obtén certificados de nivel al completar cursos y alcanzar metas de ELO."
         },
-        "messages": {
-            "verif_removed": "Verificación removida",
-            "verif_added": "Profesor verificado",
-            "verif_error": "Error al actualizar verificación",
-            "user_unbanned": "Usuario desbloqueado",
-            "user_banned": "Usuario baneado",
-            "status_error": "Error al actualizar estado",
-            "load_error": "Error cargando datos de administración"
+        "verified": {
+            "title": "Profesores Verificados",
+            "desc": "Todos nuestros maestros pasan por un riguroso proceso de verificación de identidad y nivel."
         }
+    },
+    "cta_footer": {
+        "title": "¿Listo para llevar tu ajedrez al",
+        "highlight": "siguiente nivel",
+        "button": "Comenzar Ahora"
+    },
+    "wizard": {
+        "back": "Volver al inicio",
+        "analyzing": "Analizando tu perfil...",
+        "searching": "Buscando el mejor mentor para tu estilo de juego.",
+        "match_title": "¡Match Perfecto!",
+        "match_desc": "Basado en tus objetivos, te recomendamos a:",
+        "back_btn": "Volver",
+        "connect_btn": "Conectar",
+        "login_toast": "Iniciando sesión..."
+    },
+    "toasts": {
+        "login_required": "Debes iniciar sesión para encontrar un mentor"
     }
 }

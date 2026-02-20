@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp, MessageCircle } from 'lucide-react';
+import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp, MessageCircle, Map as MapIcon, Plus, Settings } from 'lucide-react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,8 +7,9 @@ import Calendar from '../components/Calendar';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
-import { Request, Teacher, Booking } from '../types/index';
+import { Request, Teacher, Booking, Homework } from '../types/index';
 import { lichessService } from '../services/lichessService';
+import HomeworkModal from '../components/HomeworkModal';
 import { generateCodeVerifier, generateCodeChallenge } from '../utils/pkce';
 
 interface DashboardStats {
@@ -21,29 +22,41 @@ const TeacherDashboard = () => {
     const { currentUserId, logout } = useAuth();
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'overview' | 'schedule'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'homework' | 'club'>('overview');
     const [stats, setStats] = useState<DashboardStats>({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState<Request[]>([]);
     const [myStudents, setMyStudents] = useState<any[]>([]);
+    const [homeworks, setHomeworks] = useState<Homework[]>([]);
     const [availability, setAvailability] = useState<string[]>([]);
     const [teacherProfile, setTeacherProfile] = useState<Teacher | null>(null);
     const [nextBooking, setNextBooking] = useState<Booking | null>(null);
+    const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [club, setClub] = useState<any>(null);
+    const [clubTeachers, setClubTeachers] = useState<any[]>([]);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [isCreatingClub, setIsCreatingClub] = useState(false);
+    const [isInviting, setIsInviting] = useState(false);
 
     useEffect(() => {
-        const fetchData = async () => {
+        if (!currentUserId) return;
+        let isMounted = true;
+        let unsubRequests: () => void;
+        let unsubBookings: () => void;
+
+        const loadStaticData = async () => {
             setIsLoading(true);
             try {
-                // Fetch Teacher Profile
                 const profile = await firebaseService.getTeacherById(currentUserId);
-                setTeacherProfile(profile);
+                if (isMounted) setTeacherProfile(profile);
 
-                // Fetch Availability, Requests and Bookings
                 const avail = await firebaseService.getTeacherAvailability(currentUserId);
-                const allReqs = await firebaseService.getRequestsForTeacher(currentUserId);
-                const bookings = await firebaseService.getBookingsForUser(currentUserId, 'teacher');
+                if (isMounted) setAvailability(avail);
 
-                if (profile) {
+                const myHomeworks = await firebaseService.getHomeworksForTeacher(currentUserId);
+                if (isMounted) setHomeworks(myHomeworks);
+
+                if (profile && isMounted) {
                     setStats({
                         earnings: profile.earnings,
                         students: profile.classesGiven > 0 ? Math.floor(profile.classesGiven / 4) : 0,
@@ -51,69 +64,31 @@ const TeacherDashboard = () => {
                     });
                 }
 
-                // Filter pending requests and fetch student names
-                const pendingPromises = allReqs
-                    .filter((r: any) => r.status === 'pending')
-                    .map(async (r: any) => {
-                        const u = await firebaseService.getUser(r.studentId);
-                        return { ...r, studentName: u?.name || 'Usuario' };
-                    });
-                const pendingRequests = await Promise.all(pendingPromises);
-                setRequests(pendingRequests);
-
-                // Filter active students (approved requests) and deduplicate by studentId
-                const approvedReqs = allReqs.filter((r: any) => r.status === 'approved');
-                const uniqueApprovedMap = new Map();
-                approvedReqs.forEach(r => {
-                    if (!uniqueApprovedMap.has(r.studentId)) {
-                        uniqueApprovedMap.set(r.studentId, r);
-                    }
-                });
-
-                const approvedPromises = Array.from(uniqueApprovedMap.values())
-                    .map(async (r: any) => {
-                        const u = await firebaseService.getUser(r.studentId);
-                        return u ? { ...u, requestId: r.id } : null;
-                    });
-                const approvedStudents = await Promise.all(approvedPromises);
-                setMyStudents(approvedStudents.filter(s => s !== null));
-
-                setAvailability(avail);
-
-                if (bookings.length > 0) {
-                    const today = new Date().toISOString().split('T')[0];
-                    // Only show future, non-cancelled bookings
-                    const upcoming = bookings.filter((b: Booking) =>
-                        b.status !== 'cancelled' && b.date >= today
-                    );
-                    const sorted = [...upcoming].sort((a, b) => {
-                        const dateCompare = a.date.localeCompare(b.date);
-                        if (dateCompare !== 0) return dateCompare;
-                        return a.time.localeCompare(b.time);
-                    });
-                    setNextBooking(sorted[0] ?? null);
+                if (profile?.role === 'club_director') {
+                    const myClub = await firebaseService.getClubByDirectorId(currentUserId);
+                    if (isMounted && myClub) setClub(myClub);
                 }
             } catch (error) {
-                console.error("Error fetching dashboard data", error);
-                toast.error("Error al cargar datos");
+                console.error("Error loading dashboard data", error);
+                toast.error("Error al cargar datos estáticos");
             } finally {
-                setIsLoading(false);
+                if (isMounted) setIsLoading(false);
             }
         };
 
-        if (currentUserId) {
-            fetchData();
-        }
-    }, [currentUserId]);
+        loadStaticData();
 
-    const handleAcceptRequest = async (requestId: string) => {
-        try {
-            await firebaseService.updateRequestStatus(requestId, 'approved');
-            setRequests(prev => prev.filter(r => r.id !== requestId));
-            toast.success(`Solicitud aceptada`);
+        unsubRequests = firebaseService.observeRequestsForTeacher(currentUserId, async (allReqs) => {
+            if (!isMounted) return;
+            const pendingPromises = allReqs
+                .filter((r: any) => r.status === 'pending')
+                .map(async (r: any) => {
+                    const u = await firebaseService.getUser(r.studentId);
+                    return { ...r, studentName: u?.name || 'Usuario' };
+                });
+            const pendingRequests = await Promise.all(pendingPromises);
+            if (isMounted) setRequests(pendingRequests);
 
-            // Re-fetch students and profile to update UI
-            const allReqs = await firebaseService.getRequestsForTeacher(currentUserId);
             const approvedReqs = allReqs.filter((r: any) => r.status === 'approved');
             const uniqueApprovedMap = new Map();
             approvedReqs.forEach(r => {
@@ -128,10 +103,39 @@ const TeacherDashboard = () => {
                     return u ? { ...u, requestId: r.id } : null;
                 });
             const approvedStudents = await Promise.all(approvedPromises);
-            setMyStudents(approvedStudents.filter(s => s !== null));
+            if (isMounted) setMyStudents(approvedStudents.filter(s => s !== null));
+        });
 
-            const profile = await firebaseService.getTeacherById(currentUserId);
-            setTeacherProfile(profile);
+        unsubBookings = firebaseService.observeBookingsForUser(currentUserId, 'teacher', (bookings) => {
+            if (!isMounted) return;
+            if (bookings.length > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                const upcoming = bookings.filter((b: Booking) =>
+                    b.status !== 'cancelled' && b.date >= today
+                );
+                const sorted = [...upcoming].sort((a, b) => {
+                    const dateCompare = a.date.localeCompare(b.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    return a.time.localeCompare(b.time);
+                });
+                setNextBooking(sorted[0] ?? null);
+            } else {
+                setNextBooking(null);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            if (unsubRequests) unsubRequests();
+            if (unsubBookings) unsubBookings();
+        };
+    }, [currentUserId]);
+
+    const handleAcceptRequest = async (requestId: string) => {
+        try {
+            await firebaseService.updateRequestStatus(requestId, 'approved');
+            // The snapshot listener will automatically update the UI lists.
+            toast.success(`Solicitud aceptada`);
         } catch (error) {
             console.error("Error accepting request:", error);
             toast.error("Error al procesar solicitud");
@@ -155,6 +159,24 @@ const TeacherDashboard = () => {
         toast.success("Horario actualizado correctamente");
     };
 
+    const handleCreateHomework = async (data: Omit<Homework, 'id' | 'teacherId' | 'status' | 'assignedAt'>) => {
+        try {
+            const newHomework: Homework = {
+                ...data,
+                id: `hw_${Date.now()}`,
+                teacherId: currentUserId,
+                status: 'pending',
+                assignedAt: Date.now()
+            };
+            await firebaseService.createHomework(newHomework);
+            setHomeworks(prev => [newHomework, ...prev]);
+            toast.success("Tarea asignada correctamente");
+        } catch (error) {
+            console.error("Error create homework", error);
+            toast.error("Error al asignar tarea");
+        }
+    };
+
     const handleLogout = () => {
         logout();
         navigate('/');
@@ -171,6 +193,164 @@ const TeacherDashboard = () => {
     const levelInfo = teacherProfile ? calculateLevel(teacherProfile.classesGiven) : calculateLevel(0);
     const progressPercent = teacherProfile ? Math.min(100, (teacherProfile.classesGiven / levelInfo.target) * 100) : 0;
     const currency = teacherProfile?.currency === 'EUR' ? '€' : '$';
+
+    const handleCreateClub = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const name = prompt("Nombre de tu nuevo club:");
+        if (!name) return;
+
+        setIsCreatingClub(true);
+        try {
+            const clubId = await firebaseService.createClub(name, currentUserId);
+            toast.success("¡Club creado con éxito! Ahora eres Director de Club.");
+            window.location.reload(); // Quickest way to refresh all roles/context
+        } catch (error) {
+            toast.error("Error al crear el club");
+        } finally {
+            setIsCreatingClub(false);
+        }
+    };
+
+    const handleInviteTeacher = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inviteEmail) return;
+
+        setIsInviting(true);
+        try {
+            const result = await firebaseService.inviteTeacherToClub(club.id, inviteEmail);
+            if (result.success) {
+                toast.success(result.message);
+                setInviteEmail('');
+                // Refresh club data or teachers list
+                const updatedTeachers = await firebaseService.getTeachers(); // For now, or just wait for refresh
+                setClubTeachers(updatedTeachers.filter(t => t.clubId === club.id));
+            } else {
+                toast.error(result.message);
+            }
+        } catch (error) {
+            toast.error("Error al invitar profesor");
+        } finally {
+            setIsInviting(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!club) return;
+        const loadClubTeachers = async () => {
+            const allTeachers = await firebaseService.getTeachers();
+            setClubTeachers(allTeachers.filter(t => t.clubId === club.id));
+        };
+        loadClubTeachers();
+    }, [club]);
+
+    const renderClubTab = () => {
+        if (!club && teacherProfile?.role !== 'club_director') {
+            return (
+                <div className="max-w-2xl mx-auto py-12 text-center animate-enter">
+                    <div className="bg-gradient-to-br from-gold/20 to-transparent p-8 rounded-3xl border border-gold/20 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+                        <MapIcon size={48} className="text-gold mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">Escala tu Academia</h2>
+                        <p className="text-white/60 mb-8 leading-relaxed">
+                            Crea tu propio club para gestionar múltiples profesores, ver sus clases en tiempo real en la <span className="text-gold font-bold">Oficina Virtual</span> y centralizar tus operaciones.
+                        </p>
+                        <button
+                            onClick={handleCreateClub}
+                            disabled={isCreatingClub}
+                            className="bg-gold hover:bg-white text-black font-black uppercase tracking-widest px-8 py-4 rounded-xl transition-all hover:scale-105 shadow-xl shadow-gold/20 disabled:opacity-50"
+                        >
+                            {isCreatingClub ? 'Creando...' : 'Crear mi Club'}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        if (!club) return <div className="text-center py-20 text-white/40">Cargando datos del club...</div>;
+
+        return (
+            <div className="space-y-6 animate-enter">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#1b1a17] p-6 rounded-2xl border border-white/5 shadow-xl">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gold/10 flex items-center justify-center border border-gold/20">
+                            <Trophy className="text-gold" size={32} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-white">{club.name}</h2>
+                            <p className="text-sm text-gold/60 font-bold uppercase tracking-widest">Director del Club</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3 w-full md:w-auto">
+                        <Link to="/office" className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-xl border border-white/10 transition-all font-bold text-sm">
+                            <MapIcon size={18} />
+                            Oficina Virtual
+                        </Link>
+                        <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#1b1a17] text-white/40 p-3 rounded-xl border border-white/5 hover:text-white transition-all">
+                            <Settings size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="glass-panel p-6 rounded-2xl border border-white/5">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Users size={20} className="text-gold" />
+                                    Profesores del Club
+                                </h3>
+                                <span className="bg-white/5 px-3 py-1 rounded-full text-xs font-mono text-white/40">{clubTeachers.length}</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {clubTeachers.map((t: Teacher) => (
+                                    <div key={t.id} className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-gold/20 transition-all flex items-center gap-4">
+                                        <img
+                                            src={t.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=333&color=fff`}
+                                            className="w-10 h-10 rounded-lg object-cover"
+                                            alt={t.name}
+                                        />
+                                        <div className="flex-grow min-w-0">
+                                            <h4 className="font-bold text-sm text-white truncate">{t.name}</h4>
+                                            <p className="text-[10px] text-text-muted uppercase tracking-widest">{t.title || 'Instructor'}</p>
+                                        </div>
+                                        <div className={`w-2 h-2 rounded-full ${t.onlineStatus === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : t.onlineStatus === 'in_class' ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="glass-panel p-6 rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/5 to-transparent">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <Plus size={20} className="text-gold" />
+                                Invitar Profesor
+                            </h3>
+                            <p className="text-xs text-text-muted mb-6">Añade nuevos instructores a tu club ingresando su correo electrónico registrado en TopChess.</p>
+                            <form onSubmit={handleInviteTeacher} className="space-y-4">
+                                <input
+                                    type="email"
+                                    required
+                                    placeholder="correo@ejemplo.com"
+                                    value={inviteEmail}
+                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-gold/50 focus:outline-none transition-all placeholder:text-white/20"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isInviting || !inviteEmail}
+                                    className="w-full bg-gold hover:bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/10 disabled:opacity-50"
+                                >
+                                    {isInviting ? 'Invitando...' : 'Añadir al Club'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in pb-24">
@@ -200,6 +380,18 @@ const TeacherDashboard = () => {
                         >
                             {t('dashboard.schedule')}
                         </button>
+                        <button
+                            onClick={() => setActiveTab('homework')}
+                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'homework' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
+                        >
+                            Tareas
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('club')}
+                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'club' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
+                        >
+                            Club
+                        </button>
                     </div>
                     <button
                         onClick={handleLogout}
@@ -222,6 +414,60 @@ const TeacherDashboard = () => {
                         />
                     </div>
                 </div>
+            ) : activeTab === 'homework' ? (
+                <div className="space-y-6 animate-enter">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white">Tareas Asignadas</h2>
+                        <button
+                            onClick={() => setIsHomeworkModalOpen(true)}
+                            className="bg-gold hover:bg-white text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-gold/10"
+                        >
+                            + Nueva Tarea
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {homeworks.length === 0 ? (
+                            <div className="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-2xl">
+                                <p className="text-text-muted">No has asignado tareas aún.</p>
+                            </div>
+                        ) : (
+                            homeworks.map(hw => (
+                                <div key={hw.id} className="glass-panel p-5 rounded-2xl border border-white/5 hover:border-gold/20 transition-all group relative overflow-hidden">
+                                    <div className={`absolute top-0 right-0 w-16 h-16 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 ${hw.status === 'completed' ? 'bg-green-500/20' : 'bg-gold/10'}`}></div>
+
+                                    <div className="flex justify-between items-start mb-3">
+                                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${hw.status === 'completed' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                                            {hw.status === 'completed' ? 'Completada' : 'Pendiente'}
+                                        </span>
+                                        <span className="text-[10px] text-text-muted font-mono">
+                                            {new Date(hw.assignedAt).toLocaleDateString()}
+                                        </span>
+                                    </div>
+
+                                    <h3 className="font-bold text-white mb-1 truncate" title={hw.title}>{hw.title}</h3>
+                                    <p className="text-xs text-text-muted mb-4 line-clamp-2">{hw.description || "Sin descripción"}</p>
+
+                                    <div className="flex items-center gap-2 mt-auto pt-3 border-t border-white/5 text-xs">
+                                        <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center font-bold text-[10px]">
+                                            {(hw.studentName || 'U').substring(0, 1)}
+                                        </div>
+                                        <span className="text-white/80 font-bold">{hw.studentName}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <HomeworkModal
+                        isOpen={isHomeworkModalOpen}
+                        onClose={() => setIsHomeworkModalOpen(false)}
+                        onSave={handleCreateHomework}
+                        students={myStudents}
+                    />
+                </div>
+            ) : activeTab === 'club' ? (
+                renderClubTab()
             ) : (
                 <>
                     {/* Stats Grid */}
@@ -353,6 +599,7 @@ const TeacherDashboard = () => {
                                                     </button>
                                                     <button
                                                         onClick={() => handleRejectRequest(req.id)}
+                                                        aria-label="Rechazar solicitud"
                                                         className="p-2 rounded-xl bg-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-all border border-white/10"
                                                     >
                                                         <X size={18} />
@@ -398,7 +645,7 @@ const TeacherDashboard = () => {
                             <div className="glass-panel rounded-2xl p-4 md:p-6 flex flex-col gap-4 bg-gradient-to-br from-[#1b1a17] to-white/[0.05]">
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                                        <img src="https://lichess.org/assets/images/favicon-32-white.png" alt="Lichess" className="w-5 h-5 opacity-80" />
+                                        <svg viewBox="0 0 448 512" className="w-5 h-5 fill-white opacity-80" xmlns="http://www.w3.org/2000/svg"><path d="M0 432L448 432 448 480 0 480 0 432zM334.8 191.1C355.7 154.5 354 116.3 328.7 87.7 296 50.8 238.2 46.2 199.1 77.5 167.3 103 154.7 146.4 167 182.8 123.6 211.5 96 261.2 96 317.9L96 384l256 0 0-66.2C352 268 332.1 224 334.8 191.1zM224 0C241.7 0 256 14.3 256 32 256 49.7 241.7 64 224 64 206.3 64 192 49.7 192 32 192 14.3 206.3 0 224 0z" /></svg>
                                     </div>
                                     <h2 className="text-lg font-bold text-white">Lichess Sync</h2>
                                     {teacherProfile?.lichessAccessToken && (
@@ -460,6 +707,7 @@ const TeacherDashboard = () => {
                                                 }}
                                                 className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-500 transition-all"
                                                 title="Desconectar"
+                                                aria-label="Desconectar cuenta de Lichess"
                                             >
                                                 <LogOut size={16} />
                                             </button>
@@ -521,8 +769,9 @@ const TeacherDashboard = () => {
                         </div>
                     </div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 
