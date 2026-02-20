@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
 import Navbar from './components/Navbar';
@@ -36,7 +36,7 @@ interface AuthContextType {
   authError: string | null;
 }
 
-// Mock Auth Context
+// Authentication Context
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -328,6 +328,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <Router
+      basename="/TopChess"
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true,
