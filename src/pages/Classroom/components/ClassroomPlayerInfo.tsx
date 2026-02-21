@@ -86,4 +86,4 @@ const ClassroomPlayerInfo: React.FC<ClassroomPlayerInfoProps> = ({
     );
 };
 
-export default ClassroomPlayerInfo;
+export default React.memo(ClassroomPlayerInfo);

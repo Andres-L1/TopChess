@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { lichessService } from '../services/lichessService';
 
 interface MoveHistoryProps {
     moves?: string[];
@@ -54,9 +55,9 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
         <div ref={scrollRef} className="p-2">
             <div className="flex flex-wrap gap-x-0 gap-y-0">
                 {/* Initial comment (Start position) */}
-                {comments && comments[-1] && (
+                {comments && comments[-1] && lichessService.parseCommentAnnotations(comments[-1]).text && (
                     <div className="w-full px-3 py-2 my-1 mb-2 text-[11px] text-[#d4c68f] italic bg-white/[0.04] rounded border-l-2 border-gold/40">
-                        {comments[-1]}
+                        {lichessService.parseCommentAnnotations(comments[-1]).text}
                     </div>
                 )}
 
@@ -66,6 +67,8 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
 
                     const commentW = comments?.[pair.w.idx];
                     const commentB = pair.b ? comments?.[pair.b.idx] : null;
+                    const textW = commentW ? (typeof commentW === 'string' ? lichessService.parseCommentAnnotations(commentW).text : (commentW as any).text) : '';
+                    const textB = commentB ? (typeof commentB === 'string' ? lichessService.parseCommentAnnotations(commentB).text : (commentB as any).text) : '';
 
                     return (
                         <React.Fragment key={pair.num}>
@@ -101,16 +104,16 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
                             )}
 
                             {/* Comments Row */}
-                            {(commentW || commentB) && (
+                            {(textW || textB) && (
                                 <div className="w-full px-3 py-2 my-1 text-[11px] text-[#d4c68f] italic bg-white/[0.04] rounded border-l-2 border-gold/40">
-                                    {commentW && <span className="block mb-1">{commentW}</span>}
-                                    {commentB && <span className="block">{commentB}</span>}
+                                    {textW && <span className="block mb-1">{textW}</span>}
+                                    {textB && <span className="block">{textB}</span>}
                                 </div>
                             )}
 
                             {/* Fallback for active currentComment IF not in map (e.g. legacy or live update) */}
                             {/* Only show if we didn't just show it above */}
-                            {!commentW && !commentB && (wActive || bActive) && currentComment && (
+                            {!textW && !textB && (wActive || bActive) && currentComment && (
                                 <div className="w-full px-3 py-2 my-1 text-[11px] text-[#d4c68f] italic bg-white/[0.04] rounded border-l-2 border-gold/40">
                                     {currentComment}
                                 </div>

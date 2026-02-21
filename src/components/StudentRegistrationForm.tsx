@@ -90,7 +90,7 @@ const StudentRegistrationForm = ({ onComplete }: { onComplete: () => void }) => 
                 <p className="text-[#8b8982]">Personaliza tu experiencia de aprendizaje</p>
             </div>
 
-            <div className="bg-[#262421] border border-white/5 rounded-2xl p-8 shadow-2xl">
+            <div className="card-glass p-8">
                 <Section title="Nivel de Ajedrez" icon={Trophy}>
                     <Option
                         selected={level === 'beginner'}
@@ -158,12 +158,7 @@ const StudentRegistrationForm = ({ onComplete }: { onComplete: () => void }) => 
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !level || !goal || !style}
-                        className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2
-                            ${isSubmitting || !level || !goal || !style
-                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg hover:shadow-blue-500/20 transform hover:-translate-y-0.5'
-                            }
-                        `}
+                        className="btn-primary"
                     >
                         {isSubmitting ? 'Creando Perfil...' : 'Comenzar a Aprender'}
                         {!isSubmitting && <ChevronRight size={18} />}

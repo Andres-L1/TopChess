@@ -4,6 +4,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
 import Navbar from './components/Navbar';
 import MobileNavbar from './components/MobileNavbar';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AnimatePresence, motion } from 'framer-motion';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
@@ -336,9 +337,11 @@ function App() {
     >
       <AuthProvider>
         <Layout>
-          <Suspense fallback={<LoadingSpinner />}>
-            <AnimatedRoutes />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner />}>
+              <AnimatedRoutes />
+            </Suspense>
+          </ErrorBoundary>
         </Layout>
       </AuthProvider>
     </Router>

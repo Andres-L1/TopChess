@@ -36,6 +36,7 @@ const Classroom: React.FC = () => {
         loadChapter,
         importStudy,
         injectPgnFen,
+        exportCurrentState,
         userRole,
         currentUserId,
         comments
@@ -44,6 +45,33 @@ const Classroom: React.FC = () => {
     const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
     const boardRef = useRef<BoardHandle>(null);
     const boardAreaRef = useRef<HTMLDivElement>(null);
+
+    // ── Resizer State ──────────────────────────────────────────────────────
+    const [sidebarWidth, setSidebarWidth] = useState(360);
+    const isDraggingRef = useRef(false);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isDraggingRef.current) return;
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth > 280 && newWidth < window.innerWidth * 0.6) {
+                setSidebarWidth(newWidth);
+            }
+        };
+        const handleMouseUp = () => {
+            if (isDraggingRef.current) {
+                isDraggingRef.current = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        };
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, []);
 
     useWakeLock();
 
@@ -117,7 +145,7 @@ const Classroom: React.FC = () => {
     }, [gameState.history.length, gameState.currentIndex]);
 
 
-    const resetStudy = () => boardRef.current?.reset();
+    const resetStudy = useCallback(() => boardRef.current?.reset(), []);
 
     const len = gameState.history.length;
     const cur = gameState.currentIndex ?? len - 1;
@@ -129,6 +157,8 @@ const Classroom: React.FC = () => {
         userRole as 'teacher' | 'student',
         isAudioEnabled
     );
+
+    const handleMoveClick = useCallback((idx: number) => boardRef.current?.goToMove(idx), []);
 
     return (
         <div className="h-[100dvh] flex flex-col bg-[#161512] text-white overflow-hidden selection:bg-gold/30">
@@ -145,7 +175,10 @@ const Classroom: React.FC = () => {
             />
 
             {/* ── Main body ──────────────────────────────────────────────── */}
-            <div className="flex-grow flex flex-col lg:flex-row min-h-0 overflow-hidden">
+            <div
+                className="flex-grow flex flex-col lg:flex-row min-h-0 overflow-hidden"
+                style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+            >
 
                 {/* ── LEFT: board column ─────────────────────────────────── */}
                 <div className="flex-grow flex flex-col min-w-0 min-h-0 overflow-hidden">
@@ -260,12 +293,18 @@ const Classroom: React.FC = () => {
                     </div>
                 </div>
 
+                {/* ── DRAG HANDLE (Desktop) ──────────────────────────────── */}
+                <div
+                    className="hidden lg:flex w-1.5 cursor-col-resize hover:bg-gold/50 active:bg-gold/80 bg-white/5 transition-colors z-10"
+                    onMouseDown={() => {
+                        isDraggingRef.current = true;
+                        document.body.style.cursor = 'col-resize';
+                        document.body.style.userSelect = 'none';
+                    }}
+                />
+
                 {/* ── RIGHT: sidebar ─────────────────────────────────────── */}
-                {/* On mobile: fixed height or flex-grow? 
-                    We want it to take remaining space. 
-                    If closed, it renders null (handled by component).
-                */}
-                <div className={`flex-none lg:flex-none lg:w-[320px] xl:w-[360px] bg-[#1b1a17] border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${isSidePanelOpen ? 'h-[40vh] lg:h-auto' : 'h-0 lg:h-auto lg:w-0 lg:hidden'}`}>
+                <div className={`flex-none w-full lg:w-[var(--sidebar-width)] bg-[#1b1a17] border-t lg:border-t-0 flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${isSidePanelOpen ? 'h-[40vh] lg:h-auto' : 'h-0 lg:h-auto lg:w-0 lg:hidden'}`}>
                     <ClassroomSidebar
                         isSidePanelOpen={true} // Always render internal content if this wrapper is visible
                         messages={messages}
@@ -280,8 +319,9 @@ const Classroom: React.FC = () => {
                         onImportStudy={importStudy}
                         teacherProfile={teacherProfile}
                         onInjectPgnFen={injectPgnFen}
-                        onMoveClick={(idx) => boardRef.current?.goToMove(idx)}
+                        onMoveClick={handleMoveClick}
                         comments={comments}
+                        onExportPgn={exportCurrentState}
                     />
                 </div>
             </div>

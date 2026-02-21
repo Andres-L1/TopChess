@@ -32,17 +32,17 @@ const STEPS = [
 ];
 
 interface FindMentorWizardProps {
-    onComplete: (answers: any) => void;
+    onComplete: (answers: Record<string, string>) => void;
     onCancel: () => void;
 }
 
 const FindMentorWizard = ({ onComplete, onCancel }: FindMentorWizardProps) => {
     const [currentStep, setCurrentStep] = useState(0);
-    const [answers, setAnswers] = useState<any>({});
+    const [answers, setAnswers] = useState<Record<string, string>>({});
 
     const handleSelect = (value: string) => {
         const stepId = STEPS[currentStep].id;
-        setAnswers((prev: any) => ({ ...prev, [stepId]: value }));
+        setAnswers((prev) => ({ ...prev, [stepId]: value }));
     };
 
     const handleNext = () => {
@@ -88,7 +88,7 @@ const FindMentorWizard = ({ onComplete, onCancel }: FindMentorWizardProps) => {
                 </div>
 
                 <div className="space-y-3 flex-1">
-                    {step.options.map((opt: any) => {
+                    {step.options.map((opt: { value: string, label: string, desc: string, icon?: string }) => {
                         const isSelected = answers[step.id] === opt.value;
                         return (
                             <button

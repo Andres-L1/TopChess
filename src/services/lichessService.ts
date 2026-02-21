@@ -1,3 +1,6 @@
+import { Teacher, Booking } from '../types/index';
+import type { DrawShape } from 'chessground/draw';
+import { Key } from 'chessground/types';
 export interface LichessStudy {
     id: string;
     name: string;
@@ -130,10 +133,6 @@ export const lichessService = {
             .replace(/\r/g, '')
             // Strip Lichess metadata headers (cause chess.js parse failures)
             .replace(/\[(LichessId|Variant|Annotator|SIT|Clock|UTCDate|UTCTime|ChapterMode) "[^"]*"\]\s*/g, '')
-            // Remove blocks that contain ONLY system annotations
-            .replace(/\{\s*(\[%[^\]]+\]\s*)+\}/g, '')
-            // Strip [%...] inside mixed comments that still have human text
-            .replace(/\[%[^\]]+\]/g, '')
             // Normalize whitespace inside { }
             .replace(/\{\s+/g, '{ ')
             .replace(/\s+\}/g, ' }')
@@ -141,6 +140,54 @@ export const lichessService = {
             .replace(/[ \t]{2,}/g, ' ')
             .replace(/\n{3,}/g, '\n\n')
             .trim();
+    },
+
+    parseCommentAnnotations(comment: string): { text: string, shapes: DrawShape[], glyph?: string } {
+        if (!comment) return { text: '', shapes: [] };
+        let text = comment;
+        let shapes: DrawShape[] = [];
+        let glyph: string | undefined;
+
+        // NAGs inside comments (often exported by some tools if not using standard NAG notation)
+        // Extract [%cal ...]
+        const calMatch = text.match(/\[%cal ([^\]]+)\]/);
+        if (calMatch) {
+            const items = calMatch[1].split(',');
+            items.forEach(item => {
+                const colorCode = item.charAt(0);
+                const colorMap: Record<string, string> = { 'G': 'green', 'R': 'red', 'B': 'blue', 'Y': 'yellow' };
+                const brush = colorMap[colorCode] || 'green';
+                const orig = item.substring(1, 3);
+                let dest = item.substring(3, 5);
+                if (orig && dest) {
+                    shapes.push({ orig: orig as Key, dest: dest as Key, brush });
+                }
+            });
+            text = text.replace(/\[%cal [^\]]+\]/, '');
+        }
+
+        // Extract [%csl ...]
+        const cslMatch = text.match(/\[%csl ([^\]]+)\]/);
+        if (cslMatch) {
+            const items = cslMatch[1].split(',');
+            items.forEach(item => {
+                const colorCode = item.charAt(0);
+                const colorMap: Record<string, string> = { 'G': 'green', 'R': 'red', 'B': 'blue', 'Y': 'yellow' };
+                const brush = colorMap[colorCode] || 'green';
+                const orig = item.substring(1, 3);
+                if (orig) {
+                    shapes.push({ orig: orig as Key, brush });
+                }
+            });
+            text = text.replace(/\[%csl [^\]]+\]/, '');
+        }
+
+        // Cleanup empty annotations formatting strings
+        text = text.replace(/\[%clk [^\]]+\]/g, '');
+        text = text.replace(/\[%eval [^\]]+\]/g, '');
+        text = text.replace(/\[%[^\]]+\]/g, ''); // catch any other annotations
+
+        return { text: text.trim(), shapes, glyph };
     },
 
     getLICHESS_CLIENT_ID() { return LICHESS_CLIENT_ID; },

@@ -107,7 +107,7 @@ const Navbar: React.FC = () => {
                                 <button
                                     onClick={handleLogin}
                                     disabled={isLoginLoading}
-                                    className="px-6 py-2 rounded-xl bg-white text-black font-bold hover:bg-gold transition-all duration-300 text-xs uppercase tracking-widest shadow-lg shadow-white/5 disabled:opacity-50 disabled:cursor-wait"
+                                    className="btn-primary"
                                 >
                                     {isLoginLoading ? '...' : t('nav.login')}
                                 </button>
@@ -245,7 +245,7 @@ const Navbar: React.FC = () => {
                                 <button
                                     onClick={handleLogin}
                                     disabled={isLoginLoading}
-                                    className="w-full py-3 rounded-xl bg-white text-black font-bold hover:bg-gold transition-all duration-300 text-xs uppercase tracking-widest shadow-lg shadow-white/5 disabled:opacity-50 flex justify-center items-center gap-2"
+                                    className="btn-primary w-full"
                                 >
                                     {isLoginLoading && <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
                                     {isLoginLoading ? 'Iniciando...' : t('nav.login')}

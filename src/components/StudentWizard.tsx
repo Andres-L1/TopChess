@@ -32,6 +32,15 @@ const STEPS = [
             { value: 'theory', label: 'Teoría y Análisis', desc: 'Estudiar partidas y conceptos profundos.' },
             { value: 'mixed', label: 'Híbrido', desc: 'Un poco de todo.' }
         ]
+    },
+    {
+        id: 'theme',
+        question: 'Elige tu tablero inicial',
+        options: [
+            { value: 'classic', label: 'Clásico madera', desc: 'El tablero tradicional de toda la vida.' },
+            { value: 'dark', label: 'Modo Oscuro', desc: 'Tablero minimalista, ideal para la vista.' },
+            { value: 'glass', label: 'Cristal Premium', desc: 'El estilo exclusivo de TopChess.' }
+        ]
     }
 ];
 
@@ -65,7 +74,8 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
                     currency: 'EUR',
                     elo: answers['level'] === 'beginner' ? 600 : answers['level'] === 'intermediate' ? 1200 : 1600,
                     learningGoals: [answers['goals']], // Wrap in array as type expects array
-                    preferredStyle: answers['style']
+                    preferredStyle: answers['style'],
+                    boardTheme: answers['theme'] || 'glass'
                 };
 
                 await firebaseService.createUser(userProfile);
@@ -119,7 +129,7 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
                 </div>
 
                 <div className="grid gap-3 max-w-md mx-auto w-full">
-                    {step.options.map((opt: any) => {
+                    {step.options.map((opt: { value: string, label: string, desc: string, icon?: string }) => {
                         const isSelected = answers[step.id] === opt.value;
                         return (
                             <button

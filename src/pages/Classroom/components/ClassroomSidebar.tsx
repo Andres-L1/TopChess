@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, MessageSquare, Plus, ChevronRight, Hash, Brain, Sword, Trophy } from 'lucide-react';
+import { BookOpen, MessageSquare, Plus, ChevronRight, Hash, Brain, Sword, Trophy, Download } from 'lucide-react';
 import MoveHistory from '../../../components/MoveHistory';
 import CapturedPieces from '../../../components/CapturedPieces';
 import ClassroomChat from './ClassroomChat';
@@ -11,16 +11,17 @@ interface ClassroomSidebarProps {
     userRole: string;
     onSendMessage: (text: string) => void;
     gameState: GameState;
-    roomChapters: any[];
+    roomChapters: { name: string, pgn: string }[];
     activeChapterIndex: number;
     onLoadChapter: (idx: number) => Promise<void>;
     currentComment: string;
-    lichessStudies: any[];
+    lichessStudies: { id: string, name: string }[];
     onImportStudy: (id: string, name: string) => Promise<void>;
     teacherProfile: Teacher | null;
     onInjectPgnFen: (val: string) => Promise<void>;
     onMoveClick: (index: number) => void;
     comments?: Record<number, string>;
+    onExportPgn: () => void;
 }
 
 const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
@@ -38,7 +39,8 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
     teacherProfile,
     onInjectPgnFen,
     onMoveClick,
-    comments
+    comments,
+    onExportPgn
 }) => {
     const [activeTab, setActiveTab] = useState<'moves' | 'chapters' | 'chat'>('moves');
     const [studyId, setStudyId] = useState('');
@@ -137,9 +139,19 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
                         {/* Chapter list */}
                         {roomChapters.length > 0 && (
                             <section className="space-y-3">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5">
-                                    <Hash size={10} /> Capítulos de la Clase
-                                </p>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5">
+                                        <Hash size={10} /> Capítulos de la Clase
+                                    </p>
+                                    {userRole === 'teacher' && (
+                                        <button
+                                            onClick={onExportPgn}
+                                            className="px-2 py-1 bg-white/5 hover:bg-gold/20 text-white/50 hover:text-gold rounded text-[8px] font-black uppercase tracking-widest border border-white/5 flex items-center gap-1 transition-all"
+                                        >
+                                            <Download size={10} /> Exportar
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="grid gap-1">
                                     {roomChapters.map((ch, idx) => (
                                         <button
@@ -176,7 +188,7 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
                                         value={studyName}
                                         onChange={e => setStudyName(e.target.value)}
                                         placeholder="Nombre del estudio"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:border-gold/50 outline-none placeholder:text-white/10 transition-all"
+                                        className="input-premium px-3 py-2.5 text-xs"
                                     />
                                     <div className="flex gap-2">
                                         <input
@@ -184,11 +196,11 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
                                             value={studyId}
                                             onChange={e => setStudyId(e.target.value)}
                                             placeholder="ID del estudio"
-                                            className="flex-grow bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:border-gold/50 outline-none placeholder:text-white/10 font-mono transition-all"
+                                            className="input-premium flex-grow px-3 py-2.5 text-xs font-mono"
                                         />
                                         <button
                                             onClick={() => { onImportStudy(studyId, studyName); setStudyId(''); setStudyName(''); }}
-                                            className="px-4 bg-gold hover:bg-white text-black rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                                            className="btn-primary px-4 py-2.5 text-[9px]"
                                         >
                                             Importar
                                         </button>
@@ -236,4 +248,4 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
     );
 };
 
-export default ClassroomSidebar;
+export default React.memo(ClassroomSidebar);

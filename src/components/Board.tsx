@@ -238,37 +238,37 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
         const gameOver = chessInstance.isEnd();
         setIsGameOver(gameOver);
 
-        // Extract comment from PGN if available (Only for teachers)
+        // Extract comment and shapes for current move
         let currentComment = "";
-        if (userRole === 'teacher' && chapterPgn) {
-            try {
-                const tempGame = new ChessJS();
-                const cleanPgn = lichessService.sanitizePgn(chapterPgn);
+        let newShapes: DrawShape[] = [];
 
+        if (userRole === 'teacher') {
+            if (roomData?.comments && roomData.comments[activeIdx]) {
+                // Read from pre-extracted comments
+                const parsed = lichessService.parseCommentAnnotations(roomData.comments[activeIdx]);
+                currentComment = parsed.text || "";
+                newShapes = parsed.shapes || [];
+            } else if (chapterPgn) {
+                // Fallback to Replaying PGN locally
                 try {
-                    (tempGame as any).loadPgn(cleanPgn);
-                } catch (e) {
-                    const fenOnly = cleanPgn.match(/\[FEN "(.*)"\]/);
-                    if (fenOnly) tempGame.load(fenOnly[1]);
-                }
+                    const tempGame = new ChessJS();
+                    const cleanPgn = lichessService.sanitizePgn(chapterPgn);
+                    try { (tempGame as any).loadPgn(cleanPgn); }
+                    catch (e) { const fenOnly = cleanPgn.match(/\[FEN "(.*)"\]/); if (fenOnly) tempGame.load(fenOnly[1]); }
 
-                // Replay moves to find the comment for the current position
-                tempGame.reset();
-                for (let i = 0; i <= activeIdx; i++) {
-                    if (currentHistory[i]) {
-                        try {
-                            tempGame.move(currentHistory[i]);
-                        } catch (moveErr) {
-                            break;
+                    tempGame.reset();
+                    for (let i = 0; i <= activeIdx; i++) {
+                        if (currentHistory[i]) {
+                            try { tempGame.move(currentHistory[i]); } catch (moveErr) { break; }
                         }
                     }
-                }
-                currentComment = tempGame.getComment() || "";
-            } catch (e) {
-                console.warn("Could not extract comment from PGN", e);
+                    const rawComment = tempGame.getComment() || "";
+                    const parsed = lichessService.parseCommentAnnotations(rawComment);
+                    currentComment = parsed.text;
+                    newShapes = parsed.shapes;
+                } catch (e) { console.warn("Could not extract comment from PGN", e); }
             }
         }
-
         if (onGameStateChange) {
             onGameStateChange({
                 fen: newFen,
@@ -286,7 +286,7 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
                 turnColor: turnColor,
                 check: chessInstance.isCheck(),
                 lastMove: moveArr || undefined,
-                drawable: { shapes: [] },
+                drawable: { shapes: newShapes },
                 movable: {
                     color: userRole === 'teacher' ? 'both' : (turnColor),
                     dests: getDests(chessInstance)
@@ -301,7 +301,7 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
             history: currentHistory,
             fenHistory: currentFenHistory,
             currentIndex: activeIdx,
-            shapes: [],
+            shapes: newShapes,
             comment: currentComment
         });
     };
@@ -506,4 +506,4 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
     );
 });
 
-export default Board;
+export default React.memo(Board);

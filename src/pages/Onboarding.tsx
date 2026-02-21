@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { User, GraduationCap, ArrowRight } from 'lucide-react';
-import TeacherRegistrationForm from '../components/TeacherRegistrationForm';
-import StudentRegistrationForm from '../components/StudentRegistrationForm';
+import MatchWizard from '../components/MatchWizard';
+import StudentWizard from '../components/StudentWizard';
 
 const Onboarding = () => {
     const { userRole } = useAuth();
@@ -25,28 +25,32 @@ const Onboarding = () => {
 
     if (view === 'student_form') {
         return (
-            <div className="min-h-screen bg-[#161512] py-12 px-4">
+            <div className="min-h-screen bg-[#161512] flex items-center justify-center p-4">
                 <button
                     onClick={() => setView('selection')}
-                    className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2"
+                    className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2 z-10"
                 >
                     ← Volver
                 </button>
-                <StudentRegistrationForm onComplete={handleStudentComplete} />
+                <div className="w-full max-w-2xl animate-enter">
+                    <StudentWizard onComplete={handleStudentComplete} />
+                </div>
             </div>
         );
     }
 
     if (view === 'teacher_form') {
         return (
-            <div className="min-h-screen bg-[#161512] py-12 px-4">
+            <div className="min-h-screen bg-[#161512] flex items-center justify-center p-4">
                 <button
                     onClick={() => setView('selection')}
-                    className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2"
+                    className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2 z-10"
                 >
                     ← Volver
                 </button>
-                <TeacherRegistrationForm onComplete={handleTeacherComplete} />
+                <div className="w-full max-w-2xl animate-enter">
+                    <MatchWizard onComplete={handleTeacherComplete} />
+                </div>
             </div>
         );
     }
@@ -64,7 +68,7 @@ const Onboarding = () => {
                 {/* Student Card */}
                 <button
                     onClick={() => setView('student_form')}
-                    className="group bg-[#262421] hover:bg-[#302e2b] border border-white/5 hover:border-gold/30 rounded-2xl p-8 transition-all flex flex-col items-center gap-6 text-left relative overflow-hidden"
+                    className="group card-glass glass-panel-hover p-8 flex flex-col items-center gap-6 text-left relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                         <GraduationCap size={120} />
@@ -87,7 +91,7 @@ const Onboarding = () => {
                 {/* Teacher Card */}
                 <button
                     onClick={() => setView('teacher_form')}
-                    className="group bg-[#262421] hover:bg-[#302e2b] border border-white/5 hover:border-gold/30 rounded-2xl p-8 transition-all flex flex-col items-center gap-6 text-left relative overflow-hidden"
+                    className="group card-glass glass-panel-hover p-8 flex flex-col items-center gap-6 text-left relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                         <User size={120} />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, CreditCard, DollarSign, ShieldCheck, AlertCircle } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
+import { Teacher } from '../types';
 import toast from 'react-hot-toast';
 
 // Placeholder for Stripe Public Key - In production this should be in env vars
@@ -10,7 +11,7 @@ interface PaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: (method: 'stripe' | 'mercadopago') => Promise<void>;
-    teacher: any;
+    teacher: Teacher;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSuccess, teacher }) => {

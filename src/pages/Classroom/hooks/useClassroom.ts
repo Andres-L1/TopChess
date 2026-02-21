@@ -263,6 +263,43 @@ export const useClassroom = (teacherId: string | undefined) => {
             toast.error("Error en formato", { id: loadingToast });
         }
     }, [teacherId, extractComments]);
+    const exportCurrentState = useCallback(() => {
+        try {
+            const game = new ChessJS();
+            if (gameState.fen !== 'start' && gameState.history.length === 0) {
+                game.load(gameState.fen);
+            } else {
+                for (const move of gameState.history) {
+                    game.move(move);
+                }
+            }
+
+            game.reset();
+            if (comments[-1]) { game.setComment(typeof comments[-1] === 'string' ? comments[-1] : (comments[-1] as any).text); }
+            for (let i = 0; i < gameState.history.length; i++) {
+                game.move(gameState.history[i]);
+                if (comments[i]) {
+                    const c = typeof comments[i] === 'string' ? comments[i] : (comments[i] as any).text;
+                    if (c) game.setComment(c);
+                }
+            }
+
+            const pgn = game.pgn({ maxWidth: 80, newline: '\n' });
+            const blob = new Blob([pgn], { type: "text/plain" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `TopChess_Capitulo_${activeChapterIndex >= 0 ? activeChapterIndex + 1 : '1'}.pgn`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            toast.success("PGN exportado");
+        } catch (error) {
+            console.error("Error exporting PGN:", error);
+            toast.error("Error al exportar");
+        }
+    }, [gameState.fen, gameState.history, comments, activeChapterIndex]);
 
     return {
         token,
@@ -286,6 +323,7 @@ export const useClassroom = (teacherId: string | undefined) => {
         loadChapter,
         importStudy,
         injectPgnFen,
+        exportCurrentState,
         userRole,
         currentUserId,
         comments

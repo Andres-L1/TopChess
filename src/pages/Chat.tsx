@@ -252,7 +252,7 @@ const Chat: React.FC = () => {
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder={status === 'approved' ? "Escribe un mensaje..." : "Escribe para presentarte..."}
-                        className="w-full bg-white/5 border border-white/10 text-white text-[13px] md:text-sm rounded-xl px-4 py-3 md:px-5 md:py-3.5 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all placeholder:text-white/30 shadow-inner"
+                        className="input-premium text-[13px] md:text-sm py-3 md:py-3.5 shadow-inner"
                     />
                 </div>
                 <PremiumButton

@@ -1,3 +1,5 @@
+import type { DrawShape } from 'chessground/draw';
+
 export interface Teacher {
     id: string;
     name: string;
@@ -23,6 +25,9 @@ export interface Teacher {
     onlineStatus?: 'offline' | 'online' | 'in_class';
     lastActive?: number;
     clubId?: string;
+    classCredits?: number;
+    requestDate?: number;
+    boardTheme?: string;
 }
 
 export interface TeacherAvailability {
@@ -75,7 +80,7 @@ export interface RoomData {
     history?: string[];
     fenHistory?: string[];
     currentIndex?: number;
-    shapes?: any[];
+    shapes?: DrawShape[];
     chapters?: { name: string, pgn: string }[];
     activeChapterIndex?: number;
     comment?: string;
@@ -143,6 +148,7 @@ export interface AppUser {
     elo?: number;
     learningGoals?: string[];
     preferredStyle?: string;
+    boardTheme?: string;
 }
 
 export interface AppNotification {

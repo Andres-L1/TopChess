@@ -111,4 +111,4 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
     );
 };
 
-export default ClassroomHeader;
+export default React.memo(ClassroomHeader);

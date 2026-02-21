@@ -121,7 +121,7 @@ const TeacherRegistrationForm = ({ onComplete }: { onComplete: () => void }) => 
                 </div>
             </div>
 
-            <div className="bg-[#262421] border border-white/5 rounded-2xl p-8 shadow-2xl">
+            <div className="card-glass p-8">
                 <Section title="Ubicación y Tarifa" icon={Globe}>
                     <Option
                         selected={region === 'EU'}
@@ -191,12 +191,7 @@ const TeacherRegistrationForm = ({ onComplete }: { onComplete: () => void }) => 
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !region || !experience || !style}
-                        className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2
-                            ${isSubmitting || !region || !experience || !style
-                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                                : 'bg-gold hover:bg-gold-hover text-black shadow-lg hover:shadow-gold/20 transform hover:-translate-y-0.5'
-                            }
-                        `}
+                        className="btn-primary"
                     >
                         {isSubmitting ? 'Creando Profesor...' : 'Crear Perfil Profesional'}
                         {!isSubmitting && <ChevronRight size={18} />}

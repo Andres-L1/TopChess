@@ -45,7 +45,7 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     placeholder="Escribe un mensaje..."
-                    className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold/30 transition-all placeholder:text-white/20"
+                    className="input-premium flex-grow"
                 />
                 <button
                     onClick={handleSend}
@@ -58,4 +58,4 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
     );
 };
 
-export default ClassroomChat;
+export default React.memo(ClassroomChat);

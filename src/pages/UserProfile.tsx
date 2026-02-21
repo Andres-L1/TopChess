@@ -94,7 +94,7 @@ const UserProfile = () => {
                                 name="name"
                                 value={profile.name}
                                 onChange={handleChange}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-gold/50 focus:outline-none transition-colors"
+                                className="input-premium"
                             />
                         </div>
 
@@ -105,7 +105,7 @@ const UserProfile = () => {
                                 value={profile.bio || ''}
                                 onChange={handleChange}
                                 rows={4}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-gold/50 focus:outline-none transition-colors"
+                                className="input-premium resize-none"
                                 placeholder="Cuéntanos sobre tu experiencia en ajedrez..."
                             />
                         </div>
@@ -117,7 +117,7 @@ const UserProfile = () => {
                                 name="image"
                                 value={profile.image}
                                 onChange={handleChange}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white text-xs font-mono focus:border-gold/50 focus:outline-none transition-colors"
+                                className="input-premium text-xs font-mono"
                             />
                             <p className="text-[10px] text-text-muted mt-1">Usa una URL de imagen válida (ej. Unsplash).</p>
                         </div>

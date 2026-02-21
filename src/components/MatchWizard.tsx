@@ -32,19 +32,28 @@ const STEPS = [
             { value: 'dynamic', label: 'Dinámico y Divertido', desc: 'Clases rápidas, prácticas y entretenidas.' },
             { value: 'patient', label: 'Paciente y Comprensivo', desc: 'Ir paso a paso sin prisas.' }
         ]
+    },
+    {
+        id: 'theme',
+        question: 'Elige tu tablero inicial',
+        options: [
+            { value: 'classic', label: 'Clásico madera', desc: 'El tablero tradicional de toda la vida.' },
+            { value: 'dark', label: 'Modo Oscuro', desc: 'Tablero minimalista, ideal para la vista.' },
+            { value: 'glass', label: 'Cristal Premium', desc: 'El estilo exclusivo de TopChess.' }
+        ]
     }
 ];
 
 const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
     const { currentUserId, currentUser } = useAuth();
     const [currentStep, setCurrentStep] = useState(0);
-    const [answers, setAnswers] = useState<any>({});
+    const [answers, setAnswers] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSelect = (value: string) => {
         const stepId = STEPS[currentStep].id;
         // Single choice logic
-        setAnswers((prev: any) => ({ ...prev, [stepId]: value }));
+        setAnswers((prev) => ({ ...prev, [stepId]: value }));
     };
 
     const handleNext = async () => {
@@ -75,7 +84,8 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
                     teachingStyle: answers['style'],
                     curriculum: 'Personalizado basándome en tus objetivos.',
                     experienceYears: answers['experience'] === 'master' ? 10 : 2,
-                    achievements: []
+                    achievements: [],
+                    boardTheme: answers['theme'] || 'glass'
                 };
 
                 await firebaseService.createTeacherProfile(profile);
@@ -147,7 +157,7 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
                 </div>
 
                 <div className="flex-1 space-y-3 overflow-y-auto mb-8 pr-2 custom-scrollbar">
-                    {step.options.map((opt: any) => {
+                    {step.options.map((opt: { value: string, label: string, desc: string, icon?: string }) => {
                         const isSelected = answers[step.id] === opt.value;
                         return (
                             <button

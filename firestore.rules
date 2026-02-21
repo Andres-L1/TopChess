@@ -67,6 +67,12 @@ service cloud.firestore {
        allow write: if isAuthenticated() && request.resource.data.chatId.matches('.*'+request.auth.uid+'.*');
     }
 
+    // --- Chats Metadata ---
+    match /chats/{chatId} {
+       allow read: if isAuthenticated() && (chatId.matches('.*'+request.auth.uid+'.*') || isAdmin());
+       allow write: if isAuthenticated() && chatId.matches('.*'+request.auth.uid+'.*');
+    }
+
     // --- Rooms (LiveKit/Classroom state) ---
     match /rooms/{roomId} {
       // Room names are normally built with the teacher's ID

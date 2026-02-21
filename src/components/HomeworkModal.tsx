@@ -65,7 +65,7 @@ const HomeworkModal: React.FC<HomeworkModalProps> = ({ isOpen, onClose, onSave, 
                             required
                             value={studentId}
                             onChange={(e) => setStudentId(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all font-medium appearance-none"
+                            className="input-premium appearance-none"
                         >
                             <option value="">Selecciona un alumno...</option>
                             {students.map(s => (
@@ -85,7 +85,7 @@ const HomeworkModal: React.FC<HomeworkModalProps> = ({ isOpen, onClose, onSave, 
                             placeholder="Ej: Finales de Torres"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all font-medium placeholder:text-white/20"
+                            className="input-premium"
                         />
                     </div>
 
@@ -96,7 +96,7 @@ const HomeworkModal: React.FC<HomeworkModalProps> = ({ isOpen, onClose, onSave, 
                             <select
                                 value={type}
                                 onChange={(e) => setType(e.target.value as any)}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all appearance-none"
+                                className="input-premium appearance-none text-sm"
                             >
                                 <option value="lichess_study">Estudio Lichess</option>
                                 <option value="custom_fen">Posición (FEN)</option>
@@ -113,7 +113,7 @@ const HomeworkModal: React.FC<HomeworkModalProps> = ({ isOpen, onClose, onSave, 
                                 placeholder={type === 'lichess_study' ? 'https://lichess.org/study/...' : '...'}
                                 value={referenceData}
                                 onChange={(e) => setReferenceData(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all font-mono text-[11px] placeholder:text-white/20"
+                                className="input-premium font-mono text-[11px]"
                             />
                         </div>
                     </div>
@@ -126,14 +126,14 @@ const HomeworkModal: React.FC<HomeworkModalProps> = ({ isOpen, onClose, onSave, 
                             placeholder="Explica qué debe hacer el alumno..."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/30 transition-all resize-none placeholder:text-white/20 text-sm"
+                            className="input-premium resize-none text-sm"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gold hover:bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-gold/10 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-primary w-full py-4 mt-4"
                     >
                         {loading ? 'Asignando...' : 'Asignar Tarea'}
                     </button>
