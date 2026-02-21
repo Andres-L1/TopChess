@@ -22,8 +22,8 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
     };
 
     return (
-        <div className="h-full flex flex-col animate-in fade-in duration-300">
-            <div className="flex-grow p-6 overflow-y-auto space-y-4 custom-scrollbar bg-[#1b1a17]/50">
+        <div className="flex-1 min-h-0 flex flex-col animate-in fade-in duration-300">
+            <div className="flex-1 min-h-0 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-[#1b1a17]/50">
                 {messages.map((msg) => (
                     <div key={msg.id} className={`flex flex-col ${msg.sender === userRole ? 'items-end' : 'items-start'}`}>
                         <div className={`p-4 rounded-2xl max-w-[85%] transition-all shadow-lg ${msg.sender === userRole

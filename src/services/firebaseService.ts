@@ -679,6 +679,28 @@ export const firebaseService = {
         }
     },
 
+    async resetRoom(roomId: string): Promise<void> {
+        try {
+            await setDoc(doc(db, 'rooms', roomId), {
+                fen: 'start',
+                pgn: '',
+                orientation: 'white',
+                history: [],
+                fenHistory: [],
+                currentIndex: 0,
+                shapes: [],
+                chapters: [],
+                activeChapterIndex: -1,
+                activeStudyName: '',
+                comment: '',
+                comments: {}
+            });
+        } catch (error) {
+            console.error(`Error in resetRoom(${roomId}):`, error);
+            throw error;
+        }
+    },
+
     async updateChatMessages(chatId: string): Promise<void> {
         try {
             const chatRef = doc(db, 'chats', chatId);

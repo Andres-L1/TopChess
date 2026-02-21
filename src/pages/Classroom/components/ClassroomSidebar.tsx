@@ -12,6 +12,7 @@ interface ClassroomSidebarProps {
     onSendMessage: (text: string) => void;
     gameState: GameState;
     roomChapters: { name: string, pgn: string }[];
+    activeStudyName: string;
     activeChapterIndex: number;
     onLoadChapter: (idx: number) => Promise<void>;
     currentComment: string;
@@ -31,6 +32,7 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
     onSendMessage,
     gameState,
     roomChapters,
+    activeStudyName,
     activeChapterIndex,
     onLoadChapter,
     currentComment,
@@ -74,18 +76,18 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
             </div>
 
             {/* ── Tab content ─────────────────────────────────────────────── */}
-            <div className="flex-grow overflow-y-auto custom-scrollbar">
+            <div className="flex-1 min-h-0 flex flex-col">
 
                 {/* MOVES TAB ─ main panel, Lichess style */}
                 {activeTab === 'moves' && (
-                    <div className="flex flex-col h-full">
+                    <div className="flex-1 min-h-0 flex flex-col">
                         {/* Material captured (compact, above move list like Lichess) */}
                         <div className="flex-none px-4 pt-3 pb-1 border-b border-white/5">
                             <CapturedPieces fen={gameState.fen} orientation={gameState.orientation || 'white'} />
                         </div>
 
                         {/* Move list */}
-                        <div className="flex-grow min-h-0 overflow-y-auto">
+                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                             <MoveHistory
                                 moves={gameState.history}
                                 currentIndex={gameState.currentIndex}
@@ -135,7 +137,7 @@ const ClassroomSidebar: React.FC<ClassroomSidebarProps> = ({
 
                 {/* CHAPTERS TAB */}
                 {activeTab === 'chapters' && (
-                    <div className="p-4 space-y-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-6">
                         {/* Chapter list */}
                         {roomChapters.length > 0 && (
                             <section className="space-y-3">

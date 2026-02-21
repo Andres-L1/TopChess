@@ -17,6 +17,7 @@ export const useClassroom = (teacherId: string | undefined) => {
     const [lichessStudies, setLichessStudies] = useState<LichessStudy[]>([]);
     const [roomChapters, setRoomChapters] = useState<{ name: string, pgn: string }[]>([]);
     const [activeChapterIndex, setActiveChapterIndex] = useState<number>(-1);
+    const [activeStudyName, setActiveStudyName] = useState<string>("");
     const [comments, setComments] = useState<Record<number, string>>({});
     const [currentComment, setCurrentComment] = useState<string>("");
     const [isAudioEnabled, setIsAudioEnabled] = useState(false);
@@ -83,6 +84,7 @@ export const useClassroom = (teacherId: string | undefined) => {
                         if (data.activeChapterIndex !== undefined) setActiveChapterIndex(data.activeChapterIndex);
                         if (data.comment !== undefined) setCurrentComment(data.comment || "");
                         if (data.comments) setComments(data.comments);
+                        setActiveStudyName(data.activeStudyName || "");
 
                         // Sync shared game state for sidebar/header visibility
                         setGameState(prev => ({
@@ -211,6 +213,7 @@ export const useClassroom = (teacherId: string | undefined) => {
 
             const extractedComments = extractComments(game);
             await firebaseService.updateRoom(teacherId, {
+                activeStudyName: studyName,
                 chapters: chapters,
                 activeChapterIndex: 0,
                 fen: game.fen(),
@@ -326,6 +329,8 @@ export const useClassroom = (teacherId: string | undefined) => {
         exportCurrentState,
         userRole,
         currentUserId,
-        comments
+        comments,
+        activeStudyName,
+        setActiveStudyName
     };
 };

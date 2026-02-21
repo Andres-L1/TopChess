@@ -12,6 +12,7 @@ interface ClassroomHeaderProps {
     toggleMute: () => void;
     userRole: string;
     teacherId: string;
+    teacherName?: string;
     onResetStudy: () => void;
 }
 
@@ -23,6 +24,7 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
     toggleMute,
     userRole,
     teacherId,
+    teacherName,
     onResetStudy
 }) => {
     const navigate = useNavigate();
@@ -42,7 +44,9 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
 
                 <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gold/5 rounded-2xl border border-gold/10">
                     <div className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-                    <span className="text-sm font-medium text-gold/80 uppercase tracking-wider">Clase en Vivo</span>
+                    <span className="text-sm font-medium text-gold/80 uppercase tracking-wider">
+                        {userRole === 'student' && teacherName ? `Aula de ${teacherName}` : 'Clase en Vivo'}
+                    </span>
                 </div>
             </div>
 
@@ -97,7 +101,15 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
                 <div className="h-6 md:h-8 w-px bg-white/10 mx-1 md:mx-2" />
 
                 <button
-                    onClick={() => {
+                    onClick={async () => {
+                        if (userRole === 'teacher') {
+                            try {
+                                const { firebaseService } = await import('../../../services/firebaseService');
+                                await firebaseService.resetRoom(teacherId);
+                            } catch (e) {
+                                console.error("Could not reset room on exit:", e);
+                            }
+                        }
                         toast.success('Clase finalizada');
                         navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard');
                     }}

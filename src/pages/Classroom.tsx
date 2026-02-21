@@ -39,7 +39,8 @@ const Classroom: React.FC = () => {
         exportCurrentState,
         userRole,
         currentUserId,
-        comments
+        comments,
+        activeStudyName
     } = useClassroom(teacherId);
 
     const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
@@ -171,6 +172,7 @@ const Classroom: React.FC = () => {
                 toggleMute={toggleMute}
                 userRole={userRole}
                 teacherId={teacherId || ""}
+                teacherName={teacherProfile?.name}
                 onResetStudy={resetStudy}
             />
 
@@ -312,6 +314,7 @@ const Classroom: React.FC = () => {
                         onSendMessage={handleSendMessage}
                         gameState={gameState}
                         roomChapters={roomChapters}
+                        activeStudyName={activeStudyName}
                         activeChapterIndex={activeChapterIndex}
                         onLoadChapter={loadChapter}
                         currentComment={currentComment}

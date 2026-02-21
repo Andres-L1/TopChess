@@ -83,6 +83,7 @@ export interface RoomData {
     shapes?: DrawShape[];
     chapters?: { name: string, pgn: string }[];
     activeChapterIndex?: number;
+    activeStudyName?: string;
     comment?: string;
     comments?: Record<number, string>;
 }
