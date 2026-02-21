@@ -70,7 +70,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 <p className="text-xs md:text-sm text-text-muted">{t('dashboard.total_earnings')}</p>
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                     <AreaChart data={[{ v: 0 }, { v: 10 }, { v: 5 }, { v: 20 }, { v: 15 }, { v: 30 }, { v: stats.earnings > 30 ? stats.earnings : 40 }]}>
                                         <Area type="monotone" dataKey="v" stroke="#4ade80" fill="#4ade80" strokeWidth={2} />
                                     </AreaChart>
@@ -89,7 +89,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 <p className="text-xs md:text-sm text-text-muted">{t('dashboard.active_students')}</p>
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                     <AreaChart data={[{ v: 1 }, { v: 2 }, { v: 2 }, { v: 3 }, { v: stats.students > 3 ? stats.students : 4 }]}>
                                         <Area type="stepAfter" dataKey="v" stroke="#3b82f6" fill="#3b82f6" strokeWidth={2} />
                                     </AreaChart>
@@ -108,7 +108,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 <p className="text-xs md:text-sm text-text-muted">{t('dashboard.classes_given')}</p>
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                     <AreaChart data={[{ v: 0 }, { v: 5 }, { v: 8 }, { v: 15 }, { v: stats.hours }]}>
                                         <Area type="monotone" dataKey="v" stroke="#a855f7" fill="#a855f7" strokeWidth={2} />
                                     </AreaChart>

@@ -66,7 +66,7 @@ const AdminTeachersTab: React.FC<AdminTeachersTabProps> = ({ filteredTeachers, h
                             <td className="p-4">
                                 <div className="flex items-center gap-3">
                                     <div className="relative shrink-0">
-                                        <img src={teacher.image} className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/10 group-hover:ring-gold/20 transition-all grayscale group-hover:grayscale-0" alt="" />
+                                        <img src={teacher.image?.startsWith('http') ? teacher.image : `https://api.dicebear.com/7.x/avataaars/svg?seed=${teacher.id}`} className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/10 group-hover:ring-gold/20 transition-all grayscale group-hover:grayscale-0" alt="" />
                                         {teacher.isVerified && (
                                             <div className="absolute -bottom-1 -right-1 bg-gold rounded-full p-0.5 border border-[#111] shadow-[0_0_6px_rgba(212,175,55,0.4)]">
                                                 <CheckCircle size={8} className="text-black" />

@@ -51,7 +51,7 @@ const AdminAnalyticsTab: React.FC<AdminAnalyticsTabProps> = ({ weeklyRevenue, tr
             <div className="glass-panel p-6 rounded-3xl border-white/5">
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 mb-6">Evolución de Ingresos (7 días)</p>
                 <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                         <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -74,7 +74,7 @@ const AdminAnalyticsTab: React.FC<AdminAnalyticsTabProps> = ({ weeklyRevenue, tr
                 <div className="glass-panel p-6 rounded-3xl border-white/5 flex flex-col items-center">
                     <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 w-full mb-2">Distribución de Flujos</p>
                     <div className="h-[200px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                             <PieChart>
                                 <Pie
                                     data={txData}
@@ -111,7 +111,7 @@ const AdminAnalyticsTab: React.FC<AdminAnalyticsTabProps> = ({ weeklyRevenue, tr
                                     <div className={`w-6 text-center font-black ${i === 0 ? 'text-gold' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-white/20'}`}>
                                         #{i + 1}
                                     </div>
-                                    <img src={t.image} className="w-10 h-10 rounded-xl object-cover border border-white/10 group-hover:border-gold/50 transition-colors" alt="" />
+                                    <img src={t.image?.startsWith('http') ? t.image : `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.id}`} className="w-10 h-10 rounded-xl object-cover border border-white/10 group-hover:border-gold/50 transition-colors" alt="" />
                                     <div className="flex-grow">
                                         <div className="flex items-center justify-between mb-1.5">
                                             <span className="text-sm font-bold text-white tracking-wide">{t.name}</span>
