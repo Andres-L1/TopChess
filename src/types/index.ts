@@ -24,6 +24,7 @@ export interface Teacher {
     lichessAccessToken?: string;
     onlineStatus?: 'offline' | 'online' | 'in_class';
     lastActive?: number;
+    rating?: number;
     clubId?: string;
     classCredits?: number;
     requestDate?: number;
@@ -118,7 +119,7 @@ export interface Booking {
     slotId: string;
     date: string;
     time: string;
-    status: 'confirmed' | 'cancelled';
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     timestamp: number;
     meetingLink: string;
 }
