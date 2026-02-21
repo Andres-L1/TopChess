@@ -11,7 +11,8 @@ import {
     addDoc,
     onSnapshot,
     limit,
-    orderBy
+    orderBy,
+    getCountFromServer
 } from 'firebase/firestore';
 import {
     Teacher,
@@ -873,6 +874,23 @@ export const firebaseService = {
             await updateDoc(doc(notificationsRef, notificationId), { read: true });
         } catch (error) {
             console.error(`Error in markNotificationAsRead(${notificationId}):`, error);
+        }
+    },
+
+    async getPlatformStats(): Promise<{ users: number, teachers: number, requests: number }> {
+        try {
+            const usersCount = await getCountFromServer(usersRef);
+            const teachersCount = await getCountFromServer(teachersRef);
+            const requestsCount = await getCountFromServer(requestsRef);
+
+            return {
+                users: usersCount.data().count,
+                teachers: teachersCount.data().count,
+                requests: requestsCount.data().count
+            };
+        } catch (error) {
+            console.error("Error fetching platform stats:", error);
+            return { users: 0, teachers: 0, requests: 0 };
         }
     }
 };
