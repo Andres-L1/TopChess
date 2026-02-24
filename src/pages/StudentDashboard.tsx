@@ -6,7 +6,7 @@ import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X
 import BookingModal from '../components/BookingModal';
 import toast from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
-import { Booking, Homework } from '../types/index';
+import { Booking, Homework, Teacher } from '../types/index';
 import PaymentModal from '../components/PaymentModal';
 
 import { StudentStats } from './StudentDashboard/components/StudentStats';
@@ -23,15 +23,15 @@ const StudentDashboard: React.FC = () => {
     const { currentUserId, logout, currentUser } = auth!; // Added currentUser
     const navigate = useNavigate();
     const [balance, setBalance] = useState(0); // This should come from a real Wallet service eventually
-    const [myTeachers, setMyTeachers] = useState<any[]>([]);
-    const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+    const [myTeachers, setMyTeachers] = useState<(Teacher & { classCredits?: number })[]>([]);
+    const [pendingRequests, setPendingRequests] = useState<(Teacher & { requestDate?: number })[]>([]);
     const [myBookings, setMyBookings] = useState<Booking[]>([]);
     const [myHomeworks, setMyHomeworks] = useState<Homework[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     // Booking Modal State
-    const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
+    const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
 
@@ -106,12 +106,12 @@ const StudentDashboard: React.FC = () => {
         };
     }, [currentUserId]);
 
-    const openBookingModal = (teacher: any) => {
+    const openBookingModal = (teacher: Teacher) => {
         setSelectedTeacher(teacher);
         setIsBookingModalOpen(true);
     };
 
-    const handleOpenPaymentModal = (teacher: any) => {
+    const handleOpenPaymentModal = (teacher: Teacher) => {
         setSelectedTeacher(teacher);
         setIsPaymentModalOpen(true);
     };

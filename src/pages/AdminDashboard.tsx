@@ -130,10 +130,7 @@ const AdminDashboard = () => {
     const tickRef = useRef(0);
     useEffect(() => { tickRef.current++; setLiveCount(c => c + 1); }, [users, teachers, transactions]);
 
-    // Access already enforced by AdminRoute in App.tsx
-    useEffect(() => {
-        if (!currentUser) return;
-    }, [currentUser, navigate]);
+    // Access enforced by AdminRoute in App.tsx — no extra checks needed
 
     // ── Real-time listeners for everything ──────────────────────────────
     useEffect(() => {

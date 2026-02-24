@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, LayoutDashboard, LogOut, Shield, Globe, X, Bell, Map } from 'lucide-react';
@@ -42,6 +42,17 @@ const Navbar: React.FC = () => {
             setNotifications([]);
         }
     }, [authContext?.currentUserId]);
+
+    // Mark all unread notifications as read when panel opens
+    const handleToggleNotifications = useCallback(() => {
+        const willOpen = !showNotifications;
+        setShowNotifications(willOpen);
+        if (willOpen && authContext?.currentUserId) {
+            notifications
+                .filter(n => !n.read)
+                .forEach(n => firebaseService.markNotificationAsRead(n.id).catch(console.error));
+        }
+    }, [showNotifications, notifications, authContext?.currentUserId]);
 
     const handleNotificationClick = async (notif: AppNotification) => {
         if (!notif.read) {
@@ -127,7 +138,7 @@ const Navbar: React.FC = () => {
                                 <div className="relative">
                                     <button
                                         onClick={() => {
-                                            setShowNotifications(!showNotifications);
+                                            handleToggleNotifications();
                                             setIsMenuOpen(false);
                                         }}
                                         className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all"

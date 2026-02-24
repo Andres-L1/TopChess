@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
-import { Send, CheckCircle, Clock, DollarSign, ChevronLeft } from 'lucide-react';
+import { Send, CheckCircle, Clock, ChevronLeft } from 'lucide-react';
 import { Message, Profile, Request } from '../types/index';
 import toast from 'react-hot-toast';
 import PremiumButton from '../components/PremiumButton';
@@ -13,14 +13,17 @@ const Chat: React.FC = () => {
     const { userRole, currentUserId, currentUser } = useAuth();
     const navigate = useNavigate();
 
-    const targetId = teacherId!;
+    // Guard: redirect if teacherId param is missing
+    const targetId = teacherId ?? '';
+    React.useEffect(() => {
+        if (!teacherId) navigate('/', { replace: true });
+    }, [teacherId, navigate]);
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState("");
     const [status, setStatus] = useState<Request['status'] | null>(null);
     const [targetProfile, setTargetProfile] = useState<Profile | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
 
 
     // Initial Load

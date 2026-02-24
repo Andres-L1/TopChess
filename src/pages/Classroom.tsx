@@ -136,14 +136,15 @@ const Classroom: React.FC = () => {
         if (!el) return;
         const handler = (e: WheelEvent) => {
             e.preventDefault();
-            const len = gameState.history.length;
-            const cur = gameState.currentIndex ?? len - 1;
+            const gs = gameStateRef.current;
+            const len = gs.history.length;
+            const cur = gs.currentIndex ?? len - 1;
             if (e.deltaY > 0) boardRef.current?.goToMove(Math.min(len - 1, cur + 1));
             else boardRef.current?.goToMove(Math.max(-1, cur - 1));
         };
         el.addEventListener('wheel', handler, { passive: false });
         return () => el.removeEventListener('wheel', handler);
-    }, [gameState.history.length, gameState.currentIndex]);
+    }, []); // Stable listener using ref
 
 
     const resetStudy = useCallback(() => boardRef.current?.reset(), []);

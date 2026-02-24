@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { deleteField } from 'firebase/firestore';
 import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp, MessageCircle, Map as MapIcon, Plus, Settings } from 'lucide-react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
@@ -7,7 +8,7 @@ import Calendar from '../components/Calendar';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
-import { Request, Teacher, Booking, Homework } from '../types/index';
+import { Request, Teacher, Booking, Homework, Club, AppUser } from '../types/index';
 import { lichessService } from '../services/lichessService';
 import HomeworkModal from '../components/HomeworkModal';
 import { generateCodeVerifier, generateCodeChallenge } from '../utils/pkce';
@@ -22,25 +23,27 @@ interface DashboardStats {
 }
 
 const TeacherDashboard = () => {
-    const { currentUserId, logout } = useAuth();
+    const { currentUserId, logout, setUserRole } = useAuth();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'homework' | 'club'>('overview');
     const [stats, setStats] = useState<DashboardStats>({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState<Request[]>([]);
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
-    const [myStudents, setMyStudents] = useState<any[]>([]);
+    const [myStudents, setMyStudents] = useState<(AppUser & { requestId: string })[]>([]);
     const [homeworks, setHomeworks] = useState<Homework[]>([]);
     const [availability, setAvailability] = useState<string[]>([]);
     const [teacherProfile, setTeacherProfile] = useState<Teacher | null>(null);
     const [nextBooking, setNextBooking] = useState<Booking | null>(null);
     const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [club, setClub] = useState<any>(null);
-    const [clubTeachers, setClubTeachers] = useState<any[]>([]);
+    const [club, setClub] = useState<Club | null>(null);
+    const [clubTeachers, setClubTeachers] = useState<Teacher[]>([]);
     const [inviteEmail, setInviteEmail] = useState('');
     const [isCreatingClub, setIsCreatingClub] = useState(false);
     const [isInviting, setIsInviting] = useState(false);
+    const [showClubNameModal, setShowClubNameModal] = useState(false);
+    const [clubNameInput, setClubNameInput] = useState('');
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -228,16 +231,17 @@ const TeacherDashboard = () => {
     const progressPercent = teacherProfile ? Math.min(100, (teacherProfile.classesGiven / levelInfo.target) * 100) : 0;
     const currency = teacherProfile?.currency === 'EUR' ? '€' : '$';
 
-    const handleCreateClub = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const name = prompt("Nombre de tu nuevo club:");
-        if (!name) return;
-
+    const handleCreateClub = async (name: string) => {
+        if (!name.trim()) return;
         setIsCreatingClub(true);
         try {
-            const clubId = await firebaseService.createClub(name, currentUserId);
+            await firebaseService.createClub(name.trim(), currentUserId);
+            setUserRole('club_director');
+            const myClub = await firebaseService.getClubByDirectorId(currentUserId);
+            if (myClub) setClub(myClub);
             toast.success("¡Club creado con éxito! Ahora eres Director de Club.");
-            window.location.reload(); // Quickest way to refresh all roles/context
+            setShowClubNameModal(false);
+            setClubNameInput('');
         } catch (error) {
             toast.error("Error al crear el club");
         } finally {
@@ -298,8 +302,8 @@ const TeacherDashboard = () => {
     const handleLichessDisconnect = async () => {
         try {
             await firebaseService.updateTeacher(currentUserId, {
-                lichessAccessToken: undefined,
-                lichessUsername: undefined
+                lichessAccessToken: deleteField() as any,
+                lichessUsername: deleteField() as any
             });
             setTeacherProfile(prev => prev ? { ...prev, lichessAccessToken: undefined, lichessUsername: undefined } : null);
             toast.success("Desconectado de Lichess");
@@ -384,6 +388,10 @@ const TeacherDashboard = () => {
                     setInviteEmail={setInviteEmail}
                     handleInviteTeacher={handleInviteTeacher}
                     isInviting={isInviting}
+                    showClubNameModal={showClubNameModal}
+                    setShowClubNameModal={setShowClubNameModal}
+                    clubNameInput={clubNameInput}
+                    setClubNameInput={setClubNameInput}
                 />
             ) : (
                 <TeacherOverviewTab

@@ -7,12 +7,16 @@ interface TeacherClubTabProps {
     club: Club | null;
     teacherProfile: Teacher | null;
     clubTeachers: Teacher[];
-    handleCreateClub: (e: React.FormEvent) => Promise<void>;
+    handleCreateClub: (name: string) => Promise<void>;
     isCreatingClub: boolean;
     inviteEmail: string;
     setInviteEmail: (email: string) => void;
     handleInviteTeacher: (e: React.FormEvent) => Promise<void>;
     isInviting: boolean;
+    showClubNameModal?: boolean;
+    setShowClubNameModal?: (v: boolean) => void;
+    clubNameInput?: string;
+    setClubNameInput?: (v: string) => void;
 }
 
 const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
@@ -24,7 +28,11 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
     inviteEmail,
     setInviteEmail,
     handleInviteTeacher,
-    isInviting
+    isInviting,
+    showClubNameModal = false,
+    setShowClubNameModal,
+    clubNameInput = '',
+    setClubNameInput
 }) => {
     if (!club && teacherProfile?.role !== 'club_director') {
         return (
@@ -37,12 +45,46 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
                         Crea tu propio club para gestionar múltiples profesores, ver sus clases en tiempo real en la <span className="text-gold font-bold">Oficina Virtual</span> y centralizar tus operaciones.
                     </p>
                     <button
-                        onClick={handleCreateClub}
+                        onClick={() => setShowClubNameModal?.(true)}
                         disabled={isCreatingClub}
                         className="btn-primary px-8 py-4"
                     >
                         {isCreatingClub ? 'Creando...' : 'Crear mi Club'}
                     </button>
+
+                    {/* Club Name Modal */}
+                    {showClubNameModal && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowClubNameModal?.(false)}>
+                            <div className="bg-[#1b1a17] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl p-8" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-xl font-bold text-white mb-2">Nombre de tu Club</h3>
+                                <p className="text-sm text-white/40 mb-6">Elige un nombre para tu academia de ajedrez.</p>
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    value={clubNameInput}
+                                    onChange={e => setClubNameInput?.(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && clubNameInput.trim() && handleCreateClub(clubNameInput)}
+                                    placeholder="Ej: Academia Capablanca"
+                                    className="input-premium text-sm mb-6"
+                                />
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowClubNameModal?.(false)}
+                                        className="flex-1 py-3 text-white/40 hover:text-white border border-white/10 rounded-xl transition-all font-bold text-sm"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={() => handleCreateClub(clubNameInput)}
+                                        disabled={!clubNameInput.trim() || isCreatingClub}
+                                        className="flex-1 btn-primary py-3"
+                                    >
+                                        {isCreatingClub ? 'Creando...' : 'Crear Club'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );
