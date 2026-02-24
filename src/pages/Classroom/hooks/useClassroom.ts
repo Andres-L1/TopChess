@@ -156,15 +156,15 @@ export const useClassroom = (teacherId: string | undefined) => {
                 try {
                     const fenMatch = pgn.match(/\[FEN "([^"]+)"\]/);
                     if (fenMatch) { game.load(fenMatch[1]); loaded = true; }
-                } catch (e2) { }
+                } catch (e2) { console.debug('FEN extraction fallback failed:', e2); }
             }
             if (!loaded) {
-                try { game.load(cleanPgn); loaded = true; } catch (e3) { }
+                try { game.load(cleanPgn); loaded = true; } catch (e3) { console.debug('Direct load failed:', e3); }
             }
             if (!loaded) {
                 let rawMoves = cleanPgn.replace(/\[.*?\]/g, "").replace(/\{.*?\}/g, "").replace(/;.*$/gm, "").trim();
                 if (rawMoves.length > 0) {
-                    try { (game as any).loadPgn(`[Event "Live"]\n[Site "TopChess"]\n\n${rawMoves}`); loaded = true; } catch (e4) { }
+                    try { (game as any).loadPgn(`[Event "Live"]\n[Site "TopChess"]\n\n${rawMoves}`); loaded = true; } catch (e4) { console.debug('Raw moves load failed:', e4); }
                 }
             }
 

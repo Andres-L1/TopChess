@@ -154,6 +154,11 @@ export interface AppUser {
     preferredStyle?: string;
     boardTheme?: string;
     bio?: string;
+    // Dashboard stats (populated by Firestore)
+    studentsCount?: number;
+    balance?: number;
+    level?: number;
+    streak?: number;
 }
 
 export interface AppNotification {

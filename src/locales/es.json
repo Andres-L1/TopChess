@@ -11,56 +11,93 @@
         "panel": "Mi Panel",
         "admin": "Admin",
         "profile": "Mi Perfil",
-        "logout": "Cerrar Sesión"
+        "logout": "Cerrar Sesión",
+        "exit": "Salir"
     },
     "hero": {
-        "badge": "La Plataforma Premium de Ajedrez",
-        "title": "Domina el Tablero",
-        "subtitle": "Sin Límites",
-        "description": "Conecta con Grandes Maestros, accede a clases en vivo y mejora tu juego con herramientas de análisis de última generación.",
+        "badge": "Una Red Exclusiva",
+        "title_line1": "TU VERDADERO",
+        "title_line2": "POTENCIAL",
+        "description": "Una plataforma minimalista diseñada exclusivamente para conectar a grandes maestros del ajedrez con aspirantes a la maestría. Sin distracciones, solo crecimiento real.",
+        "cta_start": "INICIAR AHORA",
+        "cta_teach": "SOY PROFESOR",
         "cta_find": "Encontrar Mentor",
-        "cta_start": "Empezar Ahora",
-        "cta_teach": "Soy Profesor",
         "cta_dashboard": "Mi Panel"
     },
     "stats": {
-        "students": "Estudiantes",
-        "teachers": "Maestros",
-        "support": "Soporte",
-        "rating": "Valoración"
+        "users": "Usuarios",
+        "teachers": "Maestros FIDE",
+        "matches": "Matchs Exitosos"
     },
     "features": {
-        "title": "Todo lo que necesitas",
-        "subtitle": "Herramientas profesionales para estudiantes y maestros.",
+        "section_label": "Características",
+        "section_title": "LO CRUCIAL, NADA MÁS",
         "classroom": {
-            "title": "Aula Virtual Avanzada",
-            "desc": "Tablero interactivo sincronizado en tiempo real, chat de voz/video y herramientas de dibujo."
+            "title": "AULA INTEGRADA",
+            "desc": "Tablero de alto rendimiento con PGN, evaluación stockfish y audio P2P bajo WebRTC en una misma vista."
         },
-        "analysis": {
-            "title": "Análisis con IA",
-            "desc": "Identifica tus errores al instante con Stockfish 16 y recibe sugerencias de mejora."
+        "fast_match": {
+            "title": "FAST MATCH",
+            "desc": "Sistema de emparejamiento automático por IA que cruza tu estilo con los instructores verificados."
         },
-        "payments": {
-            "title": "Pagos Globales",
-            "desc": "Gestiona tus cobros y pagos de forma segura desde cualquier parte del mundo."
+        "wallet": {
+            "title": "BILLETERA GLOBAL",
+            "desc": "Transfiere y paga en cualquier divisa gracias a la potencia de Stripe integrado."
         },
-        "community": {
-            "title": "Comunidad Activa",
-            "desc": "Participa en torneos, únete a clubes y conecta con otros apasionados del ajedrez."
-        },
-        "cert": {
-            "title": "Certificación",
-            "desc": "Obtén certificados de nivel al completar cursos y alcanzar metas de ELO."
+        "data": {
+            "title": "DATOS REALES",
+            "desc": "Control completo sobre tu progreso, asertividad (ELO) e historial de clases."
         },
         "verified": {
-            "title": "Profesores Verificados",
-            "desc": "Todos nuestros maestros pasan por un riguroso proceso de verificación de identidad y nivel."
+            "title": "RIGUROSIDAD",
+            "desc": "Verificación manual de Maestros FIDE/Nacionales para garantizar la calidad."
+        },
+        "dark_glass": {
+            "title": "DARK GLASS",
+            "desc": "Estética premium oscura y limpia diseñada para reducir la fatiga visual."
         }
     },
     "cta_footer": {
-        "title": "¿Listo para llevar tu ajedrez al",
-        "highlight": "siguiente nivel",
-        "button": "Comenzar Ahora"
+        "title_line1": "EL TABLERO",
+        "title_line2": "TE ESPERA",
+        "button": "ENTRAR EMPAREJAMIENTO"
+    },
+    "home_auth": {
+        "badge_teacher": "Instructor Verificado",
+        "badge_student": "Sala de Estudiante",
+        "greeting": "¡Hola, {{name}}!",
+        "desc_teacher": "Bienvenido de vuelta a tu centro de mando. Aquí tienes el resumen real de tu academia online.",
+        "desc_student": "El tablero te espera. Continúa tu entrenamiento o entra en contacto con tu mentor.",
+        "go_dashboard": "Ir a mi Dashboard",
+        "find_mentor": "Buscar Mentor",
+        "communications": "Comunicaciones",
+        "communications_desc": "Responde los mensajes, solicita revisión de partidas o comunícate vía chat integrado.",
+        "finances": "Finanzas",
+        "finances_desc_teacher": "Revisa tu balance y transfiere a tu cuenta bancaria.",
+        "finances_desc_student": "Recarga créditos para comprar horas con tus profesores.",
+        "stat_students": "Alumnos",
+        "stat_students_sub": "Alumnos activos reales",
+        "stat_pending": "Clases Pendientes",
+        "stat_pending_sub": "Clases programadas",
+        "stat_balance": "Balance",
+        "stat_balance_sub": "Wallet actual",
+        "stat_rating": "Tu Rating",
+        "stat_rating_sub": "Calificación media",
+        "stat_level": "Nivel",
+        "stat_level_sub": "Progresión actual",
+        "stat_streak": "Racha",
+        "stat_streak_sub": "Días seguidos",
+        "stat_completed": "Clases Listas",
+        "stat_completed_sub": "Clases recibidas",
+        "stat_upcoming": "Clases Próximas",
+        "stat_upcoming_sub": "Agendadas"
+    },
+    "footer": {
+        "rights": "Todos los derechos reservados.",
+        "mentors": "Mentores",
+        "register": "Registrarse",
+        "platform": "Plataforma",
+        "about": "Nosotros"
     },
     "wizard": {
         "back": "Volver al inicio",

@@ -51,7 +51,7 @@ const sanitizeFirestoreData = (data: any): any => {
         return Object.entries(data).reduce((acc, [key, value]) => {
             acc[key] = value === undefined ? null : sanitizeFirestoreData(value);
             return acc;
-        }, {} as any);
+        }, {} as Record<string, unknown>);
     }
     return data;
 };
@@ -855,7 +855,7 @@ export const firebaseService = {
                         requests: data.requests || 98
                     };
                 }
-            } catch (e) { }
+            } catch (e) { console.debug('Stats doc unavailable:', e); }
 
             // 2. Fallback to simplified live counts (avoiding noisy 403s)
             // Teachers is usually public, we can count it
@@ -863,7 +863,7 @@ export const firebaseService = {
             try {
                 const teachersCount = await getCountFromServer(teachersRef);
                 teachers = teachersCount.data().count;
-            } catch (e) { }
+            } catch (e) { console.debug('Teacher count unavailable:', e); }
 
             // Static defaults for protected metrics (avoid 403 errors)
             const users = teachers > 0 ? teachers * 3 : 0;

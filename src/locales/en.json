@@ -11,56 +11,93 @@
         "panel": "Dashboard",
         "admin": "Admin",
         "profile": "Profile",
-        "logout": "Logout"
+        "logout": "Logout",
+        "exit": "Exit"
     },
     "hero": {
-        "badge": "The Premium Chess Platform",
-        "title": "Master the Board",
-        "subtitle": "No Limits",
-        "description": "Connect with Grandmasters, access live classes, and improve your game with next-gen analysis tools.",
+        "badge": "An Exclusive Network",
+        "title_line1": "YOUR TRUE",
+        "title_line2": "POTENTIAL",
+        "description": "A minimalist platform designed exclusively to connect chess grandmasters with aspiring masters. No distractions, only real growth.",
+        "cta_start": "START NOW",
+        "cta_teach": "I'M A TEACHER",
         "cta_find": "Find Mentor",
-        "cta_start": "Start Now",
-        "cta_teach": "I'm a Teacher",
         "cta_dashboard": "Dashboard"
     },
     "stats": {
-        "students": "Students",
-        "teachers": "Masters",
-        "support": "Support",
-        "rating": "Rating"
+        "users": "Users",
+        "teachers": "FIDE Masters",
+        "matches": "Successful Matches"
     },
     "features": {
-        "title": "Everything you need",
-        "subtitle": "Professional tools for students and masters.",
+        "section_label": "Features",
+        "section_title": "THE ESSENTIALS, NOTHING MORE",
         "classroom": {
-            "title": "Advanced Virtual Classroom",
-            "desc": "Real-time synchronized interactive board, voice/video chat, and drawing tools."
+            "title": "INTEGRATED CLASSROOM",
+            "desc": "High-performance board with PGN, Stockfish evaluation, and P2P audio via WebRTC in one view."
         },
-        "analysis": {
-            "title": "AI Analysis",
-            "desc": "Identify mistakes instantly with Stockfish 16 and get improvement suggestions."
+        "fast_match": {
+            "title": "FAST MATCH",
+            "desc": "AI-powered automatic matching that crosses your style with verified instructors."
         },
-        "payments": {
-            "title": "Global Payments",
-            "desc": "Manage payments securely from anywhere in the world."
+        "wallet": {
+            "title": "GLOBAL WALLET",
+            "desc": "Transfer and pay in any currency powered by Stripe integration."
         },
-        "community": {
-            "title": "Active Community",
-            "desc": "Join tournaments, clubs, and connect with other chess enthusiasts."
-        },
-        "cert": {
-            "title": "Certification",
-            "desc": "Get level certificates by completing courses and reaching ELO goals."
+        "data": {
+            "title": "REAL DATA",
+            "desc": "Full control over your progress, assertiveness (ELO), and class history."
         },
         "verified": {
-            "title": "Verified Teachers",
-            "desc": "All our masters undergo a rigorous identity and skill verification process."
+            "title": "RIGOR",
+            "desc": "Manual verification of FIDE/National Masters to guarantee quality."
+        },
+        "dark_glass": {
+            "title": "DARK GLASS",
+            "desc": "Premium dark and clean aesthetic designed to reduce eye strain."
         }
     },
     "cta_footer": {
-        "title": "Ready to take your chess to the",
-        "highlight": "next level",
-        "button": "Start Now"
+        "title_line1": "THE BOARD",
+        "title_line2": "AWAITS YOU",
+        "button": "ENTER MATCHING"
+    },
+    "home_auth": {
+        "badge_teacher": "Verified Instructor",
+        "badge_student": "Student Lounge",
+        "greeting": "Hello, {{name}}!",
+        "desc_teacher": "Welcome back to your command center. Here's the real overview of your online academy.",
+        "desc_student": "The board awaits you. Continue your training or get in touch with your mentor.",
+        "go_dashboard": "Go to Dashboard",
+        "find_mentor": "Find Mentor",
+        "communications": "Communications",
+        "communications_desc": "Reply to messages, request game reviews, or communicate via integrated chat.",
+        "finances": "Finances",
+        "finances_desc_teacher": "Check your balance and transfer to your bank account.",
+        "finances_desc_student": "Recharge credits to buy hours with your teachers.",
+        "stat_students": "Students",
+        "stat_students_sub": "Real active students",
+        "stat_pending": "Pending Classes",
+        "stat_pending_sub": "Scheduled classes",
+        "stat_balance": "Balance",
+        "stat_balance_sub": "Current wallet",
+        "stat_rating": "Your Rating",
+        "stat_rating_sub": "Average rating",
+        "stat_level": "Level",
+        "stat_level_sub": "Current progression",
+        "stat_streak": "Streak",
+        "stat_streak_sub": "Consecutive days",
+        "stat_completed": "Completed Classes",
+        "stat_completed_sub": "Classes received",
+        "stat_upcoming": "Upcoming Classes",
+        "stat_upcoming_sub": "Scheduled"
+    },
+    "footer": {
+        "rights": "All rights reserved.",
+        "mentors": "Mentors",
+        "register": "Register",
+        "platform": "Platform",
+        "about": "About"
     },
     "wizard": {
         "back": "Back to Home",

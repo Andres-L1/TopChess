@@ -125,7 +125,7 @@ export const lichessService = {
                     return this.sanitizePgn(parsed.pgn);
                 }
                 return '';
-            } catch (e) { }
+            } catch (e) { console.debug('PGN JSON parse skipped:', e); }
         }
 
         return pgn
