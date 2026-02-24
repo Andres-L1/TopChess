@@ -176,7 +176,7 @@ const Home = () => {
 
                         {/* Direct Tools */}
                         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="glass-panel p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer group" onClick={() => navigate('/chat')}>
+                            <div className="glass-panel p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer group" onClick={() => navigate(userRole === 'teacher' ? '/dashboard' : '/mentors')}>
                                 <div className="w-16 h-16 rounded-2xl bg-white/5 text-white flex items-center justify-center mb-6 group-hover:scale-110 group-hover:text-gold transition-all">
                                     <BookOpen size={32} />
                                 </div>

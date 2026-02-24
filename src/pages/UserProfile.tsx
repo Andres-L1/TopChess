@@ -3,9 +3,11 @@ import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { User, Save, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const UserProfile = () => {
     const { currentUserId } = useAuth()!;
+    const { t } = useTranslation();
     const [profile, setProfile] = useState({ name: '', bio: '', image: '', elo: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -53,9 +55,9 @@ const UserProfile = () => {
     if (loading) return <div className="text-white p-8">Cargando perfil...</div>;
 
     return (
-        <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in pb-24">
-            <h1 className="text-3xl font-bold font-display text-white mb-2">Mi Perfil</h1>
-            <p className="text-text-muted mb-8">Personaliza tu identidad en la plataforma.</p>
+        <div className="p-4 md:p-8 pt-24 max-w-4xl mx-auto animate-fade-in pb-24">
+            <h1 className="text-3xl font-bold font-display text-white mb-2">{t('profile.title')}</h1>
+            <p className="text-text-muted mb-8">{t('profile.subtitle')}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Left Column: Avatar & Quick Stats */}
@@ -83,12 +85,12 @@ const UserProfile = () => {
                 {/* Right Column: Edit Form */}
                 <div className="md:col-span-2 glass-panel p-6 rounded-2xl">
                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                        <User size={18} className="text-gold" /> Información Personal
+                        <User size={18} className="text-gold" /> {t('profile.personal_info')}
                     </h3>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Nombre Visible</label>
+                            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">{t('profile.name')}</label>
                             <input
                                 type="text"
                                 name="name"
@@ -99,7 +101,7 @@ const UserProfile = () => {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Biografía</label>
+                            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">{t('profile.bio')}</label>
                             <textarea
                                 name="bio"
                                 value={profile.bio || ''}
@@ -111,7 +113,7 @@ const UserProfile = () => {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">URL de Avatar</label>
+                            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">{t('profile.avatar_url')}</label>
                             <input
                                 type="text"
                                 name="image"
@@ -127,7 +129,7 @@ const UserProfile = () => {
                                 onClick={handleSave}
                                 className="btn-primary flex items-center gap-2 px-6"
                             >
-                                <Save size={18} /> Guardar Cambios
+                                <Save size={18} /> {t('profile.save')}
                             </button>
                         </div>
                     </div>

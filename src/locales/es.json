@@ -111,5 +111,26 @@
     },
     "toasts": {
         "login_required": "Debes iniciar sesión para encontrar un mentor"
+    },
+    "mobile_nav": {
+        "home": "Inicio",
+        "mentors": "Mentores",
+        "panel": "Panel",
+        "profile": "Perfil",
+        "menu": "Menú"
+    },
+    "notifications": {
+        "title": "Notificaciones",
+        "new": "Nuevas",
+        "empty": "No tienes notificaciones"
+    },
+    "profile": {
+        "title": "Mi Perfil",
+        "subtitle": "Personaliza tu identidad en la plataforma.",
+        "personal_info": "Información Personal",
+        "name": "Nombre Visible",
+        "bio": "Biografía",
+        "avatar_url": "URL de Avatar",
+        "save": "Guardar Cambios"
     }
 }

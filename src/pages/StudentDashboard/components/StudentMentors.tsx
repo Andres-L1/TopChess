@@ -31,7 +31,7 @@ export const StudentMentors: React.FC<StudentMentorsProps> = ({ isLoading, myTea
                         {myTeachers.length === 0 ? (
                             <div className="col-span-1 md:col-span-2 p-12 rounded-3xl border-2 border-dashed border-white/5 bg-white/[0.01] text-center">
                                 <p className="text-text-muted mb-4 text-sm italic">No tienes mentores activos todavía.</p>
-                                <Link to="/" className="btn-secondary py-3 px-8 text-xs">Explorar catálogo</Link>
+                                <Link to="/mentors" className="btn-secondary py-3 px-8 text-xs">Explorar catálogo</Link>
                             </div>
                         ) : (
                             myTeachers.map(teacher => (

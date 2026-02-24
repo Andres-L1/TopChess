@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, LayoutDashboard, BookOpen, User, Menu } from 'lucide-react';
+import { Home, LayoutDashboard, BookOpen, User, Menu, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../App';
 
@@ -10,7 +10,7 @@ interface MobileNavbarProps {
 const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
     const { t } = useTranslation();
     const location = useLocation();
-    const { userRole, isAuthenticated, currentUserId } = useAuth();
+    const { userRole, isAuthenticated } = useAuth();
 
     const isActive = (path: string) => location.pathname === path;
 
@@ -24,66 +24,66 @@ const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
             <div className="flex justify-around items-center h-16">
                 <Link
                     to="/"
-                    aria-label="Ir a Inicio"
+                    aria-label={t('mobile_nav.home')}
                     className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                 >
                     {isActive('/') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
                     <Home size={20} />
-                    <span className="text-[10px] font-medium">Jugar</span>
+                    <span className="text-[10px] font-medium">{t('mobile_nav.home')}</span>
                 </Link>
 
                 {isAuthenticated && (
                     <Link
-                        to={`/classroom/${currentUserId}`}
-                        aria-label="Ir a Aula Interactiva"
-                        className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive(`/classroom/${currentUserId}`) ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
+                        to="/mentors"
+                        aria-label={t('mobile_nav.mentors')}
+                        className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/mentors') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                     >
-                        {isActive(`/classroom/${currentUserId}`) && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
-                        <BookOpen size={20} />
-                        <span className="text-[10px] font-medium">Aprender</span>
+                        {isActive('/mentors') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
+                        <Search size={20} />
+                        <span className="text-[10px] font-medium">{t('mobile_nav.mentors')}</span>
                     </Link>
                 )}
 
                 {isAuthenticated && (
                     <Link
                         to={(userRole === 'teacher' || userRole === 'club_director') ? '/dashboard' : '/student-dashboard'}
-                        aria-label="Ir a Mi Panel"
+                        aria-label={t('mobile_nav.panel')}
                         className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/dashboard') || isActive('/student-dashboard') || isActive('/office') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                     >
                         {(isActive('/dashboard') || isActive('/student-dashboard')) && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
                         <LayoutDashboard size={20} />
-                        <span className="text-[10px] font-medium">Panel</span>
+                        <span className="text-[10px] font-medium">{t('mobile_nav.panel')}</span>
                     </Link>
                 )}
 
                 {isAuthenticated ? (
                     <Link
                         to="/profile"
-                        aria-label="Ir a Mi Perfil"
+                        aria-label={t('mobile_nav.profile')}
                         className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/profile') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                     >
                         {isActive('/profile') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
                         <User size={20} />
-                        <span className="text-[10px] font-medium">Perfil</span>
+                        <span className="text-[10px] font-medium">{t('mobile_nav.profile')}</span>
                     </Link>
                 ) : (
                     <button
                         onClick={onMenuClick}
-                        aria-label="Iniciar Sesión"
+                        aria-label={t('nav.login')}
                         className="flex flex-col items-center justify-center w-full h-full space-y-1 text-white/40 hover:text-white/80"
                     >
                         <User size={20} />
-                        <span className="text-[10px] font-medium">Login</span>
+                        <span className="text-[10px] font-medium">{t('nav.login')}</span>
                     </button>
                 )}
 
                 <button
                     onClick={onMenuClick}
-                    aria-label="Abrir Menú Principal"
+                    aria-label={t('mobile_nav.menu')}
                     className="flex flex-col items-center justify-center w-full h-full space-y-1 text-white/40 hover:text-white/80"
                 >
                     <Menu size={20} />
-                    <span className="text-[10px] font-medium">Menú</span>
+                    <span className="text-[10px] font-medium">{t('mobile_nav.menu')}</span>
                 </button>
             </div>
             {/* Safe area spacer for iPhone X+ home indicator */}

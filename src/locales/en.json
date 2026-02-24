@@ -111,5 +111,26 @@
     },
     "toasts": {
         "login_required": "You must login to find a mentor"
+    },
+    "mobile_nav": {
+        "home": "Home",
+        "mentors": "Mentors",
+        "panel": "Dashboard",
+        "profile": "Profile",
+        "menu": "Menu"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "new": "New",
+        "empty": "You have no notifications"
+    },
+    "profile": {
+        "title": "My Profile",
+        "subtitle": "Personalize your identity on the platform.",
+        "personal_info": "Personal Information",
+        "name": "Display Name",
+        "bio": "Biography",
+        "avatar_url": "Avatar URL",
+        "save": "Save Changes"
     }
 }

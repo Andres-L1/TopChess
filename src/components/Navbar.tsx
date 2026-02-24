@@ -155,9 +155,9 @@ const Navbar: React.FC = () => {
                                     {showNotifications && (
                                         <div className="absolute top-14 right-0 w-80 bg-stone-900 border border-white/5 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-3xl animate-enter">
                                             <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                                                <h3 className="font-bold text-sm text-white uppercase tracking-wider">Notificaciones</h3>
+                                                <h3 className="font-bold text-sm text-white uppercase tracking-wider">{t('notifications.title')}</h3>
                                                 {unreadCount > 0 && (
-                                                    <span className="text-[10px] bg-gold/20 text-gold px-2 py-0.5 rounded font-bold uppercase tracking-widest">{unreadCount} Nuevas</span>
+                                                    <span className="text-[10px] bg-gold/20 text-gold px-2 py-0.5 rounded font-bold uppercase tracking-widest">{unreadCount} {t('notifications.new')}</span>
                                                 )}
                                             </div>
                                             <div className="max-h-[300px] overflow-y-auto no-scrollbar">
@@ -176,7 +176,7 @@ const Navbar: React.FC = () => {
                                                         </button>
                                                     ))
                                                 ) : (
-                                                    <div className="p-8 text-center text-text-muted text-sm">No tienes notificaciones</div>
+                                                    <div className="p-8 text-center text-text-muted text-sm">{t('notifications.empty')}</div>
                                                 )}
                                             </div>
                                         </div>
@@ -292,6 +292,17 @@ const Navbar: React.FC = () => {
                                 {(userRole === 'teacher' || userRole === 'club_director') && (
                                     <Link
                                         to="/dashboard"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center gap-4 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-wider"
+                                    >
+                                        <LayoutDashboard size={18} className="text-gold/70" />
+                                        {t('nav.panel')}
+                                    </Link>
+                                )}
+
+                                {userRole === 'student' && (
+                                    <Link
+                                        to="/student-dashboard"
                                         onClick={() => setIsMenuOpen(false)}
                                         className="flex items-center gap-4 px-4 py-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-wider"
                                     >
