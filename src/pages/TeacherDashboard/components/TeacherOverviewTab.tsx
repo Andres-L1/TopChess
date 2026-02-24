@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, Users, Clock, Trophy, Bell, X, Video, LogOut, MessageCircle } from 'lucide-react';
+import { DollarSign, Users, Clock, Trophy, Bell, X, Video, LogOut, MessageCircle, UserMinus, CalendarX } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
@@ -23,9 +23,12 @@ interface TeacherOverviewTabProps {
     handleRejectBooking: (id: string) => Promise<void>;
     nextBooking: Booking | null;
     currentUserId: string;
-    myStudents: AppUser[];
+    myStudents: (AppUser & { requestId: string })[];
     handleLichessConnect: () => Promise<void>;
     handleLichessDisconnect: () => Promise<void>;
+    handleDisconnectStudent: (requestId: string, studentName: string) => Promise<void>;
+    confirmedBookings: Booking[];
+    handleCancelConfirmedBooking: (bookingId: string) => Promise<void>;
 }
 
 const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
@@ -45,7 +48,10 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
     currentUserId,
     myStudents,
     handleLichessConnect,
-    handleLichessDisconnect
+    handleLichessDisconnect,
+    handleDisconnectStudent,
+    confirmedBookings,
+    handleCancelConfirmedBooking
 }) => {
     const { t } = useTranslation();
 
@@ -359,15 +365,22 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-3 gap-2">
                                             <Link to={`/chat/${student.id}`} className="bg-white/5 hover:bg-white/10 text-white/80 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group">
                                                 <MessageCircle size={14} className="group-hover:text-gold transition-colors" />
                                                 <span className="text-[10px] font-black uppercase tracking-widest">Mensaje</span>
                                             </Link>
                                             <Link to={`/classroom/${currentUserId}`} className="bg-gold hover:bg-white text-black py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group font-black shadow-lg shadow-gold/5">
                                                 <Video size={14} />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Aula en vivo</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Aula</span>
                                             </Link>
+                                            <button
+                                                onClick={() => handleDisconnectStudent(student.requestId, student.name || 'Alumno')}
+                                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400/70 hover:text-red-400 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group border border-red-500/10"
+                                            >
+                                                <UserMinus size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Eliminar</span>
+                                            </button>
                                         </div>
                                     </div>
                                 ))
@@ -375,6 +388,41 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                         )}
                     </div>
                 </div>
+
+                {/* Confirmed Classes Section */}
+                {confirmedBookings.length > 0 && (
+                    <div className="flex-1 glass-panel rounded-2xl p-4 md:p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg md:text-xl font-bold text-white">Clases Confirmadas</h2>
+                            <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">{confirmedBookings.length} próximas</span>
+                        </div>
+                        <div className="space-y-3">
+                            {confirmedBookings.map(booking => (
+                                <div key={booking.id} className="p-4 rounded-2xl bg-[#1b1a17] border border-white/5 hover:border-green-500/20 transition-all flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center font-bold text-green-400 border border-green-500/20 text-sm">
+                                            {(booking.studentName || 'A').substring(0, 1).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-white text-sm">{booking.studentName || 'Alumno'}</h4>
+                                            <p className="text-[10px] text-white/40 font-mono">
+                                                {booking.date} · {booking.time}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleCancelConfirmedBooking(booking.id)}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400/70 hover:text-red-400 border border-red-500/10 transition-all"
+                                        title="Cancelar clase"
+                                    >
+                                        <CalendarX size={14} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Cancelar</span>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

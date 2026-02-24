@@ -30,6 +30,7 @@ const TeacherDashboard = () => {
     const [stats, setStats] = useState<DashboardStats>({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState<Request[]>([]);
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+    const [confirmedBookings, setConfirmedBookings] = useState<Booking[]>([]);
     const [myStudents, setMyStudents] = useState<(AppUser & { requestId: string })[]>([]);
     const [homeworks, setHomeworks] = useState<Homework[]>([]);
     const [availability, setAvailability] = useState<string[]>([]);
@@ -126,6 +127,19 @@ const TeacherDashboard = () => {
             const pBookings = await Promise.all(pendingPromises);
             if (isMounted) setPendingBookings(pBookings as any);
 
+            // Handle confirmed bookings (upcoming classes)
+            const today = new Date().toISOString().split('T')[0];
+            const confirmed = bookings
+                .filter(b => b.status === 'confirmed' && b.date >= today)
+                .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+            const confirmedWithNames = await Promise.all(
+                confirmed.map(async (b) => {
+                    const u = await firebaseService.getUser(b.studentId);
+                    return { ...b, studentName: u?.name || 'Alumno' };
+                })
+            );
+            if (isMounted) setConfirmedBookings(confirmedWithNames);
+
             if (bookings.length > 0) {
                 const today = new Date().toISOString().split('T')[0];
                 const upcoming = bookings.filter((b: Booking) =>
@@ -217,6 +231,30 @@ const TeacherDashboard = () => {
     const handleLogout = () => {
         logout();
         navigate('/');
+    };
+
+    const handleDisconnectStudent = async (requestId: string, studentName: string) => {
+        if (!window.confirm(`¿Estás seguro de que quieres eliminar a ${studentName} de tu lista de alumnos?`)) return;
+        try {
+            await firebaseService.updateRequestStatus(requestId, 'rejected');
+            setMyStudents(prev => prev.filter(s => s.requestId !== requestId));
+            toast.success(`${studentName} ha sido eliminado de tus alumnos`);
+        } catch (error) {
+            console.error('Error disconnecting student:', error);
+            toast.error('Error al eliminar alumno');
+        }
+    };
+
+    const handleCancelConfirmedBooking = async (bookingId: string) => {
+        if (!window.confirm('¿Estás seguro de que quieres cancelar esta clase?')) return;
+        try {
+            await firebaseService.updateBookingStatus(bookingId, 'cancelled');
+            setConfirmedBookings(prev => prev.filter(b => b.id !== bookingId));
+            toast.success('Clase cancelada correctamente');
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            toast.error('Error al cancelar la clase');
+        }
     };
 
     // GAMIFICATION LOGIC
@@ -412,6 +450,9 @@ const TeacherDashboard = () => {
                     myStudents={myStudents}
                     handleLichessConnect={handleLichessConnect}
                     handleLichessDisconnect={handleLichessDisconnect}
+                    handleDisconnectStudent={handleDisconnectStudent}
+                    confirmedBookings={confirmedBookings}
+                    handleCancelConfirmedBooking={handleCancelConfirmedBooking}
                 />
             )}
         </div>
