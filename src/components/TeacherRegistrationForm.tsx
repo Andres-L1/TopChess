@@ -35,7 +35,7 @@ const TeacherRegistrationForm = ({ onComplete }: { onComplete: () => void }) => 
                 classesGiven: 0,
                 earnings: 0,
                 description: `Profesor especializado en metodología ${style}.`,
-                image: currentUser?.photoURL || 'https://via.placeholder.com/150',
+                image: currentUser?.photoURL || '',
                 tags: [style, experience],
                 teachingStyle: style,
                 curriculum: 'Personalizado basándome en tus objetivos.',

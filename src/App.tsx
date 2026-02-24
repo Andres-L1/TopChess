@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { firebaseService } from './services/firebaseService';
 import Navbar from './components/Navbar';
@@ -23,6 +23,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const LichessCallback = lazy(() => import('./pages/LichessCallback'));
 const ClubOffice = lazy(() => import('./pages/ClubOffice'));
+const TeachersDirectory = lazy(() => import('./pages/TeachersDirectory'));
 
 // Types
 interface AuthContextType {
@@ -274,6 +275,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Home /></PageTransition>} />
         <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
+        <Route path="/mentors" element={<PrivateRoute><PageTransition><TeachersDirectory /></PageTransition></PrivateRoute>} />
         <Route path="/chat/:teacherId" element={<PrivateRoute><PageTransition><Chat /></PageTransition></PrivateRoute>} />
         <Route path="/room/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
         <Route path="/classroom/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
@@ -328,8 +330,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <Router
-      basename="/TopChess"
+    <HashRouter
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true,
@@ -344,7 +345,7 @@ function App() {
           </ErrorBoundary>
         </Layout>
       </AuthProvider>
-    </Router>
+    </HashRouter>
   );
 }
 

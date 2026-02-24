@@ -1,4 +1,3 @@
-import { Teacher, Booking } from '../types/index';
 import type { DrawShape } from 'chessground/draw';
 import { Key } from 'chessground/types';
 export interface LichessStudy {

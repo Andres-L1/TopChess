@@ -29,6 +29,7 @@ export interface Teacher {
     classCredits?: number;
     requestDate?: number;
     boardTheme?: string;
+    availability?: string[];
 }
 
 export interface TeacherAvailability {
@@ -115,6 +116,7 @@ export interface Profile {
 export interface Booking {
     id: string;
     studentId: string;
+    studentName?: string; // Optional for display
     teacherId: string;
     slotId: string;
     date: string;
@@ -151,6 +153,7 @@ export interface AppUser {
     learningGoals?: string[];
     preferredStyle?: string;
     boardTheme?: string;
+    bio?: string;
 }
 
 export interface AppNotification {

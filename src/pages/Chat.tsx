@@ -21,10 +21,7 @@ const Chat: React.FC = () => {
     const [targetProfile, setTargetProfile] = useState<Profile | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Payment State
-    const [showPayModal, setShowPayModal] = useState(false);
-    const [payAmount] = useState(59);
-    const [isProcessingPay, setIsProcessingPay] = useState(false);
+
 
     // Initial Load
     useEffect(() => {
@@ -74,7 +71,7 @@ const Chat: React.FC = () => {
                 studentId: userRole === 'student' ? currentUserId : targetId,
                 teacherId: userRole === 'student' ? targetId : currentUserId,
                 text: inputText,
-                sender: (userRole as any) || 'student',
+                sender: (userRole === 'teacher' ? 'teacher' : 'student'),
                 timestamp: Date.now(),
                 type: 'text'
             };
@@ -98,34 +95,7 @@ const Chat: React.FC = () => {
         }
     };
 
-    const handlePayment = async () => {
-        setIsProcessingPay(true);
-        try {
-            const result = await firebaseService.processPayment(currentUserId, targetId, payAmount);
 
-            if (result.success) {
-                toast.success(result.message);
-                setShowPayModal(false);
-
-                const month = new Date().toLocaleString('es-ES', { month: 'long' });
-                await firebaseService.sendMessage({
-                    studentId: currentUserId,
-                    teacherId: targetId,
-                    text: `💰 He pagado la mensualidad de ${month} (${payAmount}€)`,
-                    sender: 'student',
-                    timestamp: Date.now(),
-                    type: 'payment_request'
-                });
-            } else {
-                toast.error(result.message);
-            }
-        } catch (error) {
-            console.error("Payment error", error);
-            toast.error("Error al procesar el pago");
-        } finally {
-            setIsProcessingPay(false);
-        }
-    };
 
     if (!targetProfile) return (
         <div className="flex items-center justify-center min-h-screen bg-dark-bg text-gold">
@@ -163,17 +133,7 @@ const Chat: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-3 ml-2">
-                    {userRole === 'student' && status === 'approved' && (
-                        <PremiumButton
-                            variant="gold"
-                            size="sm"
-                            onClick={() => setShowPayModal(true)}
-                            icon={DollarSign}
-                            className="!px-2 md:!px-4 !py-1 text-[10px] md:text-xs"
-                        >
-                            <span className="hidden sm:inline">Pagar</span>
-                        </PremiumButton>
-                    )}
+
 
                     {status === 'approved' && (
                         <PremiumButton
@@ -265,59 +225,7 @@ const Chat: React.FC = () => {
                 </PremiumButton>
             </div>
 
-            {/* Payment Modal */}
-            <AnimatePresence>
-                {showPayModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-[#1a1917] w-full max-w-sm rounded-[40px] border border-white/10 shadow-[0_0_100px_rgba(212,175,55,0.15)] overflow-hidden"
-                        >
-                            <div className="p-8 text-center border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
-                                <div className="w-20 h-20 bg-gold/10 rounded-[30px] border border-gold/30 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-gold/5">
-                                    <DollarSign size={40} className="text-gold" />
-                                </div>
-                                <h3 className="text-2xl font-black text-white tracking-tight">Suscripción Premium</h3>
-                                <p className="text-sm font-bold text-text-muted mt-2 uppercase tracking-widest">{targetProfile.name}</p>
-                            </div>
 
-                            <div className="p-10">
-                                <div className="text-center mb-10">
-                                    <div className="text-5xl font-black text-white flex items-center justify-center gap-1">
-                                        {payAmount}
-                                        <span className="text-2xl text-gold font-light">€</span>
-                                    </div>
-                                    <p className="text-xs font-bold text-[#8b8982] mt-2 uppercase tracking-[0.2em]">Pago Mensual</p>
-                                </div>
-
-                                <div className="flex flex-col gap-4">
-                                    <PremiumButton
-                                        onClick={handlePayment}
-                                        disabled={isProcessingPay}
-                                        className="w-full !rounded-[24px] !py-5 shadow-2xl shadow-gold/20"
-                                        size="lg"
-                                    >
-                                        {isProcessingPay ? 'Procesando...' : 'Confirmar Pago'}
-                                    </PremiumButton>
-                                    <button
-                                        onClick={() => setShowPayModal(false)}
-                                        className="w-full py-4 text-[#666] hover:text-white font-black text-xs uppercase tracking-widest transition-all"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };

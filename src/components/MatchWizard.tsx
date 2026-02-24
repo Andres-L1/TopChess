@@ -79,7 +79,7 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
                     classesGiven: 0,
                     earnings: 0,
                     description: `Profesor especializado en metodología ${answers['style']}.`,
-                    image: currentUser?.photoURL || 'https://via.placeholder.com/150',
+                    image: currentUser?.photoURL || '',
                     tags: [answers['style'], answers['experience']],
                     teachingStyle: answers['style'],
                     curriculum: 'Personalizado basándome en tus objetivos.',
@@ -151,8 +151,8 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
                     <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                         {step.question}
                     </h2>
-                    {(step as any).subtitle && (
-                        <p className="text-[#8b8982] mt-2 text-lg">{(step as any).subtitle}</p>
+                    {'subtitle' in step && step.subtitle && (
+                        <p className="text-[#8b8982] mt-2 text-lg">{step.subtitle}</p>
                     )}
                 </div>
 

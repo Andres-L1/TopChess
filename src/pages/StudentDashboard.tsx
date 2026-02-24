@@ -3,7 +3,7 @@ import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trophy, Clock, Target, ChevronRight, Video, Calendar as CalendarIcon, X, LogOut, Search, MessageCircle, TrendingUp, DollarSign, BookOpen, ExternalLink } from 'lucide-react';
-import Calendar from '../components/Calendar';
+import BookingModal from '../components/BookingModal';
 import toast from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
 import { Booking, Homework } from '../types/index';
@@ -32,7 +32,6 @@ const StudentDashboard: React.FC = () => {
 
     // Booking Modal State
     const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
-    const [teacherAvailability, setTeacherAvailability] = useState<string[]>([]);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
 
@@ -107,9 +106,7 @@ const StudentDashboard: React.FC = () => {
         };
     }, [currentUserId]);
 
-    const openBookingModal = async (teacher: any) => {
-        const avail = await firebaseService.getTeacherAvailability(teacher.id);
-        setTeacherAvailability(avail);
+    const openBookingModal = (teacher: any) => {
         setSelectedTeacher(teacher);
         setIsBookingModalOpen(true);
     };
@@ -151,59 +148,27 @@ const StudentDashboard: React.FC = () => {
         }
     };
 
-    const handleSlotBook = async (slot: Slot) => {
-        // Real Booking Logic
-        const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        const dateStr = `Próximo ${dayNames[slot.dayIndex]}`;
-        const slotId = `${slot.dayIndex}-${slot.hour}`;
+    const handleBookingSuccess = async () => {
+        if (!currentUserId) return;
 
-        // Simple ID generation
-        const bookingId = `booking_${Date.now()}`;
+        // Refresh bookings
+        const bookings = await firebaseService.getBookingsForUser(currentUserId, 'student');
+        setMyBookings(bookings);
 
-        const newBooking: Booking = {
-            id: bookingId,
-            studentId: currentUserId,
-            teacherId: selectedTeacher.id,
-            slotId: slotId,
-            date: new Date().toISOString().split('T')[0],
-            time: slot.hour,
-            status: 'confirmed',
-            timestamp: Date.now(),
-            meetingLink: `/classroom/${selectedTeacher.id}`
-        };
-
-        try {
-            const res = await firebaseService.bookClass(currentUserId, selectedTeacher.id, newBooking);
-            if (res.success) {
-                toast.success(res.message);
-                setSelectedTeacher(null);
-                setIsBookingModalOpen(false);
-
-                // Refresh bookings
-                const bookings = await firebaseService.getBookingsForUser(currentUserId, 'student');
-                setMyBookings(bookings);
-
-                // Refresh teachers credits
-                const requests = await firebaseService.getRequestsForStudent(currentUserId);
-                const approvedReqs = requests.filter((r: any) => r.status === 'approved');
-                const uniqueApprovedMap = new Map();
-                approvedReqs.forEach(r => {
-                    if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
-                });
-                const approvedPromises = Array.from(uniqueApprovedMap.values())
-                    .map(async (r: any) => {
-                        const t = await firebaseService.getTeacherById(r.teacherId);
-                        return t ? { ...t, classCredits: r.classCredits || 0 } : null;
-                    });
-                const approvedTeachers = await Promise.all(approvedPromises);
-                setMyTeachers(approvedTeachers.filter((t: any) => t !== null));
-            } else {
-                toast.error(res.message);
-            }
-        } catch (error) {
-            console.error("Error creating booking", error);
-            toast.error("Error al reservar la clase");
-        }
+        // Refresh teachers credits
+        const requests = await firebaseService.getRequestsForStudent(currentUserId);
+        const approvedReqs = requests.filter((r: any) => r.status === 'approved');
+        const uniqueApprovedMap = new Map();
+        approvedReqs.forEach(r => {
+            if (!uniqueApprovedMap.has(r.teacherId)) uniqueApprovedMap.set(r.teacherId, r);
+        });
+        const approvedPromises = Array.from(uniqueApprovedMap.values())
+            .map(async (r: any) => {
+                const t = await firebaseService.getTeacherById(r.teacherId);
+                return t ? { ...t, classCredits: r.classCredits || 0 } : null;
+            });
+        const approvedTeachers = await Promise.all(approvedPromises);
+        setMyTeachers(approvedTeachers.filter((t: any) => t !== null));
     };
 
     const handleLogout = () => {
@@ -211,9 +176,9 @@ const StudentDashboard: React.FC = () => {
         navigate('/');
     };
 
-    // Calculate next class — sorted by date then time, excluding cancelled
+    // Calculate next class — sorted by date then time, strictly confirmed
     const nextClass = [...myBookings]
-        .filter(b => b.status !== 'cancelled')
+        .filter(b => b.status === 'confirmed')
         .sort((a, b) => {
             const dateCompare = a.date.localeCompare(b.date);
             if (dateCompare !== 0) return dateCompare;
@@ -287,21 +252,17 @@ const StudentDashboard: React.FC = () => {
             </div>
 
             {/* Booking Modal */}
-            {selectedTeacher && isBookingModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-dark-panel border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative">
-                        <button onClick={() => { setSelectedTeacher(null); setIsBookingModalOpen(false); }} className="absolute top-4 right-4 text-text-muted hover:text-white" aria-label="Cerrar Modal">
-                            <X size={24} />
-                        </button>
-                        <div className="p-6 border-b border-white/5">
-                            <h2 className="text-xl font-bold text-white">Reservar Clase</h2>
-                            <p className="text-sm text-text-muted">con <span className="text-gold">{selectedTeacher.name}</span></p>
-                        </div>
-                        <div className="p-6">
-                            <Calendar mode="view" availability={teacherAvailability} onSlotClick={handleSlotBook} />
-                        </div>
-                    </div>
-                </div>
+            {selectedTeacher && (
+                <BookingModal
+                    isOpen={isBookingModalOpen}
+                    onClose={() => {
+                        setIsBookingModalOpen(false);
+                        setSelectedTeacher(null);
+                    }}
+                    teacher={selectedTeacher}
+                    studentId={currentUserId}
+                    onSuccess={handleBookingSuccess}
+                />
             )}
 
             <PaymentModal

@@ -28,6 +28,7 @@ const TeacherDashboard = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'homework' | 'club'>('overview');
     const [stats, setStats] = useState<DashboardStats>({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState<Request[]>([]);
+    const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
     const [myStudents, setMyStudents] = useState<any[]>([]);
     const [homeworks, setHomeworks] = useState<Homework[]>([]);
     const [availability, setAvailability] = useState<string[]>([]);
@@ -109,12 +110,23 @@ const TeacherDashboard = () => {
             if (isMounted) setMyStudents(approvedStudents.filter(s => s !== null));
         });
 
-        unsubBookings = firebaseService.observeBookingsForUser(currentUserId, 'teacher', (bookings) => {
+        unsubBookings = firebaseService.observeBookingsForUser(currentUserId, 'teacher', async (bookings) => {
             if (!isMounted) return;
+
+            // Handle Pending Bookings (New requests)
+            const pendingPromises = bookings
+                .filter(b => b.status === 'pending')
+                .map(async (b) => {
+                    const u = await firebaseService.getUser(b.studentId);
+                    return { ...b, studentName: u?.name || 'Usuario' };
+                });
+            const pBookings = await Promise.all(pendingPromises);
+            if (isMounted) setPendingBookings(pBookings as any);
+
             if (bookings.length > 0) {
                 const today = new Date().toISOString().split('T')[0];
                 const upcoming = bookings.filter((b: Booking) =>
-                    b.status !== 'cancelled' && b.date >= today
+                    b.status !== 'cancelled' && b.status !== 'pending' && b.date >= today
                 );
                 const sorted = [...upcoming].sort((a, b) => {
                     const dateCompare = a.date.localeCompare(b.date);
@@ -137,11 +149,30 @@ const TeacherDashboard = () => {
     const handleAcceptRequest = async (requestId: string) => {
         try {
             await firebaseService.updateRequestStatus(requestId, 'approved');
-            // The snapshot listener will automatically update the UI lists.
             toast.success(`Solicitud aceptada`);
         } catch (error) {
             console.error("Error accepting request:", error);
             toast.error("Error al procesar solicitud");
+        }
+    };
+
+    const handleAcceptBooking = async (bookingId: string) => {
+        try {
+            await firebaseService.updateBookingStatus(bookingId, 'confirmed');
+            toast.success(`Clase confirmada`);
+        } catch (error) {
+            console.error("Error accepting booking:", error);
+            toast.error("Error al confirmar clase");
+        }
+    };
+
+    const handleRejectBooking = async (bookingId: string) => {
+        try {
+            await firebaseService.updateBookingStatus(bookingId, 'cancelled');
+            toast.success(`Clase rechazada`);
+        } catch (error) {
+            console.error("Error rejecting booking:", error);
+            toast.error("Error al rechazar clase");
         }
     };
 
@@ -363,8 +394,11 @@ const TeacherDashboard = () => {
                     progressPercent={progressPercent}
                     teacherProfile={teacherProfile}
                     requests={requests}
+                    pendingBookings={pendingBookings}
                     handleAcceptRequest={handleAcceptRequest}
                     handleRejectRequest={handleRejectRequest}
+                    handleAcceptBooking={handleAcceptBooking}
+                    handleRejectBooking={handleRejectBooking}
                     nextBooking={nextBooking}
                     currentUserId={currentUserId}
                     myStudents={myStudents}

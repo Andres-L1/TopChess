@@ -51,7 +51,7 @@ const AdminAnalyticsTab: React.FC<AdminAnalyticsTabProps> = ({ weeklyRevenue, tr
             <div className="glass-panel p-6 rounded-3xl border-white/5">
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 mb-6">Evolución de Ingresos (7 días)</p>
                 <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                    <ResponsiveContainer width="100%" height="100%" debounce={50}>
                         <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -60,7 +60,7 @@ const AdminAnalyticsTab: React.FC<AdminAnalyticsTabProps> = ({ weeklyRevenue, tr
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                            <XAxis dataKey="name" stroke="#ffffff40" fontSize={11} tickLine={false} axisLine={false} />
+                            <XAxis dataKey="name" stroke="#ffffff40" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => v} />
                             <YAxis stroke="#ffffff40" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `€${value}`} />
                             <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#ffffff20', strokeWidth: 1, strokeDasharray: '3 3' }} />
                             <Area type="monotone" dataKey="revenue" stroke="#D4AF37" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
@@ -74,7 +74,7 @@ const AdminAnalyticsTab: React.FC<AdminAnalyticsTabProps> = ({ weeklyRevenue, tr
                 <div className="glass-panel p-6 rounded-3xl border-white/5 flex flex-col items-center">
                     <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 w-full mb-2">Distribución de Flujos</p>
                     <div className="h-[200px] w-full">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                        <ResponsiveContainer width="100%" height="100%" debounce={50}>
                             <PieChart>
                                 <Pie
                                     data={txData}

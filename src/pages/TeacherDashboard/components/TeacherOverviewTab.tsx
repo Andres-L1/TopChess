@@ -16,8 +16,11 @@ interface TeacherOverviewTabProps {
     progressPercent: number;
     teacherProfile: Teacher | null;
     requests: Request[];
+    pendingBookings: Booking[];
     handleAcceptRequest: (id: string) => Promise<void>;
     handleRejectRequest: (id: string) => Promise<void>;
+    handleAcceptBooking: (id: string) => Promise<void>;
+    handleRejectBooking: (id: string) => Promise<void>;
     nextBooking: Booking | null;
     currentUserId: string;
     myStudents: AppUser[];
@@ -33,8 +36,11 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
     progressPercent,
     teacherProfile,
     requests,
+    pendingBookings,
     handleAcceptRequest,
     handleRejectRequest,
+    handleAcceptBooking,
+    handleRejectBooking,
     nextBooking,
     currentUserId,
     myStudents,
@@ -70,7 +76,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 <p className="text-xs md:text-sm text-text-muted">{t('dashboard.total_earnings')}</p>
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
                                     <AreaChart data={[{ v: 0 }, { v: 10 }, { v: 5 }, { v: 20 }, { v: 15 }, { v: 30 }, { v: stats.earnings > 30 ? stats.earnings : 40 }]}>
                                         <Area type="monotone" dataKey="v" stroke="#4ade80" fill="#4ade80" strokeWidth={2} />
                                     </AreaChart>
@@ -89,7 +95,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 <p className="text-xs md:text-sm text-text-muted">{t('dashboard.active_students')}</p>
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
                                     <AreaChart data={[{ v: 1 }, { v: 2 }, { v: 2 }, { v: 3 }, { v: stats.students > 3 ? stats.students : 4 }]}>
                                         <Area type="stepAfter" dataKey="v" stroke="#3b82f6" fill="#3b82f6" strokeWidth={2} />
                                     </AreaChart>
@@ -108,7 +114,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 <p className="text-xs md:text-sm text-text-muted">{t('dashboard.classes_given')}</p>
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
                                     <AreaChart data={[{ v: 0 }, { v: 5 }, { v: 8 }, { v: 15 }, { v: stats.hours }]}>
                                         <Area type="monotone" dataKey="v" stroke="#a855f7" fill="#a855f7" strokeWidth={2} />
                                     </AreaChart>
@@ -165,44 +171,80 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                 ))}
                             </>
                         ) : (
-                            requests.length === 0 ? (
+                            requests.length === 0 && pendingBookings.length === 0 ? (
                                 <div className="text-center py-10 text-white/20 border-2 border-dashed border-white/5 rounded-2xl">
                                     <Bell size={40} className="mx-auto mb-4 opacity-10" />
                                     <p className="text-sm font-medium">Bandeja de entrada vacía</p>
                                 </div>
                             ) : (
-                                requests.map(req => (
-                                    <div key={req.id} className="p-4 rounded-2xl bg-gradient-to-r from-white/[0.03] to-transparent border border-white/5 hover:border-gold/30 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-4 relative overflow-hidden">
-                                        <div className="absolute inset-y-0 left-0 w-1 bg-gold scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center font-bold text-gold border border-gold/20 shadow-lg">
-                                                {(req.studentName || 'U').substring(0, 1).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-white text-sm">{req.studentName || 'Interesado'}</h4>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></div>
-                                                    <span className="text-[10px] text-gold/60 font-black uppercase tracking-widest">Nueva Solicitud</span>
+                                <>
+                                    {/* Class Requests (Bookings) */}
+                                    {pendingBookings.map(booking => (
+                                        <div key={booking.id} className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/20 hover:border-gold/30 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-4 relative overflow-hidden">
+                                            <div className="absolute inset-y-0 left-0 w-1 bg-blue-500 scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center font-bold text-blue-400 border border-blue-500/20 shadow-lg">
+                                                    {(booking.studentName || 'U').substring(0, 1).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white text-sm">{booking.studentName || 'Alumno'}</h4>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                                                        <span className="text-[10px] text-blue-400/80 font-black uppercase tracking-widest leading-none">Nueva Clase: {booking.date} @ {booking.time}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <div className="flex gap-2 w-full sm:w-auto">
+                                                <button
+                                                    onClick={() => handleAcceptBooking(booking.id)}
+                                                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all shadow-lg shadow-blue-500/10"
+                                                >
+                                                    Confirmar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRejectBooking(booking.id)}
+                                                    className="p-2 rounded-xl bg-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-all border border-white/10"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-2 w-full sm:w-auto">
-                                            <button
-                                                onClick={() => handleAcceptRequest(req.id)}
-                                                className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-gold/10"
-                                            >
-                                                Aceptar
-                                            </button>
-                                            <button
-                                                onClick={() => handleRejectRequest(req.id)}
-                                                aria-label="Rechazar solicitud"
-                                                className="p-2 rounded-xl bg-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-all border border-white/10"
-                                            >
-                                                <X size={18} />
-                                            </button>
+                                    ))}
+
+                                    {/* Connection Requests (Old system) */}
+                                    {requests.map(req => (
+                                        <div key={req.id} className="p-4 rounded-2xl bg-gradient-to-r from-white/[0.03] to-transparent border border-white/5 hover:border-gold/30 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between group gap-4 relative overflow-hidden">
+                                            <div className="absolute inset-y-0 left-0 w-1 bg-gold scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center font-bold text-gold border border-gold/20 shadow-lg">
+                                                    {(req.studentName || 'U').substring(0, 1).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white text-sm">{req.studentName || 'Interesado'}</h4>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></div>
+                                                        <span className="text-[10px] text-gold/60 font-black uppercase tracking-widest">Nueva Conexión</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2 w-full sm:w-auto">
+                                                <button
+                                                    onClick={() => handleAcceptRequest(req.id)}
+                                                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-gold/10"
+                                                >
+                                                    Aceptar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRejectRequest(req.id)}
+                                                    aria-label="Rechazar solicitud"
+                                                    className="p-2 rounded-xl bg-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-all border border-white/10"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))}
+                                </>
                             )
                         )}
                     </div>

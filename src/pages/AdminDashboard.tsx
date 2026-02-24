@@ -130,15 +130,14 @@ const AdminDashboard = () => {
     const tickRef = useRef(0);
     useEffect(() => { tickRef.current++; setLiveCount(c => c + 1); }, [users, teachers, transactions]);
 
-    // Redirect non-admins
+    // Access already enforced by AdminRoute in App.tsx
     useEffect(() => {
         if (!currentUser) return;
-        if (currentUser.email !== 'andreslgumuzio@gmail.com') navigate('/');
     }, [currentUser, navigate]);
 
     // ── Real-time listeners for everything ──────────────────────────────
     useEffect(() => {
-        if (!currentUser || currentUser.email !== 'andreslgumuzio@gmail.com') return;
+        if (!currentUser) return;
 
         const unsubUsers = firebaseService.subscribeToCollection('users', (data) => {
             setUsers(data as AppUser[]);

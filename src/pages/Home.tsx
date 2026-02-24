@@ -6,7 +6,6 @@ import {
     TrendingUp, Wallet as WalletIcon, Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import FindMentorWizard from '../components/FindMentorWizard';
 import PremiumButton from '../components/PremiumButton';
 import FeatureCard from '../components/FeatureCard';
 
@@ -14,7 +13,6 @@ import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../App';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Request } from '../types/index';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -112,98 +110,8 @@ const Home = () => {
     }, [isAuthenticated, currentUserId, userRole]);
 
     const handleFindTeacher = () => {
-        if (!isAuthenticated) {
-            toast.error(t('login_to_find'));
-            loginWithGoogle();
-            return;
-        }
-        setShowWizard(true);
+        navigate('/mentors');
     };
-
-    const handleWizardComplete = async (answers: any) => {
-        setIsMatching(true);
-        try {
-            const allTeachers = await firebaseService.getTeachers();
-            const verifiedTeachers = allTeachers.filter(t => t.isVerified);
-            const pool = verifiedTeachers.length > 0 ? verifiedTeachers : allTeachers;
-
-            if (pool.length === 0) {
-                toast.error("No hay profesores disponibles en este momento");
-                setShowWizard(false);
-                setIsMatching(false);
-                return;
-            }
-
-            let matched = pool.find(t => t.teachingStyle === answers.style);
-            if (!matched) matched = pool[0];
-
-            if (!currentUserId || !currentUser) {
-                toast.error("Error: Sesión no válida");
-                return;
-            }
-
-            const requestId = `req_${Date.now()}_${currentUserId.substring(0, 5)}`;
-            const req: Request = {
-                id: requestId,
-                studentId: currentUserId,
-                studentName: currentUser.displayName || 'Estudiante',
-                teacherId: matched.id,
-                status: 'approved',
-                timestamp: Date.now(),
-                message: "¡Hola! El sistema nos ha emparejado automáticamente."
-            };
-
-            await firebaseService.createRequest(req);
-
-            await firebaseService.createNotification({
-                id: `notif_${Date.now()}_${matched.id.substring(0, 5)}`,
-                userId: matched.id,
-                title: '¡Nuevo Alumno Asignado!',
-                message: `${currentUser.displayName} se ha unido a tus clases.`,
-                type: 'match',
-                read: false,
-                timestamp: Date.now(),
-                link: `/chat/${currentUserId}`
-            });
-
-            toast.success("¡Match exitoso! Hemos encontrado a tu mentor.");
-            navigate(`/chat/${matched.id}`);
-
-        } catch (error) {
-            console.error("Matching error:", error);
-            toast.error("Error durante el emparejamiento.");
-        } finally {
-            setIsMatching(false);
-        }
-    };
-
-    if (showWizard) {
-        return (
-            <div className="min-h-screen pt-24 px-4 flex items-center justify-center relative overflow-hidden bg-[#050505]">
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                    <div className="absolute top-20 left-10 w-96 h-96 bg-gold/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-[120px]" />
-                </div>
-                <div className="relative z-10 w-full max-w-4xl animate-in fade-in zoom-in duration-500">
-                    <button
-                        onClick={() => setShowWizard(false)}
-                        className="mb-8 text-white/50 hover:text-white flex items-center gap-2 transition-colors uppercase text-[10px] font-black tracking-[4px]"
-                    >
-                        ← Volver al Inicio
-                    </button>
-                    {isMatching ? (
-                        <div className="glass-panel h-[500px] flex flex-col items-center justify-center p-12 text-center bg-white/[0.02] rounded-[40px] border border-white/5">
-                            <div className="w-20 h-20 border-4 border-gold/10 border-t-gold rounded-full animate-spin mb-8"></div>
-                            <h3 className="text-3xl font-black text-white mb-3">Analizando Perfil...</h3>
-                            <p className="text-[#8b8982] uppercase tracking-[2px] text-xs">Buscando al maestro perfecto para ti en nuestra red de élite</p>
-                        </div>
-                    ) : (
-                        <FindMentorWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />
-                    )}
-                </div>
-            </div>
-        );
-    }
 
     if (isAuthenticated) {
         return (

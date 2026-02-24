@@ -67,7 +67,7 @@ const Wallet: React.FC = () => {
                     </h1>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-transparent border border-gold/10 flex items-center justify-center p-1 overflow-hidden">
-                    <img src={currentUser?.photoURL || 'https://via.placeholder.com/150'} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                    <img src={currentUser?.photoURL || ''} alt="Profile" className="w-full h-full rounded-full object-cover" />
                 </div>
             </div>
 
@@ -216,8 +216,8 @@ const Wallet: React.FC = () => {
                                             key={amt}
                                             onClick={() => setDepositAmount(amt)}
                                             className={`py-3 rounded-xl font-black text-lg transition-all ${depositAmount === amt
-                                                    ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] scale-105 border-transparent'
-                                                    : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
+                                                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] scale-105 border-transparent'
+                                                : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
                                                 }`}
                                         >
                                             {amt}€

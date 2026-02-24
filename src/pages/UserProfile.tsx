@@ -16,9 +16,9 @@ const UserProfile = () => {
                 if (data) {
                     setProfile({
                         name: data.name || '',
-                        bio: (data as any).bio || '',
+                        bio: data.bio || '',
                         image: data.photoURL || '',
-                        elo: (data as any).elo || 0
+                        elo: data.elo || 0
                     });
                 }
             } catch (error) {
@@ -41,7 +41,7 @@ const UserProfile = () => {
             await firebaseService.updateUser(currentUserId, {
                 name: profile.name,
                 photoURL: profile.image,
-                ...(profile.bio ? { bio: profile.bio } as any : {}),
+                ...(profile.bio ? { bio: profile.bio } : {}),
             });
             toast.success('Perfil actualizado correctamente');
         } catch (error) {

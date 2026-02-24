@@ -43,7 +43,7 @@ export const usePeerAudio = (
         });
 
         peer.on('open', (id) => {
-            console.log('My Peer ID:', id);
+            console.debug('My Peer ID:', id);
             // If student, connect to teacher
             if (userRole === 'student' && targetId) {
                 connectToPeer(peer, targetId);
@@ -52,7 +52,7 @@ export const usePeerAudio = (
 
         // Handle incoming calls (Teacher receives from Student, or vice-versa)
         peer.on('call', async (call) => {
-            console.log('Incoming call from:', call.peer);
+            console.debug('Incoming call from:', call.peer);
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 localStreamRef.current = stream;
@@ -69,7 +69,7 @@ export const usePeerAudio = (
             // Ignore trivial errors
             if (err.type === 'peer-unavailable') {
                 // Retry?
-                console.log('Peer unavailable, maybe retrying?');
+                console.debug('Peer unavailable, maybe retrying?');
             }
         });
 
@@ -100,7 +100,7 @@ export const usePeerAudio = (
         connectionsRef.current.push(call);
 
         call.on('stream', (remoteStream) => {
-            console.log('Received remote stream');
+            console.debug('Received remote stream');
             if (remoteAudioRef.current) {
                 remoteAudioRef.current.srcObject = remoteStream;
                 remoteAudioRef.current.play().catch(e => console.error("Audio play error", e));
@@ -109,12 +109,12 @@ export const usePeerAudio = (
         });
 
         call.on('close', () => {
-            console.log("Call closed");
+            console.debug("Call closed");
             setIsConnected(false);
         });
 
         call.on('error', (e) => {
-            console.log("Call error", e);
+            console.debug("Call error", e);
             setIsConnected(false);
         });
     };

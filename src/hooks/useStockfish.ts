@@ -34,7 +34,7 @@ export const useStockfish = () => {
 
             worker.onmessage = (e) => {
                 const line = e.data;
-                console.log('Stockfish:', line);
+                console.debug('Stockfish:', line);
 
                 if (line === 'uciok') {
                     setEngineStatus('ready');

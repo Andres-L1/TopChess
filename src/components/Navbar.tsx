@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, LayoutDashboard, LogOut, Shield, Globe, X, Bell, Map } from 'lucide-react';
@@ -8,6 +8,7 @@ import Logo from './Logo';
 import MobileNavbar from './MobileNavbar';
 import { firebaseService } from '../services/firebaseService';
 import { AppNotification } from '../types/index';
+
 
 const Navbar: React.FC = () => {
     const authContext = useAuth();
@@ -20,7 +21,16 @@ const Navbar: React.FC = () => {
     const [isLoginLoading, setIsLoginLoading] = useState(false);
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const unreadCount = notifications.filter(n => !n.read).length;
+
+    useEffect(() => {
+        if (authContext?.currentUserId) {
+            firebaseService.isAdmin(authContext.currentUserId).then(setIsAdmin);
+        } else {
+            setIsAdmin(false);
+        }
+    }, [authContext?.currentUserId]);
 
     useEffect(() => {
         if (authContext?.currentUserId) {
@@ -155,7 +165,7 @@ const Navbar: React.FC = () => {
                                                         </button>
                                                     ))
                                                 ) : (
-                                                    <div className="p-8 text-center text-text-muted text-sm">No tienes notificaciones x</div>
+                                                    <div className="p-8 text-center text-text-muted text-sm">No tienes notificaciones</div>
                                                 )}
                                             </div>
                                         </div>
@@ -279,7 +289,7 @@ const Navbar: React.FC = () => {
                                     </Link>
                                 )}
 
-                                {authContext.currentUser?.email === 'andreslgumuzio@gmail.com' && (
+                                {isAdmin && (
                                     <Link
                                         to="/admin"
                                         onClick={() => setIsMenuOpen(false)}

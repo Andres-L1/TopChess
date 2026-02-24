@@ -8,7 +8,7 @@ export const useWakeLock = () => {
             if ('wakeLock' in navigator) {
                 try {
                     wakeLockRef.current = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock is active');
+                    console.debug('Wake Lock is active');
                 } catch (err) {
                     console.error(`${(err as Error).name}, ${(err as Error).message}`);
                 }
@@ -31,7 +31,7 @@ export const useWakeLock = () => {
                 wakeLockRef.current.release()
                     .then(() => {
                         wakeLockRef.current = null;
-                        console.log('Wake Lock released');
+                        console.debug('Wake Lock released');
                     });
             }
         };

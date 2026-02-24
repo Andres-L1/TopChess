@@ -13,12 +13,12 @@ service cloud.firestore {
     
     function isAdmin() {
        return request.auth.token.admin == true || 
-              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+              (isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     // --- Users Collection ---
     match /users/{userId} {
-      allow read: if isAuthenticated(); 
+      allow read: if true; // Public for stats/profiles
       allow write: if isOwner(userId) || isAdmin();
     }
     
@@ -42,27 +42,21 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
     }
 
-    // --- Homeworks (SOLUCIONA EL ERROR DE PERMISOS) ---
+    // --- Homeworks ---
     match /homeworks/{homeworkId} {
-      // Allow read if you are the assigned student or the creator teacher
       allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
-      // Teachers create homework
       allow create: if isAuthenticated() && request.resource.data.teacherId == request.auth.uid;
-      // Students update status (mark as complete), Teachers update content, Admins overview
       allow update: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.teacherId == request.auth.uid || isAdmin());
     }
 
     // --- Transactions (Wallet) ---
     match /transactions/{txId} {
-      // Users can only see their own transactions (sent or received)
       allow read: if isAuthenticated() && (resource.data.fromId == request.auth.uid || resource.data.toId == request.auth.uid || isAdmin());
-      // System or User creating payment intent (simplified for MVP, secure via backend ideally)
       allow create: if isAuthenticated() && request.resource.data.fromId == request.auth.uid;
     }
     
     // --- Chat Messages ---
     match /messages/{messageId} {
-       // Only participants of a chat (identified by chatId 'uidA_uidB') can read/write their messages
        allow read: if isAuthenticated() && (resource.data.chatId.matches('.*'+request.auth.uid+'.*') || isAdmin());
        allow write: if isAuthenticated() && request.resource.data.chatId.matches('.*'+request.auth.uid+'.*');
     }
@@ -75,7 +69,6 @@ service cloud.firestore {
 
     // --- Rooms (LiveKit/Classroom state) ---
     match /rooms/{roomId} {
-      // Room names are normally built with the teacher's ID
       allow read, write: if isAuthenticated() && (roomId.matches('.*'+request.auth.uid+'.*') || isAdmin()); 
     }
     
