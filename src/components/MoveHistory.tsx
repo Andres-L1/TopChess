@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { lichessService } from '../services/lichessService';
+import { MessageCircle } from 'lucide-react';
 
 interface MoveHistoryProps {
     moves?: string[];
@@ -13,19 +13,18 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
     moves = [],
     currentIndex = -1,
     onMoveClick,
-    comments, // New prop
-    currentComment
+    comments,
 }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Auto-scroll to highlight
+    // Auto-scroll the active move into view
     useEffect(() => {
         if (!scrollRef.current) return;
         const active = scrollRef.current.querySelector<HTMLElement>('.move-active');
         if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [currentIndex, moves.length]);
 
-    // Build move pairs
+    // Build move pairs (1. e4 e5 / 2. Nf3 Nc6 …)
     const pairs: { num: number; w: { text: string; idx: number }; b: { text: string; idx: number } | null }[] = [];
     for (let i = 0; i < moves.length; i += 2) {
         pairs.push({
@@ -38,7 +37,7 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
     if (moves.length === 0) {
         return (
             <div className="flex items-center justify-center h-full py-16 px-6 relative">
-                {/* Show initial comment even if no moves? */}
+                {/* Initial comment even without moves */}
                 {comments && comments[-1] && (
                     <div className="absolute top-0 left-0 w-full px-4 py-3 bg-white/5 text-[11px] text-[#d4c68f] italic border-b border-white/5">
                         {comments[-1]}
@@ -54,21 +53,18 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
     return (
         <div ref={scrollRef} className="p-2">
             <div className="flex flex-wrap gap-x-0 gap-y-0">
-                {/* Initial comment (Start position) */}
-                {comments && comments[-1] && lichessService.parseCommentAnnotations(comments[-1]).text && (
+                {/* Initial comment at start position */}
+                {comments && comments[-1] && (
                     <div className="w-full px-3 py-2 my-1 mb-2 text-[11px] text-[#d4c68f] italic bg-white/[0.04] rounded border-l-2 border-gold/40">
-                        {lichessService.parseCommentAnnotations(comments[-1]).text}
+                        {comments[-1]}
                     </div>
                 )}
 
                 {pairs.map(pair => {
                     const wActive = currentIndex === pair.w.idx;
                     const bActive = pair.b && currentIndex === pair.b.idx;
-
-                    const commentW = comments?.[pair.w.idx];
-                    const commentB = pair.b ? comments?.[pair.b.idx] : null;
-                    const textW = commentW ? (typeof commentW === 'string' ? lichessService.parseCommentAnnotations(commentW).text : (commentW as any).text) : '';
-                    const textB = commentB ? (typeof commentB === 'string' ? lichessService.parseCommentAnnotations(commentB).text : (commentB as any).text) : '';
+                    const hasCommentW = !!(comments?.[pair.w.idx]);
+                    const hasCommentB = !!(pair.b && comments?.[pair.b.idx]);
 
                     return (
                         <React.Fragment key={pair.num}>
@@ -80,45 +76,34 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
                             {/* White move */}
                             <button
                                 onClick={() => onMoveClick?.(pair.w.idx)}
-                                className={`inline-flex items-center px-2 py-1 rounded text-[13px] font-medium transition-all ${wActive
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[13px] font-medium transition-all ${wActive
                                     ? 'bg-[#b5b5af] text-black move-active font-bold'
                                     : 'text-[#c9c9c9] hover:bg-white/10'
                                     }`}
                             >
                                 {pair.w.text}
+                                {hasCommentW && (
+                                    <MessageCircle size={9} className={wActive ? 'text-black/40' : 'text-gold/50'} />
+                                )}
                             </button>
 
                             {/* Black move */}
                             {pair.b ? (
                                 <button
                                     onClick={() => onMoveClick?.(pair.b!.idx)}
-                                    className={`inline-flex items-center px-2 py-1 rounded text-[13px] font-medium transition-all ${bActive
+                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[13px] font-medium transition-all ${bActive
                                         ? 'bg-[#b5b5af] text-black move-active font-bold'
                                         : 'text-[#c9c9c9] hover:bg-white/10'
                                         }`}
                                 >
                                     {pair.b.text}
+                                    {hasCommentB && (
+                                        <MessageCircle size={9} className={bActive ? 'text-black/40' : 'text-gold/50'} />
+                                    )}
                                 </button>
                             ) : (
                                 <span className="inline-flex px-2 py-1 min-w-[3rem]" />
                             )}
-
-                            {/* Comments Row */}
-                            {(textW || textB) && (
-                                <div className="w-full px-3 py-2 my-1 text-[11px] text-[#d4c68f] italic bg-white/[0.04] rounded border-l-2 border-gold/40">
-                                    {textW && <span className="block mb-1">{textW}</span>}
-                                    {textB && <span className="block">{textB}</span>}
-                                </div>
-                            )}
-
-                            {/* Fallback for active currentComment IF not in map (e.g. legacy or live update) */}
-                            {/* Only show if we didn't just show it above */}
-                            {!textW && !textB && (wActive || bActive) && currentComment && (
-                                <div className="w-full px-3 py-2 my-1 text-[11px] text-[#d4c68f] italic bg-white/[0.04] rounded border-l-2 border-gold/40">
-                                    {currentComment}
-                                </div>
-                            )}
-
                         </React.Fragment>
                     );
                 })}

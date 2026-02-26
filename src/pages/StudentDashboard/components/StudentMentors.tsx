@@ -35,12 +35,12 @@ export const StudentMentors: React.FC<StudentMentorsProps> = ({ isLoading, myTea
                             </div>
                         ) : (
                             myTeachers.map(teacher => (
-                                <div key={teacher.id} className="glass-panel p-6 rounded-2xl bg-[#1b1a17] border border-white/5 group hover:border-gold/30 transition-all duration-500">
+                                <div key={teacher.id} className="liquid-glass p-6 rounded-2xl group hover:border-gold/40 transition-all duration-500">
                                     <div className="flex items-center gap-5 mb-6">
                                         <img
                                             src={teacher.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name)}&background=random`}
                                             alt={teacher.name}
-                                            className="w-16 h-16 rounded-2xl object-cover border border-white/10"
+                                            className="w-16 h-16 rounded-2xl object-cover border border-white/10 shadow-xl"
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name)}&background=random`;
                                             }}
@@ -51,9 +51,10 @@ export const StudentMentors: React.FC<StudentMentorsProps> = ({ isLoading, myTea
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 mt-4">
-                                        <div className="col-span-2 flex justify-between items-center bg-black/40 px-4 py-2 rounded-lg border border-white/5 mb-2">
-                                            <span className="text-xs text-text-muted font-bold">Clases Disponibles:</span>
-                                            <span className="text-lg font-black text-gold">{teacher.classCredits || 0}</span>
+                                        <div className="col-span-2 flex justify-between items-center bg-black/40 px-4 py-2 rounded-lg border border-white/5 mb-2 relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-gold/5 pointer-events-none" />
+                                            <span className="text-xs text-text-muted font-bold relative z-10">Clases Disponibles:</span>
+                                            <span className="text-lg font-black text-gold relative z-10">{teacher.classCredits || 0}</span>
                                         </div>
                                         {teacher.classCredits > 0 ? (
                                             <>
@@ -62,17 +63,17 @@ export const StudentMentors: React.FC<StudentMentorsProps> = ({ isLoading, myTea
                                                 </Link>
                                                 <button
                                                     onClick={() => openBookingModal(teacher)}
-                                                    className="flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5"
+                                                    className="flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5 liquid-shimmer"
                                                 >
-                                                    <CalendarIcon size={14} /> Agendar
+                                                    <span className="relative z-10 flex items-center gap-2"><CalendarIcon size={14} /> Agendar</span>
                                                 </button>
                                             </>
                                         ) : (
                                             <button
                                                 onClick={() => handleOpenPaymentModal(teacher)}
-                                                className="col-span-2 flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5"
+                                                className="col-span-2 flex items-center justify-center gap-2 bg-gold hover:bg-white text-black text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-lg shadow-gold/5 liquid-shimmer"
                                             >
-                                                <DollarSign size={14} /> Pagar Mensualidad
+                                                <span className="relative z-10 flex items-center gap-2"><DollarSign size={14} /> Pagar Mensualidad</span>
                                             </button>
                                         )}
                                     </div>

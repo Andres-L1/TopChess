@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 
 // Firebase Web App Config
 const firebaseConfig = {
@@ -21,3 +22,5 @@ export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.error("Firebase Persistence Error:", error);
 });
+
+export const rtdb = getDatabase(app);

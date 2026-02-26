@@ -45,7 +45,7 @@ const PremiumButton: React.FC<PremiumButtonProps> = ({
             type={type}
             onClick={onClick}
             disabled={disabled}
-            className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+            className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className} liquid-shimmer`}
         >
             {/* Sweep Animation Effect */}
             <div className={`absolute inset-0 ${sweepColor} translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out`}></div>

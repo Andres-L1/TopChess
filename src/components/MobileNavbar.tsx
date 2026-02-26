@@ -20,14 +20,14 @@ const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
     }
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#161512] border-t border-white/10 pb-safe z-50">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 liquid-glass-dark border-t-0 pb-safe z-50">
             <div className="flex justify-around items-center h-16">
                 <Link
                     to="/"
                     aria-label={t('mobile_nav.home')}
                     className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                 >
-                    {isActive('/') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
+                    {isActive('/') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_15px_rgba(212,175,55,0.6)]" />}
                     <Home size={20} />
                     <span className="text-[10px] font-medium">{t('mobile_nav.home')}</span>
                 </Link>
@@ -38,7 +38,7 @@ const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
                         aria-label={t('mobile_nav.mentors')}
                         className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/mentors') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                     >
-                        {isActive('/mentors') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
+                        {isActive('/mentors') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_15px_rgba(212,175,55,0.6)]" />}
                         <Search size={20} />
                         <span className="text-[10px] font-medium">{t('mobile_nav.mentors')}</span>
                     </Link>
@@ -50,7 +50,7 @@ const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
                         aria-label={t('mobile_nav.panel')}
                         className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/dashboard') || isActive('/student-dashboard') || isActive('/office') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                     >
-                        {(isActive('/dashboard') || isActive('/student-dashboard')) && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
+                        {(isActive('/dashboard') || isActive('/student-dashboard')) && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_15px_rgba(212,175,55,0.6)]" />}
                         <LayoutDashboard size={20} />
                         <span className="text-[10px] font-medium">{t('mobile_nav.panel')}</span>
                     </Link>
@@ -62,7 +62,7 @@ const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
                         aria-label={t('mobile_nav.profile')}
                         className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive('/profile') ? 'text-gold' : 'text-white/40 hover:text-white/80'}`}
                     >
-                        {isActive('/profile') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />}
+                        {isActive('/profile') && <div className="absolute top-0 w-8 h-1 bg-gold rounded-b-full shadow-[0_0_15px_rgba(212,175,55,0.6)]" />}
                         <User size={20} />
                         <span className="text-[10px] font-medium">{t('mobile_nav.profile')}</span>
                     </Link>
@@ -87,8 +87,9 @@ const MobileNavbar: React.FC<MobileNavbarProps> = ({ onMenuClick }) => {
                 </button>
             </div>
             {/* Safe area spacer for iPhone X+ home indicator */}
-            <div className="h-safe-area-bottom w-full bg-[#161512]" />
+            <div className="h-safe-area-bottom w-full liquid-glass-dark" />
         </div>
+
     );
 };
 

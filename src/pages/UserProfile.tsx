@@ -61,12 +61,14 @@ const UserProfile = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Left Column: Avatar & Quick Stats */}
-                <div className="glass-panel p-6 rounded-2xl flex flex-col items-center text-center h-fit">
+                <div className="liquid-glass p-6 rounded-2xl flex flex-col items-center text-center h-fit">
                     <div className="relative group mb-4">
                         <div
-                            className="w-32 h-32 rounded-full bg-cover bg-center border-4 border-white/5 shadow-2xl"
+                            className="w-32 h-32 rounded-full bg-cover bg-center border-2 border-white/20 shadow-2xl relative"
                             style={{ backgroundImage: `url(${profile.image})` }}
-                        ></div>
+                        >
+                            <div className="absolute inset-0 rounded-full border border-white/10 pointer-events-none" />
+                        </div>
                         <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                             <Camera className="text-white" />
                         </div>
@@ -83,7 +85,7 @@ const UserProfile = () => {
                 </div>
 
                 {/* Right Column: Edit Form */}
-                <div className="md:col-span-2 glass-panel p-6 rounded-2xl">
+                <div className="md:col-span-2 liquid-glass p-6 rounded-2xl">
                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                         <User size={18} className="text-gold" /> {t('profile.personal_info')}
                     </h3>
@@ -127,9 +129,11 @@ const UserProfile = () => {
                         <div className="pt-4 flex justify-end">
                             <button
                                 onClick={handleSave}
-                                className="btn-primary flex items-center gap-2 px-6"
+                                className="btn-primary flex items-center gap-2 px-8 py-3 liquid-shimmer"
                             >
-                                <Save size={18} /> {t('profile.save')}
+                                <span className="relative z-10 flex items-center gap-2">
+                                    <Save size={18} /> {t('profile.save')}
+                                </span>
                             </button>
                         </div>
                     </div>

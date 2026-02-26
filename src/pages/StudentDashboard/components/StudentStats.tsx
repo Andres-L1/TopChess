@@ -5,7 +5,7 @@ export const StudentStats: React.FC = () => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Level & XP Box */}
-            <div className="glass-panel p-6 rounded-3xl bg-gradient-to-br from-[#1a1917] to-gold/5 border-gold/20 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div className="liquid-glass-subtle liquid-shimmer liquid-glow p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-gold/20 transition-all duration-500"></div>
                 <div className="flex items-center gap-4 mb-5 relative z-10">
                     <div className="relative">
@@ -34,7 +34,7 @@ export const StudentStats: React.FC = () => {
             </div>
 
             {/* Daily Mission */}
-            <div className="glass-panel p-6 rounded-3xl border-white/5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div className="liquid-glass-subtle liquid-shimmer p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all duration-500"></div>
                 <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -55,7 +55,7 @@ export const StudentStats: React.FC = () => {
             </div>
 
             {/* Streak */}
-            <div className="glass-panel p-6 rounded-3xl bg-gradient-to-br from-[#1a1917] to-orange-500/5 border-orange-500/20 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div className="liquid-glass-subtle p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-orange-500/20 transition-all duration-500"></div>
                 <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500 border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.2)] animate-pulse">
@@ -78,7 +78,7 @@ export const StudentStats: React.FC = () => {
             </div>
 
             {/* Recent Badges */}
-            <div className="glass-panel p-6 rounded-3xl border-white/5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div className="liquid-glass-subtle p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-all duration-500"></div>
                 <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">

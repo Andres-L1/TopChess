@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import { Message } from '../../../types/index';
 
@@ -14,6 +14,12 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
     onSendMessage
 }) => {
     const [inputText, setInputText] = useState("");
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to the latest message whenever messages update
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     const handleSend = () => {
         if (!inputText.trim()) return;
@@ -23,12 +29,12 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
 
     return (
         <div className="flex-1 min-h-0 flex flex-col animate-in fade-in duration-300">
-            <div className="flex-1 min-h-0 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-[#1b1a17]/50">
+            <div className="flex-1 min-h-0 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-black/20">
                 {messages.map((msg) => (
                     <div key={msg.id} className={`flex flex-col ${msg.sender === userRole ? 'items-end' : 'items-start'}`}>
                         <div className={`p-4 rounded-2xl max-w-[85%] transition-all shadow-lg ${msg.sender === userRole
-                            ? 'bg-gold/10 border border-gold/20 text-white'
-                            : 'bg-white/5 border border-white/10 text-white/80'
+                            ? 'liquid-glass-subtle border-gold/20 text-white'
+                            : 'liquid-glass border-white/5 text-white/80'
                             }`}>
                             <span className="text-[9px] font-black uppercase tracking-widest opacity-30 mb-2 block">
                                 {msg.sender === 'teacher' ? 'Profesor' : 'Alumno'}
@@ -37,8 +43,10 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
                         </div>
                     </div>
                 ))}
+                {/* Scroll anchor */}
+                <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 bg-[#1b1a17] flex gap-3 border-t border-white/5">
+            <div className="p-4 liquid-glass-dark flex gap-3 border-t-0">
                 <input
                     type="text"
                     value={inputText}
@@ -49,9 +57,9 @@ const ClassroomChat: React.FC<ClassroomChatProps> = ({
                 />
                 <button
                     onClick={handleSend}
-                    className="p-3 bg-gold text-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-gold/20"
+                    className="p-3 bg-gold text-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-gold/20 liquid-shimmer"
                 >
-                    <Send size={18} />
+                    <span className="relative z-10"><Send size={18} /></span>
                 </button>
             </div>
         </div>

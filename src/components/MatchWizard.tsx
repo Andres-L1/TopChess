@@ -130,10 +130,11 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
     const canIsNext = answers[step.id];
 
     return (
-        <div className="w-full bg-[#262421] border border-gold/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col relative h-auto md:min-h-[600px]">
+        <div className="w-full liquid-glass border-gold/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col relative h-auto md:min-h-[600px] liquid-glow-intense">
 
             {/* Gamification Banner */}
-            <div className="bg-gradient-to-r from-gold/20 to-[#262421] p-4 flex items-center gap-3 border-b border-gold/10">
+            <div className="liquid-glass-subtle p-4 flex items-center gap-3 border-b border-gold/10 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gold/5 animate-shimmer pointer-events-none" />
                 <div className="bg-gold text-black rounded-full p-1.5 shadow-lg shadow-gold/20">
                     <TrendingUp size={16} />
                 </div>
@@ -163,13 +164,14 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
                             <button
                                 key={opt.value}
                                 onClick={() => handleSelect(opt.value)}
-                                className={`w-full text-left p-6 rounded-xl border transition-all duration-200 group relative overflow-hidden flex items-center gap-4
+                                className={`w-full text-left p-6 rounded-xl border transition-all duration-300 group relative overflow-hidden flex items-center gap-4
                                     ${isSelected
-                                        ? 'bg-gold/10 border-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                                        ? 'liquid-glass border-gold/50 shadow-lg'
                                         : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'
                                     }
                                 `}
                             >
+                                {isSelected && <div className="absolute inset-0 bg-gold/5 animate-shimmer pointer-events-none" />}
                                 {opt.icon && (
                                     <span className="text-3xl">{opt.icon}</span>
                                 )}
@@ -202,16 +204,22 @@ const MatchWizard = ({ onComplete }: { onComplete: () => void }) => {
 
                     <button
                         onClick={handleNext}
-                        disabled={!canIsNext}
-                        className={`px-8 py-3 rounded-full font-bold uppercase text-xs tracking-widest transition-all flex items-center gap-2
-                            ${canIsNext
-                                ? 'bg-gold text-black hover:bg-gold-hover shadow-lg hover:shadow-gold/20 transform hover:-translate-y-0.5'
+                        disabled={!canIsNext || isSubmitting}
+                        className={`px-8 py-3 rounded-full font-bold uppercase text-xs tracking-widest transition-all flex items-center gap-2 relative overflow-hidden
+                            ${canIsNext && !isSubmitting
+                                ? 'bg-gold text-black hover:bg-white shadow-lg liquid-shimmer'
                                 : 'bg-white/5 text-white/20 cursor-not-allowed'
                             }
                         `}
                     >
-                        {currentStep === STEPS.length - 1 ? (isSubmitting ? 'Finalizar' : 'Crear Perfil') : 'Siguiente'}
-                        {currentStep < STEPS.length - 1 && <ChevronRight size={16} />}
+                        <span className="relative z-10 flex items-center gap-2">
+                            {currentStep === STEPS.length - 1
+                                ? (isSubmitting
+                                    ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>Guardando...</>
+                                    : 'Crear Perfil')
+                                : 'Siguiente'}
+                            {currentStep < STEPS.length - 1 && <ChevronRight size={16} />}
+                        </span>
                     </button>
                 </div>
             </div>

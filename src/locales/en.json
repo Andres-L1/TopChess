@@ -8,21 +8,21 @@
         "login": "Login",
         "test_student": "Test Student",
         "test_teacher": "Test Teacher",
-        "panel": "Dashboard",
+        "panel": "My Room",
         "admin": "Admin",
         "profile": "Profile",
         "logout": "Logout",
         "exit": "Exit"
     },
     "hero": {
-        "badge": "An Exclusive Network",
-        "title_line1": "YOUR TRUE",
-        "title_line2": "POTENTIAL",
-        "description": "A minimalist platform designed exclusively to connect chess grandmasters with aspiring masters. No distractions, only real growth.",
-        "cta_start": "START NOW",
+        "badge": "The Chess Metaverse",
+        "title_line1": "YOUR OWN",
+        "title_line2": "VIRTUAL ACADEMY",
+        "description": "Explore the first isometric chess metaverse. Create your pixel-art avatar, decorate your room and learn from grandmasters in real-time inside the game.",
+        "cta_start": "CREATE AVATAR",
         "cta_teach": "I'M A TEACHER",
-        "cta_find": "Find Mentor",
-        "cta_dashboard": "Dashboard"
+        "cta_find": "Explore World",
+        "cta_dashboard": "My Room"
     },
     "stats": {
         "users": "Users",
@@ -30,37 +30,37 @@
         "matches": "Successful Matches"
     },
     "features": {
-        "section_label": "Features",
-        "section_title": "THE ESSENTIALS, NOTHING MORE",
+        "section_label": "Explore",
+        "section_title": "A LIVING WORLD",
         "classroom": {
-            "title": "INTEGRATED CLASSROOM",
-            "desc": "High-performance board with PGN, Stockfish evaluation, and P2P audio via WebRTC in one view."
+            "title": "VIRTUAL CLASSROOMS",
+            "desc": "Interactive isometric rooms. Physically enter your teacher's classroom to receive lectures with board and HD video call."
         },
         "fast_match": {
-            "title": "FAST MATCH",
-            "desc": "AI-powered automatic matching that crosses your style with verified instructors."
+            "title": "PIXEL-ART AVATARS",
+            "desc": "Create and customize your own avatar. Display your ELO and status with unique accessories that identify you."
         },
         "wallet": {
-            "title": "GLOBAL WALLET",
-            "desc": "Transfer and pay in any currency powered by Stripe integration."
+            "title": "INTERACTIVE FURNITURE",
+            "desc": "Pay subscriptions, book classes or review homework by directly interacting with 3D objects in each room."
         },
         "data": {
-            "title": "REAL DATA",
-            "desc": "Full control over your progress, assertiveness (ELO), and class history."
+            "title": "TANGIBLE PROGRESS",
+            "desc": "Start in a humble room and upgrade your facilities as your ELO or teacher income increases."
         },
         "verified": {
-            "title": "RIGOR",
-            "desc": "Manual verification of FIDE/National Masters to guarantee quality."
+            "title": "SPATIAL CHAT",
+            "desc": "Communicate instantly with other players in your same virtual room through floating bubbles."
         },
         "dark_glass": {
-            "title": "DARK GLASS",
-            "desc": "Premium dark and clean aesthetic designed to reduce eye strain."
+            "title": "STATE OF THE ART",
+            "desc": "The entire metaverse is coated with our acclaimed liquid-glass UI engine, dark, smooth and visually soothing."
         }
     },
     "cta_footer": {
-        "title_line1": "THE BOARD",
+        "title_line1": "YOUR ROOM",
         "title_line2": "AWAITS YOU",
-        "button": "ENTER MATCHING"
+        "button": "ENTER THE WORLD"
     },
     "home_auth": {
         "badge_teacher": "Verified Instructor",
@@ -114,8 +114,8 @@
     },
     "mobile_nav": {
         "home": "Home",
-        "mentors": "Mentors",
-        "panel": "Dashboard",
+        "mentors": "World",
+        "panel": "My Room",
         "profile": "Profile",
         "menu": "Menu"
     },

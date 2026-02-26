@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { deleteField } from 'firebase/firestore';
-import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp, MessageCircle, Map as MapIcon, Plus, Settings } from 'lucide-react';
+import { Users, DollarSign, Clock, Trophy, ExternalLink, Bell, Check, X, Video, LogOut, TrendingUp, MessageCircle, Map as MapIcon, Plus, Settings, Home } from 'lucide-react';
 import { useAuth } from '../App';
 import { firebaseService } from '../services/firebaseService';
 import { Link, useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar';
+import { getTeacherRoomLayout } from '../utils/roomLayouts';
 import toast from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
 import Skeleton from '../components/Skeleton';
 import { Request, Teacher, Booking, Homework, Club, AppUser } from '../types/index';
 import { lichessService } from '../services/lichessService';
@@ -16,6 +17,11 @@ import TeacherClubTab from './TeacherDashboard/components/TeacherClubTab';
 import TeacherScheduleTab from './TeacherDashboard/components/TeacherScheduleTab';
 import TeacherHomeworkTab from './TeacherDashboard/components/TeacherHomeworkTab';
 import TeacherOverviewTab from './TeacherDashboard/components/TeacherOverviewTab';
+import IsometricBuilding from '../components/IsometricBuilding';
+import { getTeacherTierProgress } from '../utils/progression';
+import CharacterCreatorModal from '../components/CharacterCreatorModal';
+import { RoomView, FurniturePlacement } from '../components/RoomView';
+import { FurnitureType } from '../components/Furniture';
 interface DashboardStats {
     earnings: number;
     students: number;
@@ -25,8 +31,8 @@ interface DashboardStats {
 const TeacherDashboard = () => {
     const { currentUserId, logout, setUserRole } = useAuth();
     const navigate = useNavigate();
-    const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'homework' | 'club'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'homework' | 'club' | 'mi-sala'>('overview');
+    const [furnitureModalAction, setFurnitureModalAction] = useState<FurnitureType | null>(null);
     const [stats, setStats] = useState<DashboardStats>({ earnings: 0, students: 0, hours: 0 });
     const [requests, setRequests] = useState<Request[]>([]);
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
@@ -45,6 +51,7 @@ const TeacherDashboard = () => {
     const [isInviting, setIsInviting] = useState(false);
     const [showClubNameModal, setShowClubNameModal] = useState(false);
     const [clubNameInput, setClubNameInput] = useState('');
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -289,7 +296,7 @@ const TeacherDashboard = () => {
 
     const handleInviteTeacher = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inviteEmail) return;
+        if (!inviteEmail || !club) return;
 
         setIsInviting(true);
         try {
@@ -350,113 +357,231 @@ const TeacherDashboard = () => {
         }
     };
 
-    return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in pb-24">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold font-display text-white">
-                        {t('dashboard.title')} <span className="text-gold">.</span>
-                    </h1>
-                    <p className="text-sm md:text-base text-text-muted">{t('dashboard.subtitle')}</p>
-                </div>
-                <div className="flex flex-wrap gap-2 md:gap-4 items-center w-full md:w-auto">
-                    <Link to={`/classroom/${currentUserId}`} className="btn-secondary flex items-center gap-2 text-[10px] sm:text-sm md:text-base flex-1 md:flex-none justify-center py-2 px-2 sm:px-4">
-                        <ExternalLink size={18} />
-                        <span className="truncate">{t('dashboard.my_classroom')}</span>
-                    </Link>
-                    <div className="flex gap-1 p-1 bg-dark-panel rounded-lg border border-white/5 flex-1 md:flex-none justify-center">
-                        <button
-                            onClick={() => setActiveTab('overview')}
-                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'overview' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
-                        >
-                            {t('dashboard.overview')}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('schedule')}
-                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'schedule' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
-                        >
-                            {t('dashboard.schedule')}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('homework')}
-                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'homework' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
-                        >
-                            Tareas
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('club')}
-                            className={`flex-1 md:flex-none px-2 sm:px-4 py-2 rounded-md text-[10px] sm:text-sm font-medium transition-all ${activeTab === 'club' ? 'bg-gold text-black shadow-lg' : 'text-text-muted hover:text-white'}`}
-                        >
-                            Club
-                        </button>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="p-2 text-text-muted hover:text-red-400 transition-colors rounded-lg border border-white/5 hover:border-red-500/20"
-                        title={t('nav.exit')}
-                        aria-label={t('nav.exit')}
-                    >
-                        <LogOut size={20} />
-                    </button>
-                </div>
-            </div>
+    // Building progression
+    const tierProgress = getTeacherTierProgress(teacherProfile?.earnings || 0);
 
-            {activeTab === 'schedule' ? (
-                <TeacherScheduleTab
-                    availability={availability}
-                    handleSaveAvailability={handleSaveAvailability}
-                />
-            ) : activeTab === 'homework' ? (
-                <TeacherHomeworkTab
-                    homeworks={homeworks}
-                    myStudents={myStudents}
-                    isHomeworkModalOpen={isHomeworkModalOpen}
-                    setIsHomeworkModalOpen={setIsHomeworkModalOpen}
-                    handleCreateHomework={handleCreateHomework}
-                />
-            ) : activeTab === 'club' ? (
-                <TeacherClubTab
-                    club={club}
-                    teacherProfile={teacherProfile}
-                    clubTeachers={clubTeachers}
-                    handleCreateClub={handleCreateClub}
-                    isCreatingClub={isCreatingClub}
-                    inviteEmail={inviteEmail}
-                    setInviteEmail={setInviteEmail}
-                    handleInviteTeacher={handleInviteTeacher}
-                    isInviting={isInviting}
-                    showClubNameModal={showClubNameModal}
-                    setShowClubNameModal={setShowClubNameModal}
-                    clubNameInput={clubNameInput}
-                    setClubNameInput={setClubNameInput}
-                />
-            ) : (
-                <TeacherOverviewTab
-                    isLoading={isLoading}
-                    stats={stats}
-                    levelInfo={levelInfo}
-                    currency={currency}
-                    progressPercent={progressPercent}
-                    teacherProfile={teacherProfile}
-                    requests={requests}
-                    pendingBookings={pendingBookings}
-                    handleAcceptRequest={handleAcceptRequest}
-                    handleRejectRequest={handleRejectRequest}
-                    handleAcceptBooking={handleAcceptBooking}
-                    handleRejectBooking={handleRejectBooking}
-                    nextBooking={nextBooking}
-                    currentUserId={currentUserId}
-                    myStudents={myStudents}
-                    handleLichessConnect={handleLichessConnect}
-                    handleLichessDisconnect={handleLichessDisconnect}
-                    handleDisconnectStudent={handleDisconnectStudent}
-                    confirmedBookings={confirmedBookings}
-                    handleCancelConfirmedBooking={handleCancelConfirmedBooking}
-                />
-            )}
-        </div>
+    return (
+        <React.Fragment>
+            <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in pb-24">
+                {/* Building Progression Panel */}
+                {teacherProfile && (
+                    <div className="relative overflow-hidden rounded-3xl liquid-glass p-6" style={{ boxShadow: `0 0 40px ${tierProgress.current.color}20` }}>
+                        <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                            {/* Isometric building */}
+                            <div className="flex-shrink-0">
+                                <IsometricBuilding
+                                    earnings={teacherProfile.earnings || 0}
+                                    teacherName={teacherProfile.name}
+                                    isOnline={teacherProfile.onlineStatus === 'online' || teacherProfile.onlineStatus === 'in_class'}
+                                    isInClass={teacherProfile.onlineStatus === 'in_class'}
+                                    size="md"
+                                    showLabel={false}
+                                />
+                            </div>
+
+                            {/* Tier info */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-2xl">{tierProgress.current.buildingEmoji}</span>
+                                    <div>
+                                        <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: tierProgress.current.color }}>
+                                            Tu Academia
+                                        </div>
+                                        <h2 className="text-xl font-black text-white">{tierProgress.current.name}</h2>
+                                    </div>
+                                    <div className="ml-auto text-right">
+                                        <div className="text-xs text-white/40">Ingresos totales</div>
+                                        <div className="text-lg font-black" style={{ color: tierProgress.current.color }}>
+                                            {(teacherProfile.earnings || 0).toLocaleString('es-ES', { style: 'currency', currency: teacherProfile.currency || 'EUR' })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div className="mb-3">
+                                    <div className="flex justify-between text-xs text-white/40 mb-1.5">
+                                        <span>{tierProgress.current.name}</span>
+                                        {tierProgress.next ? <span>{tierProgress.next.name} — faltan {tierProgress.remaining.toLocaleString('es-ES')}€</span> : <span>🏆 Nivel máximo</span>}
+                                    </div>
+                                    <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                                        <motion.div
+                                            className="h-full rounded-full"
+                                            style={{ background: `linear-gradient(90deg, ${tierProgress.current.color}, ${tierProgress.current.color}aa)` }}
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${tierProgress.progress * 100}%` }}
+                                            transition={{ duration: 1.5, ease: 'easeOut' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Perks */}
+                                <div className="flex flex-wrap gap-1.5">
+                                    {tierProgress.current.perks.map(perk => (
+                                        <span key={perk} className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: `${tierProgress.current.color}15`, color: tierProgress.current.color }}>✓ {perk}</span>
+                                    ))}
+                                    {tierProgress.next && (
+                                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white/30 bg-white/5 border border-white/10">
+                                            🔒 {tierProgress.next.perks[0]} (siguiente nivel)
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white">
+                            Mi Panel <span className="text-gold">.</span>
+                        </h1>
+                        <p className="text-sm md:text-lg text-text-muted font-medium mt-1">Bienvenido de vuelta, aquí está tu academia.</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 p-1.5 liquid-glass-subtle rounded-2xl shadow-2xl">
+                        {[
+                            { id: 'overview', label: 'Resumen' },
+                            { id: 'mi-sala', label: '🏠 Mi Sala' },
+                            { id: 'schedule', label: 'Horario' },
+                            { id: 'homework', label: 'Tareas' },
+                            { id: 'club', label: 'Club' }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab.id
+                                    ? 'liquid-glass-subtle liquid-glow text-gold'
+                                    : 'text-text-muted hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {activeTab === 'schedule' ? (
+                    <TeacherScheduleTab
+                        availability={availability}
+                        handleSaveAvailability={handleSaveAvailability}
+                    />
+                ) : activeTab === 'homework' ? (
+                    <TeacherHomeworkTab
+                        homeworks={homeworks}
+                        myStudents={myStudents}
+                        isHomeworkModalOpen={isHomeworkModalOpen}
+                        setIsHomeworkModalOpen={setIsHomeworkModalOpen}
+                        handleCreateHomework={handleCreateHomework}
+                    />
+                ) : activeTab === 'club' ? (
+                    <TeacherClubTab
+                        club={club}
+                        teacherProfile={teacherProfile}
+                        clubTeachers={clubTeachers}
+                        handleCreateClub={handleCreateClub}
+                        isCreatingClub={isCreatingClub}
+                        inviteEmail={inviteEmail}
+                        setInviteEmail={setInviteEmail}
+                        handleInviteTeacher={handleInviteTeacher}
+                        isInviting={isInviting}
+                        showClubNameModal={showClubNameModal}
+                        setShowClubNameModal={setShowClubNameModal}
+                        clubNameInput={clubNameInput}
+                        setClubNameInput={setClubNameInput}
+                    />
+                ) : activeTab === 'mi-sala' ? (
+                    <div className="space-y-4">
+                        <div className="p-4 liquid-glass-subtle rounded-2xl border border-white/5">
+                            <p className="text-xs text-text-muted uppercase tracking-widest font-bold mb-1">Tu Aula Virtual</p>
+                            <p className="text-sm text-white/60">Haz clic en el suelo para moverte. Acércate a un mueble para interactuar con él.</p>
+                        </div>
+                        <div className="p-3 bg-white/5 rounded-xl grid grid-cols-3 gap-3 text-center text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                            <div>🖋️ Pizarra → Asignar Tarea</div>
+                            <div>☕ Mesa Profesor → Ver Disponibilidad</div>
+                            <div>💰 Caja Registradora → Pagos</div>
+                        </div>
+                        {currentUserId && (
+                            <RoomView
+                                roomId={`teacher_${currentUserId}`}
+                                width={getTeacherRoomLayout(teacherProfile?.earnings || 0).width}
+                                height={getTeacherRoomLayout(teacherProfile?.earnings || 0).height}
+                                furniturePlacements={getTeacherRoomLayout(teacherProfile?.earnings || 0).furniturePlacements}
+                                obstacles={getTeacherRoomLayout(teacherProfile?.earnings || 0).obstacles}
+                                onFurnitureClick={(type) => {
+                                    if (type === 'chalkboard') {
+                                        setIsHomeworkModalOpen(true);
+                                    } else {
+                                        setFurnitureModalAction(type);
+                                    }
+                                }}
+                            />
+                        )}
+                        {/* Info modal for non-homework furniture */}
+                        {furnitureModalAction && furnitureModalAction !== 'chalkboard' && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setFurnitureModalAction(null)}>
+                                <div className="liquid-glass-dark border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+                                    <div className="text-4xl mb-4 text-center">
+                                        {furnitureModalAction === 'register' ? '💰' : furnitureModalAction === 'desk' ? '☕' : '♟️'}
+                                    </div>
+                                    <h2 className="text-xl font-black text-white text-center mb-2">
+                                        {furnitureModalAction === 'register' ? 'Caja Registradora' : furnitureModalAction === 'desk' ? 'Mesa del Profesor' : 'Mesa de Ajedrez'}
+                                    </h2>
+                                    <p className="text-sm text-text-muted text-center mb-6">
+                                        {furnitureModalAction === 'register'
+                                            ? `Has generado ${(teacherProfile?.earnings || 0).toLocaleString('es-ES', { style: 'currency', currency: teacherProfile?.currency || 'EUR' })} en ingresos totales.`
+                                            : furnitureModalAction === 'desk'
+                                                ? `Tienes ${pendingBookings.length} reservas pendientes. Ve a la pestaña Horario para gestionar tu disponibilidad.`
+                                                : 'Inicia una partida de ajedrez en tu aula virtual.'}
+                                    </p>
+                                    <div className="flex gap-3">
+                                        {furnitureModalAction === 'desk' && (
+                                            <button onClick={() => { setFurnitureModalAction(null); setActiveTab('schedule'); }} className="btn-primary flex-1">
+                                                Ver Horario
+                                            </button>
+                                        )}
+                                        {furnitureModalAction === 'register' && (
+                                            <button onClick={() => { setFurnitureModalAction(null); /* navigate to wallet */ }} className="btn-primary flex-1">
+                                                Ver Billetera
+                                            </button>
+                                        )}
+                                        <button onClick={() => setFurnitureModalAction(null)} className="flex-1 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-bold transition-all">
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <TeacherOverviewTab
+                        isLoading={isLoading}
+                        stats={stats}
+                        levelInfo={levelInfo}
+                        currency={currency}
+                        progressPercent={progressPercent}
+                        teacherProfile={teacherProfile}
+                        requests={requests}
+                        pendingBookings={pendingBookings}
+                        handleAcceptRequest={handleAcceptRequest}
+                        handleRejectRequest={handleRejectRequest}
+                        handleAcceptBooking={handleAcceptBooking}
+                        handleRejectBooking={handleRejectBooking}
+                        nextBooking={nextBooking}
+                        currentUserId={currentUserId}
+                        myStudents={myStudents}
+                        handleLichessConnect={handleLichessConnect}
+                        handleLichessDisconnect={handleLichessDisconnect}
+                        handleDisconnectStudent={handleDisconnectStudent}
+                        confirmedBookings={confirmedBookings}
+                        handleCancelConfirmedBooking={handleCancelConfirmedBooking}
+                    />
+                )}
+            </div>
+            <CharacterCreatorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
+        </React.Fragment>
     );
+
 };
 
 export default TeacherDashboard;

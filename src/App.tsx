@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { AnimatePresence, motion } from 'framer-motion';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
+import AppSidebar from './components/AppSidebar';
 
 
 
@@ -24,6 +25,10 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const LichessCallback = lazy(() => import('./pages/LichessCallback'));
 const ClubOffice = lazy(() => import('./pages/ClubOffice'));
 const TeachersDirectory = lazy(() => import('./pages/TeachersDirectory'));
+const VisitorRoom = lazy(() => import('./pages/VisitorRoom'));
+const WorldMap = lazy(() => import('./pages/WorldMap'));
+const VirtualWorld = lazy(() => import('./pages/VirtualWorld'));
+const VirtualRoom = lazy(() => import('./pages/VirtualRoom'));
 
 // Types
 interface AuthContextType {
@@ -259,8 +264,8 @@ const AnimatedRoutes = () => {
       } else {
         if (userRole === null && location.pathname !== '/onboarding') {
           navigate('/onboarding');
-        } else if (userRole !== null && location.pathname === '/onboarding') {
-          navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard');
+        } else if (userRole !== null && (location.pathname === '/onboarding' || location.pathname === '/')) {
+          navigate('/world');
         }
       }
     }
@@ -279,8 +284,11 @@ const AnimatedRoutes = () => {
         <Route path="/chat/:teacherId" element={<PrivateRoute><PageTransition><Chat /></PageTransition></PrivateRoute>} />
         <Route path="/room/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
         <Route path="/classroom/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
+        <Route path="/office/:teacherId" element={<PrivateRoute><PageTransition><VisitorRoom /></PageTransition></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><PageTransition><TeacherDashboard /></PageTransition></PrivateRoute>} />
         <Route path="/student-dashboard" element={<PrivateRoute><PageTransition><StudentDashboard /></PageTransition></PrivateRoute>} />
+        <Route path="/world" element={<PrivateRoute><PageTransition><VirtualWorld /></PageTransition></PrivateRoute>} />
+        <Route path="/virtual-room/:teacherId" element={<PrivateRoute><PageTransition><VirtualRoom /></PageTransition></PrivateRoute>} />
         <Route path="/wallet" element={<PrivateRoute><PageTransition><Wallet /></PageTransition></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><PageTransition><UserProfile /></PageTransition></PrivateRoute>} />
         <Route path="/office" element={<PrivateRoute><PageTransition><ClubOffice /></PageTransition></PrivateRoute>} />
@@ -294,36 +302,40 @@ const AnimatedRoutes = () => {
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const isClassroom = location.pathname.includes('/classroom/') || location.pathname.includes('/room/');
+  const { isAuthenticated } = useAuth();
+  const isImmersive = location.pathname.includes('/classroom/') || location.pathname.includes('/room/') || location.pathname.includes('/office/') || location.pathname.includes('/world') || location.pathname.includes('/virtual-room');
 
   return (
-    <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans">
-      {!isClassroom && <Navbar />}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: '#1b1a17',
-            color: '#fff',
-            border: '1px solid rgba(212, 175, 55, 0.2)',
-          },
-          success: {
-            iconTheme: {
-              primary: '#D4AF37', // Gold 
-              secondary: '#1b1a17',
+    <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans flex">
+      {isAuthenticated && !isImmersive && <AppSidebar />}
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isAuthenticated && !isImmersive ? 'lg:pl-64' : ''}`}>
+        {!isImmersive && !isAuthenticated && <Navbar />}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: '#1b1a17',
+              color: '#fff',
+              border: '1px solid rgba(212, 175, 55, 0.2)',
             },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1b1a17',
+            success: {
+              iconTheme: {
+                primary: '#D4AF37', // Gold 
+                secondary: '#1b1a17',
+              },
             },
-          },
-        }}
-      />
-      <main className={isClassroom ? '' : 'pt-16'}>
-        {children}
-      </main>
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#1b1a17',
+              },
+            },
+          }}
+        />
+        <main className={isImmersive ? 'w-full h-full' : (isAuthenticated ? 'pt-6' : 'pt-16')}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

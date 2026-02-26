@@ -102,9 +102,9 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
     const canIsNext = answers[step.id];
 
     return (
-        <div className="w-full bg-[#262421] border border-[#302e2b] rounded-2xl shadow-2xl overflow-hidden flex flex-col h-auto md:h-[600px]">
+        <div className="w-full liquid-glass rounded-2xl shadow-2xl overflow-hidden flex flex-col h-auto md:h-[600px] liquid-glow-intense-blue">
             {/* Header */}
-            <div className="bg-[#1e1d1b] p-6 border-b border-[#302e2b] flex items-center justify-between">
+            <div className="liquid-glass-subtle p-6 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
                         <GraduationCap size={16} />
@@ -115,7 +115,7 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
                     {STEPS.map((_, i) => (
                         <div
                             key={i}
-                            className={`h-1.5 w-6 rounded-full transition-colors ${i <= currentStep ? 'bg-blue-500' : 'bg-[#302e2b]'}`}
+                            className={`h-1.5 w-6 rounded-full transition-colors ${i <= currentStep ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-white/10'}`}
                         />
                     ))}
                 </div>
@@ -135,13 +135,14 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
                             <button
                                 key={opt.value}
                                 onClick={() => handleSelect(opt.value)}
-                                className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group relative
+                                className={`w-full text-left p-4 rounded-xl border transition-all duration-300 group relative overflow-hidden
                                     ${isSelected
-                                        ? 'bg-blue-500/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
-                                        : 'bg-[#302e2b]/50 border-transparent hover:border-[#403d39] hover:bg-[#302e2b]'
+                                        ? 'liquid-glass border-blue-500 shadow-lg'
+                                        : 'bg-white/5 border-transparent hover:border-white/20 hover:bg-white/10'
                                     }
                                 `}
                             >
+                                {isSelected && <div className="absolute inset-0 bg-blue-500/5 animate-shimmer pointer-events-none" />}
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <div className={`font-bold text-lg ${isSelected ? 'text-blue-400' : 'text-white'}`}>
@@ -172,21 +173,23 @@ const StudentWizard = ({ onComplete }: { onComplete: () => void }) => {
                     <button
                         onClick={handleNext}
                         disabled={!canIsNext || isSubmitting}
-                        className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2
+                        className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2 relative overflow-hidden
                             ${canIsNext
-                                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
-                                : 'bg-[#302e2b] text-[#666] cursor-not-allowed'
+                                ? 'bg-blue-600 hover:bg-white text-white hover:text-blue-600 shadow-lg liquid-shimmer'
+                                : 'bg-white/5 text-white/20 cursor-not-allowed'
                             }
                         `}
                     >
-                        {isSubmitting ? (
-                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <>
-                                {currentStep === STEPS.length - 1 ? 'Finalizar' : 'Siguiente'}
-                                {currentStep < STEPS.length - 1 && <ChevronRight size={16} />}
-                            </>
-                        )}
+                        <span className="relative z-10 flex items-center gap-2">
+                            {isSubmitting ? (
+                                <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    {currentStep === STEPS.length - 1 ? 'Finalizar' : 'Siguiente'}
+                                    {currentStep < STEPS.length - 1 && <ChevronRight size={16} />}
+                                </>
+                            )}
+                        </span>
                     </button>
                 </div>
             </div>

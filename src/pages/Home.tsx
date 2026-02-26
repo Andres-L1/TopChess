@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
     Play, Sparkles, Users, Award, Zap, LayoutDashboard, Monitor,
     Globe, ShieldCheck, ChevronRight, BookOpen, Star, Target,
-    TrendingUp, Wallet as WalletIcon, Calendar, type LucideIcon
+    TrendingUp, Wallet as WalletIcon, Calendar, Box, MessageCircle, type LucideIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumButton from '../components/PremiumButton';
@@ -115,97 +115,16 @@ const Home = () => {
         navigate('/mentors');
     };
 
-    if (isAuthenticated) {
-        return (
-            <div className="min-h-screen pt-28 pb-20 px-4 bg-[#050505] overflow-x-hidden">
-                <div className="max-w-6xl mx-auto">
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={containerVariants}
-                        className="space-y-12"
-                    >
-                        {/* Welcome Header */}
-                        <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-8 p-8 md:p-12 rounded-[40px] glass-panel border border-white/5 relative overflow-hidden group">
-                            {/* Background Glow */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-[100px] pointer-events-none transition-transform duration-1000 group-hover:bg-gold/10 group-hover:scale-125" />
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-[100px] pointer-events-none" />
-
-                            <div className="relative z-10">
-                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gold text-[10px] font-black uppercase tracking-[3px] mb-6 shadow-sm">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    {userRole === 'teacher' ? t('home_auth.badge_teacher') : t('home_auth.badge_student')}
-                                </div>
-                                <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white mb-2">
-                                    {t('home_auth.greeting', { name: currentUser?.displayName?.split(' ')[0] })}
-                                </h1>
-                                <p className="text-[#8b8982] text-lg font-medium max-w-xl">
-                                    {userRole === 'teacher' ? t('home_auth.desc_teacher') : t('home_auth.desc_student')}
-                                </p>
-                            </div>
-                            <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10">
-                                <PremiumButton onClick={() => navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard')} variant="gold" size="lg" className="w-full sm:w-auto shadow-2xl shadow-gold/20">
-                                    {t('home_auth.go_dashboard')} <ChevronRight size={18} />
-                                </PremiumButton>
-                                {userRole === 'student' && (
-                                    <PremiumButton onClick={handleFindTeacher} variant="outline" size="lg" className="w-full sm:w-auto text-white">
-                                        {t('home_auth.find_mentor')}
-                                    </PremiumButton>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* Real Stats Grid */}
-                        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {userRole === 'teacher' ? (
-                                <>
-                                    <DashboardCard title={t('home_auth.stat_students')} value={userData?.studentsCount || 0} icon={Users} color="bg-blue-500" subtitle={t('home_auth.stat_students_sub')} />
-                                    <DashboardCard title={t('home_auth.stat_pending')} value={realStats.pendingBookings} icon={Calendar} color="bg-orange-500" subtitle={t('home_auth.stat_pending_sub')} />
-                                    <DashboardCard title={t('home_auth.stat_balance')} value={`${userData?.balance || 0} €`} icon={WalletIcon} color="bg-emerald-500" subtitle={t('home_auth.stat_balance_sub')} />
-                                    <DashboardCard title={t('home_auth.stat_rating')} value={realStats.teacherRating} icon={Star} color="bg-gold" subtitle={t('home_auth.stat_rating_sub')} />
-                                </>
-                            ) : (
-                                <>
-                                    <DashboardCard title={t('home_auth.stat_level')} value={`LVL ${userData?.level || 1}`} icon={TrendingUp} color="bg-gold" subtitle={t('home_auth.stat_level_sub')} />
-                                    <DashboardCard title={t('home_auth.stat_streak')} value={`${userData?.streak || 0} ${t('home_auth.stat_streak_sub').split(' ').pop()}`} icon={Zap} color="bg-orange-500" subtitle={t('home_auth.stat_streak_sub')} />
-                                    <DashboardCard title={t('home_auth.stat_completed')} value={realStats.studentCompletedClasses} icon={Award} color="bg-emerald-500" subtitle={t('home_auth.stat_completed_sub')} />
-                                    <DashboardCard title={t('home_auth.stat_upcoming')} value={realStats.pendingBookings} icon={Calendar} color="bg-blue-500" subtitle={t('home_auth.stat_upcoming_sub')} />
-                                </>
-                            )}
-                        </motion.div>
-
-                        {/* Direct Tools */}
-                        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="glass-panel p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer group" onClick={() => navigate(userRole === 'teacher' ? '/dashboard' : '/mentors')}>
-                                <div className="w-16 h-16 rounded-2xl bg-white/5 text-white flex items-center justify-center mb-6 group-hover:scale-110 group-hover:text-gold transition-all">
-                                    <BookOpen size={32} />
-                                </div>
-                                <h3 className="text-2xl font-black text-white mb-2">{t('home_auth.communications')}</h3>
-                                <p className="text-[#8b8982]">{t('home_auth.communications_desc')}</p>
-                            </div>
-
-                            <div className="glass-panel p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer group" onClick={() => navigate('/wallet')}>
-                                <div className="w-16 h-16 rounded-2xl bg-white/5 text-white flex items-center justify-center mb-6 group-hover:scale-110 group-hover:text-gold transition-all">
-                                    <WalletIcon size={32} />
-                                </div>
-                                <h3 className="text-2xl font-black text-white mb-2">{t('home_auth.finances')}</h3>
-                                <p className="text-[#8b8982]">
-                                    {userRole === 'teacher' ? t('home_auth.finances_desc_teacher') : t('home_auth.finances_desc_student')}
-                                </p>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                </div>
-            </div>
-        );
-    }
+    // Authenticated users are redirected from "/" to their dashboards in App.tsx
+    // This page only serves as the public marketing landing page.
 
     return (
         <div className="relative min-h-screen bg-[#050505] overflow-x-hidden">
-            {/* Background Minimal Elements */}
-            <div className="absolute top-0 inset-x-0 h-screen pointer-events-none select-none">
-                <div className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-gold/5 rounded-full blur-[150px] animate-pulse" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[150px]" />
+            {/* Liquid Glass Background Blobs */}
+            <div className="absolute top-0 inset-x-0 h-screen pointer-events-none select-none overflow-hidden">
+                <div className="absolute top-[-15%] right-[-10%] w-[55%] h-[55%] bg-gradient-to-br from-gold/8 to-amber-600/5 animate-liquid-morph blur-[120px]" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[45%] h-[45%] bg-gradient-to-tr from-violet-500/6 to-blue-500/4 animate-liquid-morph blur-[120px]" style={{ animationDelay: '-5s' }} />
+                <div className="absolute top-[30%] left-[40%] w-[30%] h-[30%] bg-gradient-to-r from-emerald-500/4 to-cyan-500/3 animate-liquid-morph blur-[100px]" style={{ animationDelay: '-10s' }} />
             </div>
 
             <div className="relative pt-32 pb-24 px-4">
@@ -215,8 +134,8 @@ const Home = () => {
                     variants={containerVariants}
                     className="max-w-4xl mx-auto text-center relative z-10"
                 >
-                    <motion.div variants={itemVariants} className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-gold text-[10px] font-black uppercase tracking-[5.5px] mb-10 backdrop-blur-md shadow-xl">
-                        <Sparkles size={16} /> {t('hero.badge')}
+                    <motion.div variants={itemVariants} className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full liquid-glass-subtle liquid-shimmer text-gold text-[10px] font-black uppercase tracking-[5.5px] mb-10 shadow-xl">
+                        <Sparkles size={16} className="relative z-10" /> <span className="relative z-10">{t('hero.badge')}</span>
                     </motion.div>
 
                     <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl lg:text-[110px] font-black tracking-tighter text-white mb-10 leading-[0.9]">
@@ -237,46 +156,50 @@ const Home = () => {
                         </PremiumButton>
                     </motion.div>
 
-                    {/* Stats Bar */}
-                    <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-10 md:gap-20 mt-16 pt-12 border-t border-white/5">
-                        <div>
-                            <div className="text-4xl font-black text-white">{stats.users}+</div>
-                            <div className="text-[10px] text-white/40 uppercase font-bold tracking-[3px] mt-2">{t('stats.users')}</div>
+                    {/* Stats Bar — Liquid Glass Cards */}
+                    <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4 md:gap-6 mt-16 pt-12 border-t border-white/5 max-w-2xl mx-auto">
+                        <div className="liquid-glass-subtle rounded-2xl p-4 md:p-6 text-center">
+                            <div className="text-3xl md:text-4xl font-black text-white">{stats.users}+</div>
+                            <div className="text-[9px] md:text-[10px] text-white/40 uppercase font-bold tracking-[3px] mt-2">{t('stats.users')}</div>
                         </div>
-                        <div>
-                            <div className="text-4xl font-black text-gold">{stats.teachers}+</div>
-                            <div className="text-[10px] text-white/40 uppercase font-bold tracking-[3px] mt-2">{t('stats.teachers')}</div>
+                        <div className="liquid-glass-subtle rounded-2xl p-4 md:p-6 text-center liquid-glow">
+                            <div className="text-3xl md:text-4xl font-black text-gold">{stats.teachers}+</div>
+                            <div className="text-[9px] md:text-[10px] text-white/40 uppercase font-bold tracking-[3px] mt-2">{t('stats.teachers')}</div>
                         </div>
-                        <div>
-                            <div className="text-4xl font-black text-white">{stats.requests}+</div>
-                            <div className="text-[10px] text-white/40 uppercase font-bold tracking-[3px] mt-2">{t('stats.matches')}</div>
+                        <div className="liquid-glass-subtle rounded-2xl p-4 md:p-6 text-center">
+                            <div className="text-3xl md:text-4xl font-black text-white">{stats.requests}+</div>
+                            <div className="text-[9px] md:text-[10px] text-white/40 uppercase font-bold tracking-[3px] mt-2">{t('stats.matches')}</div>
                         </div>
                     </motion.div>
                 </motion.div>
             </div>
 
             {/* Features (Minimalist Grid) */}
-            <div className="py-20 px-4 bg-white/[0.01] border-y border-white/5 relative z-10">
+            <div className="py-24 px-4 relative z-10">
+                {/* Subtle glass divider */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-20 max-w-2xl mx-auto">
-                        <span className="text-gold font-black text-[11px] tracking-[5px] uppercase mb-5 block">{t('features.section_label')}</span>
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass-subtle text-gold font-black text-[11px] tracking-[5px] uppercase mb-6">{t('features.section_label')}</span>
                         <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">{t('features.section_title')}</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <FeatureCard icon={Monitor} title={t('features.classroom.title')} description={t('features.classroom.desc')} delay="0.1s" />
-                        <FeatureCard icon={Zap} title={t('features.fast_match.title')} description={t('features.fast_match.desc')} delay="0.2s" />
-                        <FeatureCard icon={Globe} title={t('features.wallet.title')} description={t('features.wallet.desc')} delay="0.3s" />
-                        <FeatureCard icon={LayoutDashboard} title={t('features.data.title')} description={t('features.data.desc')} delay="0.4s" />
-                        <FeatureCard icon={ShieldCheck} title={t('features.verified.title')} description={t('features.verified.desc')} delay="0.5s" />
+                        <FeatureCard icon={Users} title={t('features.fast_match.title')} description={t('features.fast_match.desc')} delay="0.2s" />
+                        <FeatureCard icon={Box} title={t('features.wallet.title')} description={t('features.wallet.desc')} delay="0.3s" />
+                        <FeatureCard icon={TrendingUp} title={t('features.data.title')} description={t('features.data.desc')} delay="0.4s" />
+                        <FeatureCard icon={MessageCircle} title={t('features.verified.title')} description={t('features.verified.desc')} delay="0.5s" />
                         <FeatureCard icon={Sparkles} title={t('features.dark_glass.title')} description={t('features.dark_glass.desc')} delay="0.6s" />
                     </div>
                 </div>
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </div>
 
             {/* Final CTA */}
-            <div className="py-32 px-4 text-center relative overflow-hidden bg-gradient-to-b from-transparent to-black">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/5 rounded-full blur-[150px] pointer-events-none" />
+            <div className="py-32 px-4 text-center relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-gold/8 to-amber-500/5 animate-liquid-morph blur-[120px] pointer-events-none" />
+                <div className="absolute top-[30%] right-[20%] w-[200px] h-[200px] bg-violet-500/5 animate-liquid-morph blur-[80px] pointer-events-none" style={{ animationDelay: '-7s' }} />
 
                 <motion.div
                     initial="hidden"
@@ -289,15 +212,15 @@ const Home = () => {
                         {t('cta_footer.title_line1')} <br /> <span className="text-gold italic uppercase">{t('cta_footer.title_line2')}</span>
                     </motion.h2>
                     <motion.div variants={itemVariants}>
-                        <PremiumButton onClick={handleFindTeacher} size="xl" className="shadow-2xl shadow-gold/30">
-                            {t('cta_footer.button')} <ChevronRight size={24} className="ml-2" />
+                        <PremiumButton onClick={handleFindTeacher} size="xl" className="shadow-2xl shadow-gold/30 liquid-shimmer">
+                            <span className="relative z-10 flex items-center gap-2">{t('cta_footer.button')} <ChevronRight size={24} /></span>
                         </PremiumButton>
                     </motion.div>
                 </motion.div>
             </div>
 
             {/* Footer */}
-            <footer className="border-t border-white/5 bg-black/50 backdrop-blur-sm relative z-10">
+            <footer className="liquid-glass-dark border-t-0 relative z-10">
                 <div className="max-w-6xl mx-auto px-4 py-12">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                         {/* Logo + Copyright */}

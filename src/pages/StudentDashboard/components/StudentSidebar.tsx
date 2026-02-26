@@ -13,7 +13,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ nextClass, myHom
     return (
         <div className="space-y-6">
             {/* Next Class */}
-            <div className="glass-panel p-6 rounded-3xl bg-gradient-to-br from-[#1b1a17] to-green-900/10 border-green-500/20 relative overflow-hidden">
+            <div className="liquid-glass p-6 rounded-3xl liquid-glow overflow-hidden shadow-[0_0_30px_rgba(74,222,128,0.1)]">
                 <h3 className="font-bold text-white mb-6 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-green-500/10">
                         <Target className="text-green-400" size={18} />
@@ -24,8 +24,8 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ nextClass, myHom
                     <div className="text-center py-4">
                         <p className="text-4xl font-bold text-white mb-1 tracking-tighter">{nextClass.time}</p>
                         <p className="text-xs text-green-400 font-mono mb-8 uppercase tracking-widest">{nextClass.date}</p>
-                        <Link to={nextClass.meetingLink} className="w-full bg-green-500 hover:bg-green-400 text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all block text-center">
-                            Entrar al Aula
+                        <Link to={nextClass.meetingLink} className="w-full bg-green-500 hover:bg-green-400 text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all block text-center shadow-lg shadow-green-500/20 liquid-shimmer">
+                            <span className="relative z-10">Entrar al Aula</span>
                         </Link>
                     </div>
                 ) : (
@@ -34,7 +34,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ nextClass, myHom
             </div>
 
             {/* Homework Section */}
-            <div className="glass-panel p-6 rounded-3xl border-white/5 relative overflow-hidden group">
+            <div className="liquid-glass-subtle p-6 rounded-3xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all"></div>
                 <h3 className="font-bold text-white mb-6 flex items-center gap-3 relative z-10">
                     <div className="p-2 rounded-lg bg-blue-500/10">
@@ -69,7 +69,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({ nextClass, myHom
             </div>
 
             {/* Pending */}
-            <div className="glass-panel p-6 rounded-3xl border-white/5">
+            <div className="liquid-glass-subtle p-6 rounded-3xl">
                 <h3 className="font-bold text-white mb-6 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-blue-500/10">
                         <Clock className="text-blue-400" size={18} />

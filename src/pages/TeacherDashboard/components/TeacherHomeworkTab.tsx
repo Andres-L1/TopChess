@@ -23,9 +23,9 @@ const TeacherHomeworkTab: React.FC<TeacherHomeworkTabProps> = ({
                 <h2 className="text-xl font-bold text-white">Tareas Asignadas</h2>
                 <button
                     onClick={() => setIsHomeworkModalOpen(true)}
-                    className="bg-gold hover:bg-white text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-gold/10"
+                    className="btn-primary px-4 py-2 rounded-xl text-xs liquid-shimmer"
                 >
-                    + Nueva Tarea
+                    <span className="relative z-10">+ Nueva Tarea</span>
                 </button>
             </div>
 
@@ -36,7 +36,7 @@ const TeacherHomeworkTab: React.FC<TeacherHomeworkTabProps> = ({
                     </div>
                 ) : (
                     homeworks.map(hw => (
-                        <div key={hw.id} className="glass-panel p-5 rounded-2xl border border-white/5 hover:border-gold/20 transition-all group relative overflow-hidden">
+                        <div key={hw.id} className="liquid-glass-subtle p-5 rounded-2xl border border-white/5 hover:border-gold/20 transition-all group relative overflow-hidden">
                             <div className={`absolute top-0 right-0 w-16 h-16 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 ${hw.status === 'completed' ? 'bg-green-500/20' : 'bg-gold/10'}`}></div>
 
                             <div className="flex justify-between items-start mb-3">

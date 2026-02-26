@@ -37,7 +37,7 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
     if (!club && teacherProfile?.role !== 'club_director') {
         return (
             <div className="max-w-2xl mx-auto py-12 text-center animate-enter">
-                <div className="bg-gradient-to-br from-gold/20 to-transparent p-8 rounded-3xl border border-gold/20 shadow-2xl relative overflow-hidden group">
+                <div className="liquid-glass p-8 rounded-3xl border-gold/20 shadow-2xl relative overflow-hidden group liquid-glow-intense">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
                     <MapIcon size={48} className="text-gold mx-auto mb-6 group-hover:scale-110 transition-transform" />
                     <h2 className="text-3xl font-black text-white mb-4 tracking-tight">Escala tu Academia</h2>
@@ -47,15 +47,15 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
                     <button
                         onClick={() => setShowClubNameModal?.(true)}
                         disabled={isCreatingClub}
-                        className="btn-primary px-8 py-4"
+                        className="btn-primary px-8 py-4 liquid-shimmer"
                     >
-                        {isCreatingClub ? 'Creando...' : 'Crear mi Club'}
+                        <span className="relative z-10">{isCreatingClub ? 'Creando...' : 'Crear mi Club'}</span>
                     </button>
 
                     {/* Club Name Modal */}
                     {showClubNameModal && (
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowClubNameModal?.(false)}>
-                            <div className="bg-[#1b1a17] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl p-8" onClick={e => e.stopPropagation()}>
+                            <div className="liquid-glass-dark w-full max-w-md rounded-2xl border-white/10 shadow-2xl p-8" onClick={e => e.stopPropagation()}>
                                 <h3 className="text-xl font-bold text-white mb-2">Nombre de tu Club</h3>
                                 <p className="text-sm text-white/40 mb-6">Elige un nombre para tu academia de ajedrez.</p>
                                 <input
@@ -77,9 +77,9 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
                                     <button
                                         onClick={() => handleCreateClub(clubNameInput)}
                                         disabled={!clubNameInput.trim() || isCreatingClub}
-                                        className="flex-1 btn-primary py-3"
+                                        className="flex-1 btn-primary py-3 liquid-shimmer"
                                     >
-                                        {isCreatingClub ? 'Creando...' : 'Crear Club'}
+                                        <span className="relative z-10">{isCreatingClub ? 'Creando...' : 'Crear Club'}</span>
                                     </button>
                                 </div>
                             </div>
@@ -94,7 +94,7 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
 
     return (
         <div className="space-y-6 animate-enter">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#1b1a17] p-6 rounded-2xl border border-white/5 shadow-xl">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 liquid-glass-subtle p-6 rounded-2xl shadow-xl">
                 <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-gold/10 flex items-center justify-center border border-gold/20">
                         <Trophy className="text-gold" size={32} />
@@ -117,7 +117,7 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="glass-panel p-6 rounded-2xl border border-white/5">
+                    <div className="liquid-glass p-6 rounded-2xl">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold flex items-center gap-2">
                                 <Users size={20} className="text-gold" />
@@ -128,12 +128,15 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {clubTeachers.map((t: Teacher) => (
-                                <div key={t.id} className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-gold/20 transition-all flex items-center gap-4">
-                                    <img
-                                        src={t.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=333&color=fff`}
-                                        className="w-10 h-10 rounded-lg object-cover"
-                                        alt={t.name}
-                                    />
+                                <div key={t.id} className="p-4 rounded-xl liquid-glass-subtle border border-white/5 hover:border-gold/20 transition-all flex items-center gap-4 group">
+                                    <div className="relative">
+                                        <img
+                                            src={t.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=333&color=fff`}
+                                            className="w-10 h-10 rounded-lg object-cover border-2 border-white/10"
+                                            alt={t.name}
+                                        />
+                                        <div className="absolute inset-0 rounded-lg border border-white/10 pointer-events-none group-hover:border-gold/30" />
+                                    </div>
                                     <div className="flex-grow min-w-0">
                                         <h4 className="font-bold text-sm text-white truncate">{t.name}</h4>
                                         <p className="text-[10px] text-text-muted uppercase tracking-widest">{t.title || 'Instructor'}</p>
@@ -146,7 +149,7 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
                 </div>
 
                 <div className="space-y-6">
-                    <div className="glass-panel p-6 rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/5 to-transparent">
+                    <div className="liquid-glass p-6 rounded-2xl border-gold/20 liquid-glow">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                             <Plus size={20} className="text-gold" />
                             Invitar Profesor
@@ -164,9 +167,9 @@ const TeacherClubTab: React.FC<TeacherClubTabProps> = ({
                             <button
                                 type="submit"
                                 disabled={isInviting || !inviteEmail}
-                                className="btn-primary w-full py-3"
+                                className="btn-primary w-full py-3 liquid-shimmer"
                             >
-                                {isInviting ? 'Invitando...' : 'Añadir al Club'}
+                                <span className="relative z-10">{isInviting ? 'Invitando...' : 'Añadir al Club'}</span>
                             </button>
                         </form>
                     </div>

@@ -11,7 +11,7 @@ const TeacherScheduleTab: React.FC<TeacherScheduleTabProps> = ({
     handleSaveAvailability
 }) => {
     return (
-        <div className="glass-panel p-4 md:p-6 rounded-2xl animate-enter overflow-x-auto">
+        <div className="liquid-glass p-4 md:p-8 rounded-3xl min-h-[500px] animate-enter overflow-x-auto">
             <div className="min-w-[600px] md:min-w-0">
                 <Calendar
                     mode="edit"

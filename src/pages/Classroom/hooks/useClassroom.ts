@@ -70,12 +70,17 @@ export const useClassroom = (teacherId: string | undefined) => {
                 const profile = await firebaseService.getTeacherById(teacherId);
                 setTeacherProfile(profile);
 
-                const uid1 = userRole === 'student' ? currentUserId : teacherId;
-                const uid2 = userRole === 'student' ? teacherId : currentUserId;
-
-                unsubChat = firebaseService.subscribeToChat(uid1, uid2, (msgs) => {
-                    setMessages(msgs);
-                });
+                // Teacher: subscribe to ALL messages in their room (all students)
+                // Student: subscribe to their 1-on-1 channel with the teacher
+                if (userRole === 'teacher') {
+                    unsubChat = firebaseService.subscribeToRoomChat(teacherId, (msgs) => {
+                        setMessages(msgs);
+                    });
+                } else {
+                    unsubChat = firebaseService.subscribeToChat(currentUserId, teacherId, (msgs) => {
+                        setMessages(msgs);
+                    });
+                }
 
                 unsubRoom = firebaseService.subscribeToRoom(teacherId, (data) => {
                     if (data) {
@@ -120,7 +125,10 @@ export const useClassroom = (teacherId: string | undefined) => {
         if (!text.trim() || !teacherId) return;
         try {
             const msg: Omit<Message, 'id'> = {
-                studentId: userRole === 'student' ? currentUserId : teacherId,
+                // studentId is always the non-teacher participant
+                // When teacher sends: studentId = 'teacher-broadcast', teacherId = currentUserId
+                // When student sends: studentId = currentUserId, teacherId = teacherId from URL
+                studentId: userRole === 'student' ? currentUserId : (roomData?.currentStudentId || 'room'),
                 teacherId: userRole === 'student' ? teacherId : currentUserId,
                 text,
                 sender: (userRole || 'student') as 'student' | 'teacher' | 'admin',
@@ -132,7 +140,7 @@ export const useClassroom = (teacherId: string | undefined) => {
             console.error("Error sending message:", error);
             toast.error("Error al enviar mensaje");
         }
-    }, [currentUserId, teacherId, userRole]);
+    }, [currentUserId, teacherId, userRole, roomData]);
 
     const handleGameStateChange = useCallback((newState: GameState) => {
         setGameState(newState);
@@ -181,8 +189,8 @@ export const useClassroom = (teacherId: string | undefined) => {
                 fen: game.fen(),
                 history: game.history(),
                 lastMove: null,
-                currentIndex: Math.max(0, game.history().length - 1),
-                comment: game.getComment() || "",
+                currentIndex: -1,
+                comment: "",
                 comments: extractedComments
             });
         } catch (error) {
@@ -269,14 +277,6 @@ export const useClassroom = (teacherId: string | undefined) => {
     const exportCurrentState = useCallback(() => {
         try {
             const game = new ChessJS();
-            if (gameState.fen !== 'start' && gameState.history.length === 0) {
-                game.load(gameState.fen);
-            } else {
-                for (const move of gameState.history) {
-                    game.move(move);
-                }
-            }
-
             game.reset();
             if (comments[-1]) { game.setComment(typeof comments[-1] === 'string' ? comments[-1] : (comments[-1] as any).text); }
             for (let i = 0; i < gameState.history.length; i++) {

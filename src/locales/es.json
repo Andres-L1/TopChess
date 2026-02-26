@@ -8,21 +8,21 @@
         "login": "Iniciar Sesión",
         "test_student": "Test Alumno",
         "test_teacher": "Test Profesor",
-        "panel": "Mi Panel",
+        "panel": "Mi Sala",
         "admin": "Admin",
         "profile": "Mi Perfil",
         "logout": "Cerrar Sesión",
         "exit": "Salir"
     },
     "hero": {
-        "badge": "Una Red Exclusiva",
-        "title_line1": "TU VERDADERO",
-        "title_line2": "POTENCIAL",
-        "description": "Una plataforma minimalista diseñada exclusivamente para conectar a grandes maestros del ajedrez con aspirantes a la maestría. Sin distracciones, solo crecimiento real.",
-        "cta_start": "INICIAR AHORA",
+        "badge": "El Metaverso del Ajedrez",
+        "title_line1": "TU PROPIA",
+        "title_line2": "ACADEMIA VIRTUAL",
+        "description": "Explora el primer metaverso isométrico de ajedrez. Crea tu avatar pixel-art, decora tu sala y aprende de grandes maestros en tiempo real dentro del juego.",
+        "cta_start": "CREAR AVATAR",
         "cta_teach": "SOY PROFESOR",
-        "cta_find": "Encontrar Mentor",
-        "cta_dashboard": "Mi Panel"
+        "cta_find": "Explorar Mundo",
+        "cta_dashboard": "Mi Sala"
     },
     "stats": {
         "users": "Usuarios",
@@ -30,37 +30,37 @@
         "matches": "Matchs Exitosos"
     },
     "features": {
-        "section_label": "Características",
-        "section_title": "LO CRUCIAL, NADA MÁS",
+        "section_label": "Explora",
+        "section_title": "UN MUNDO VIVO",
         "classroom": {
-            "title": "AULA INTEGRADA",
-            "desc": "Tablero de alto rendimiento con PGN, evaluación stockfish y audio P2P bajo WebRTC en una misma vista."
+            "title": "AULAS VIRTUALES",
+            "desc": "Salas isométricas interactivas. Entra físicamente al aula de tu profesor para recibir clase con tablero y videollamada HD."
         },
         "fast_match": {
-            "title": "FAST MATCH",
-            "desc": "Sistema de emparejamiento automático por IA que cruza tu estilo con los instructores verificados."
+            "title": "AVATARES PIXEL-ART",
+            "desc": "Crea y personaliza tu propio avatar. Muestra tu ELO y estatus con accesorios únicos que te identifiquen."
         },
         "wallet": {
-            "title": "BILLETERA GLOBAL",
-            "desc": "Transfiere y paga en cualquier divisa gracias a la potencia de Stripe integrado."
+            "title": "MUEBLES INTERACTIVOS",
+            "desc": "Paga suscripciones, reserva clases o revisa tareas interactuando directamente con los objetos 3D de cada sala."
         },
         "data": {
-            "title": "DATOS REALES",
-            "desc": "Control completo sobre tu progreso, asertividad (ELO) e historial de clases."
+            "title": "PROGRESO TANGIBLE",
+            "desc": "Comienza en un cuarto humilde y mejora tus instalaciones según aumentas tu ELO o tus ingresos como profesor."
         },
         "verified": {
-            "title": "RIGUROSIDAD",
-            "desc": "Verificación manual de Maestros FIDE/Nacionales para garantizar la calidad."
+            "title": "CHAT ESPACIAL",
+            "desc": "Comunícate instantáneamente con otros jugadores en tu misma sala virtual a través de burbujas flotantes."
         },
         "dark_glass": {
-            "title": "DARK GLASS",
-            "desc": "Estética premium oscura y limpia diseñada para reducir la fatiga visual."
+            "title": "ESTADO DEL ARTE",
+            "desc": "Todo el metaverso está recubierto con nuestro aclamado motor visual liquid-glass UI oscuro, suave y de bajo impacto visual."
         }
     },
     "cta_footer": {
-        "title_line1": "EL TABLERO",
+        "title_line1": "TU SALA",
         "title_line2": "TE ESPERA",
-        "button": "ENTRAR EMPAREJAMIENTO"
+        "button": "ENTRAR AL MUNDO"
     },
     "home_auth": {
         "badge_teacher": "Instructor Verificado",
@@ -114,8 +114,8 @@
     },
     "mobile_nav": {
         "home": "Inicio",
-        "mentors": "Mentores",
-        "panel": "Panel",
+        "mentors": "Mundo",
+        "panel": "Mi Sala",
         "profile": "Perfil",
         "menu": "Menú"
     },

@@ -135,6 +135,15 @@ export interface GameState {
     currentIndex?: number;
 }
 
+export interface AvatarConfig {
+    skinColor: string;
+    hairColor: string;
+    hairStyle: string; // e.g. 'short', 'long', 'spiky', 'bald'
+    shirtColor: string;
+    pantsColor: string;
+    shoesColor: string;
+}
+
 export interface AppUser {
     id: string;
     email: string;
@@ -159,6 +168,8 @@ export interface AppUser {
     balance?: number;
     level?: number;
     streak?: number;
+    // Metaverse
+    avatar?: AvatarConfig;
 }
 
 export interface AppNotification {

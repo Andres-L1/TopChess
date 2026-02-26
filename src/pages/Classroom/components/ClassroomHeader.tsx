@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Mic, MicOff, RotateCcw } from 'lucide-react';
+import { LogOut, Mic, MicOff, RotateCcw, Loader2 } from 'lucide-react';
 import Logo from '../../../components/Logo';
 import toast from 'react-hot-toast';
 
@@ -30,7 +30,7 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
     const navigate = useNavigate();
 
     return (
-        <header className="flex-none h-14 md:h-20 bg-black/40 backdrop-blur-xl border-b border-white/5 px-4 md:px-6 flex items-center justify-between relative z-50">
+        <header className="flex-none h-14 md:h-16 liquid-glass-dark border-b-0 px-4 md:px-6 flex items-center justify-between relative z-50">
             <div className="flex items-center gap-4 md:gap-8">
                 <div onClick={() => navigate('/')} className="cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="md:hidden">
@@ -69,7 +69,9 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
                     >
                         {isAudioEnabled && isConnected
                             ? (isMuted ? <MicOff size={14} /> : <Mic size={14} />)
-                            : <MicOff size={14} />
+                            : isAudioEnabled && !isConnected
+                                ? <Loader2 size={14} className="animate-spin" />
+                                : <MicOff size={14} />
                         }
                         <span className="hidden md:inline">
                             {!isAudioEnabled ? 'Activar Audio' : (isConnected ? (isMuted ? 'Unmute' : 'Mute') : 'Conectando...')}

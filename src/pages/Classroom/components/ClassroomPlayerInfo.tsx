@@ -6,20 +6,50 @@ import Skeleton from '../../../components/Skeleton';
 interface ClassroomPlayerInfoProps {
     type: 'top' | 'bottom';
     teacherProfile?: Teacher | null;
-    currentUserId?: string;
+    // bottom player — real user info
+    displayName?: string;
+    photoURL?: string;
+    userRole?: string;
+    elapsedSeconds?: number;
 }
+
+/** Format seconds as MM:SS */
+const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+};
 
 const ClassroomPlayerInfo: React.FC<ClassroomPlayerInfoProps> = ({
     type,
     teacherProfile,
-    currentUserId
+    displayName,
+    photoURL,
+    userRole,
+    elapsedSeconds = 0,
 }) => {
+    const timeStr = formatTime(elapsedSeconds);
+    const isTeacher = userRole === 'teacher';
+
     if (type === 'top') {
+        // When the logged-in user IS the teacher, top card = student placeholder (or vice versa)
+        // When the logged-in user IS a student, top card = teacher
         return (
-            <div className="flex items-center justify-between px-3 py-1.5 md:px-4 md:py-2 bg-[#1b1a17]/80 rounded-lg border border-white/5 backdrop-blur-sm shadow-xl">
+            <div className="flex items-center justify-between px-3 py-1.5 md:px-4 md:py-2 liquid-glass-subtle rounded-xl shadow-xl">
                 <div className="flex items-center gap-2 md:gap-4">
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-gold/10 border border-gold/20 flex items-center justify-center">
-                        <Trophy size={12} className="text-gold md:w-4 md:h-4" />
+                    <div className="relative">
+                        {!teacherProfile ? (
+                            <Skeleton width={56} height={56} className="rounded-2xl" />
+                        ) : (
+                            <img
+                                src={teacherProfile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherProfile.name)}&background=random`}
+                                alt={teacherProfile.name}
+                                className="w-14 h-14 rounded-2xl object-cover border-2 border-white/10 shadow-2xl"
+                            />
+                        )}
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center backdrop-blur-md">
+                            <Trophy size={12} className="text-gold" />
+                        </div>
                     </div>
                     <div className="flex flex-col gap-0.5 md:gap-1">
                         {!teacherProfile ? (
@@ -49,28 +79,49 @@ const ClassroomPlayerInfo: React.FC<ClassroomPlayerInfoProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 px-2 py-0.5 md:px-3 md:py-1 bg-black/40 rounded border border-white/5">
-                        <Clock size={10} className="text-white/20 md:w-3 md:h-3" />
-                        <span className="text-xs md:text-sm font-mono text-white/90">00:00</span>
-                    </div>
+                {/* Class timer (top) */}
+                <div className="flex items-center gap-2 px-2 py-0.5 md:px-3 md:py-1 bg-black/40 rounded border border-white/5 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+                    <Clock size={10} className="text-white/20 md:w-3 md:h-3 relative z-10" />
+                    <span className="text-xs md:text-sm font-mono text-white/90 relative z-10">{timeStr}</span>
                 </div>
             </div>
         );
     }
 
+    // Bottom = "Tú"
+    const initials = displayName
+        ? displayName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
+        : '?';
+
     return (
-        <div className="flex items-center justify-between px-3 py-1.5 md:px-4 md:py-2 bg-[#1b1a17]/80 rounded-lg border border-white/5 backdrop-blur-sm shadow-xl mt-1 md:mt-0">
+        <div className="flex items-center justify-between px-3 py-1.5 md:px-4 md:py-2 liquid-glass-subtle rounded-xl shadow-xl mt-1 md:mt-0">
             <div className="flex items-center gap-2 md:gap-4">
-                <div className="w-6 h-6 md:w-8 md:h-8 rounded bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                    <span className="text-[9px] md:text-[10px] font-black text-green-500 uppercase">
-                        {currentUserId?.substring(0, 2)}
-                    </span>
+                <div className="relative">
+                    {photoURL ? (
+                        <img
+                            src={photoURL}
+                            alt={displayName || 'Tú'}
+                            className="w-10 h-10 md:w-14 md:h-14 rounded-2xl object-cover border-2 border-green-500/30 shadow-lg"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-green-500/10 border-2 border-green-500/20 flex items-center justify-center shadow-lg">
+                            <span className="text-xs md:text-lg font-black text-green-500 uppercase">{initials}</span>
+                        </div>
+                    )}
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#161512] shadow-sm" />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-tight">Tú</span>
-                        <span className="px-1 py-0.5 bg-green-500/20 text-green-400 text-[7px] md:text-[8px] rounded font-black tracking-widest border border-green-500/20">STUDENT</span>
+                        <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-tight">
+                            {displayName ? displayName.split(' ')[0] : 'Tú'}
+                        </span>
+                        <span className={`px-1 py-0.5 text-[7px] md:text-[8px] rounded font-black tracking-widest border shadow-sm ${isTeacher
+                            ? 'bg-gold/10 text-gold border-gold/20 shadow-[0_0_10px_rgba(212,175,55,0.1)]'
+                            : 'bg-green-500/10 text-green-400 border-green-500/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]'
+                            }`}>
+                            {isTeacher ? 'PROF.' : 'ALUMNO'}
+                        </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <Activity size={7} className="text-green-500 animate-pulse md:w-2 md:h-2" />
@@ -78,9 +129,11 @@ const ClassroomPlayerInfo: React.FC<ClassroomPlayerInfoProps> = ({
                     </div>
                 </div>
             </div>
-            <div className="flex items-center gap-2 px-2 py-0.5 md:px-3 md:py-1 bg-black/40 rounded border border-white/5">
-                <Clock size={10} className="text-white/10 md:w-3 md:h-3" />
-                <span className="text-xs md:text-sm font-mono text-white/90">00:00</span>
+            {/* Class timer (bottom) */}
+            <div className="flex items-center gap-2 px-2 py-0.5 md:px-3 md:py-1 bg-black/40 rounded border border-white/5 relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+                <Clock size={10} className="text-white/10 md:w-3 md:h-3 relative z-10" />
+                <span className="text-xs md:text-sm font-mono text-white/90 relative z-10">{timeStr}</span>
             </div>
         </div>
     );

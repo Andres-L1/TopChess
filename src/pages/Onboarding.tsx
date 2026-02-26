@@ -25,7 +25,7 @@ const Onboarding = () => {
 
     if (view === 'student_form') {
         return (
-            <div className="min-h-screen bg-[#161512] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
                 <button
                     onClick={() => setView('selection')}
                     className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2 z-10"
@@ -41,7 +41,7 @@ const Onboarding = () => {
 
     if (view === 'teacher_form') {
         return (
-            <div className="min-h-screen bg-[#161512] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
                 <button
                     onClick={() => setView('selection')}
                     className="fixed top-24 left-4 md:left-8 text-white/50 hover:text-white transition-colors flex items-center gap-2 z-10"
@@ -56,7 +56,11 @@ const Onboarding = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#161512] flex flex-col items-center justify-center p-4 text-center">
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 rounded-full blur-[120px] animate-liquid-morph" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px] animate-liquid-morph" style={{ animationDelay: '-5s' }} />
+            </div>
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 animate-fade-in">
                 Bienvenido a <span className="text-gold">TopChess</span>
             </h1>
@@ -68,7 +72,7 @@ const Onboarding = () => {
                 {/* Student Card */}
                 <button
                     onClick={() => setView('student_form')}
-                    className="group card-glass glass-panel-hover p-8 flex flex-col items-center gap-6 text-left relative overflow-hidden"
+                    className="group liquid-glass p-8 flex flex-col items-center gap-6 text-left relative overflow-hidden liquid-glow transition-all duration-500"
                 >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                         <GraduationCap size={120} />
@@ -91,7 +95,7 @@ const Onboarding = () => {
                 {/* Teacher Card */}
                 <button
                     onClick={() => setView('teacher_form')}
-                    className="group card-glass glass-panel-hover p-8 flex flex-col items-center gap-6 text-left relative overflow-hidden"
+                    className="group liquid-glass p-8 flex flex-col items-center gap-6 text-left relative overflow-hidden liquid-glow transition-all duration-500"
                 >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                         <User size={120} />

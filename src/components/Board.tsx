@@ -230,7 +230,8 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
         setFen(newFen);
         setLastMove(moveArr);
         setTurn(turnColor === 'white' ? 'w' : 'b');
-        setShapes([]);
+        // Only clear shapes for teachers (students keep the teacher's drawn shapes)
+        if (userRole === 'teacher') setShapes([]);
         setHistory(currentHistory);
         setFenHistory(currentFenHistory);
         setCurrentIndex(activeIdx);
@@ -294,16 +295,19 @@ const Board = forwardRef<BoardHandle, BoardProps>(({ teacherId, onGameStateChang
             });
         }
 
-        await firebaseService.updateRoom(teacherId, {
-            fen: newFen,
-            lastMove: moveArr || null,
-            orientation: orientation,
-            history: currentHistory,
-            fenHistory: currentFenHistory,
-            currentIndex: activeIdx,
-            shapes: newShapes,
-            comment: currentComment
-        });
+        // Only the teacher writes game state to Firestore
+        if (userRole === 'teacher') {
+            await firebaseService.updateRoom(teacherId, {
+                fen: newFen,
+                lastMove: moveArr || null,
+                orientation: orientation,
+                history: currentHistory,
+                fenHistory: currentFenHistory,
+                currentIndex: activeIdx,
+                shapes: newShapes,
+                comment: currentComment
+            });
+        }
     };
 
     // ── Sync with Remote Room Data (Prop based) ──────────────────────────

@@ -1,7 +1,4 @@
 import { db } from '../firebase';
-
-// Centralized admin email list — single source of truth
-const ADMIN_EMAILS = ['andreslgumuzio@gmail.com'];
 import {
     collection,
     doc,
@@ -30,6 +27,9 @@ import {
     AppNotification,
     Club
 } from '../types/index';
+
+// Centralized admin email list — single source of truth
+const ADMIN_EMAILS = ['andreslgumuzio@gmail.com'];
 
 const messagesRef = collection(db, 'messages');
 
@@ -599,20 +599,34 @@ export const firebaseService = {
     // --- CHAT & MESSAGING ---
     subscribeToChat(userId1: string, userId2: string, callback: (messages: Message[]) => void): () => void {
         const chatId = [userId1, userId2].sort().join('_');
-        // Retrieve max 100 recent messages
         const q = query(
             messagesRef,
             where("chatId", "==", chatId),
+            orderBy("timestamp", "asc"),
             limit(100)
         );
 
         return onSnapshot(q, (snapshot) => {
-            const messages = snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() } as Message))
-                .sort((a, b) => a.timestamp - b.timestamp);
+            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
             callback(messages);
         }, (error) => {
             console.warn("Chat subscription error:", error);
+        });
+    },
+
+    // Teacher's view: all messages in their room regardless of which student sent them
+    subscribeToRoomChat(teacherId: string, callback: (messages: Message[]) => void): () => void {
+        const q = query(
+            messagesRef,
+            where("teacherId", "==", teacherId),
+            orderBy("timestamp", "asc"),
+            limit(200)
+        );
+        return onSnapshot(q, (snapshot) => {
+            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+            callback(messages);
+        }, (error) => {
+            console.warn("Room chat subscription error:", error);
         });
     },
 
@@ -679,7 +693,8 @@ export const firebaseService = {
                 orientation: 'white',
                 history: [],
                 fenHistory: [],
-                currentIndex: 0,
+                currentIndex: -1,
+                lastMove: null,
                 shapes: [],
                 chapters: [],
                 activeChapterIndex: -1,

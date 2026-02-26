@@ -62,7 +62,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                 {isLoading ? (
                     <>
                         {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col justify-between">
+                            <div key={i} className="liquid-glass-subtle p-4 md:p-6 rounded-2xl flex flex-col justify-between">
                                 <Skeleton width="40%" height={20} />
                                 <Skeleton width="80%" height={40} />
                             </div>
@@ -70,7 +70,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                     </>
                 ) : (
                     <>
-                        <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all relative overflow-hidden">
+                        <div className="liquid-glass-subtle p-4 md:p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all relative overflow-hidden liquid-shimmer">
                             <div className="flex justify-between items-start relative z-10">
                                 <div className="p-3 rounded-xl bg-green-500/10 text-green-400 group-hover:scale-110 transition-transform">
                                     <DollarSign size={24} />
@@ -90,7 +90,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                             </div>
                         </div>
 
-                        <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all relative overflow-hidden">
+                        <div className="liquid-glass-subtle p-4 md:p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all relative overflow-hidden">
                             <div className="flex justify-between items-start relative z-10">
                                 <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
                                     <Users size={24} />
@@ -109,7 +109,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                             </div>
                         </div>
 
-                        <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all relative overflow-hidden">
+                        <div className="liquid-glass-subtle p-4 md:p-6 rounded-2xl flex flex-col justify-between group hover:border-gold/30 transition-all relative overflow-hidden">
                             <div className="flex justify-between items-start relative z-10">
                                 <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
                                     <Clock size={24} />
@@ -129,7 +129,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                         </div>
 
                         {/* Gamification Card */}
-                        <div className="glass-panel p-4 md:p-6 rounded-2xl bg-gradient-to-br from-dark-panel to-gold/5 border-gold/20 relative overflow-hidden">
+                        <div className="liquid-glass p-4 md:p-6 rounded-2xl relative overflow-hidden border-gold/40 liquid-glow-intense">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                             <div className="relative z-10">
                                 <div className="flex items-center gap-2 mb-2">
@@ -161,7 +161,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
 
             <div className="flex gap-6 flex-col lg:flex-row h-full">
                 {/* Requests Feed */}
-                <div className="flex-1 glass-panel rounded-2xl p-4 md:p-6 min-h-[400px]">
+                <div className="flex-1 liquid-glass rounded-2xl p-4 md:p-6 min-h-[400px]">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg md:text-xl font-bold text-white">{t('dashboard.pending_requests')}</h2>
                         {!isLoading && requests.length > 0 && <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-xs font-bold animate-pulse">{requests.length} nuevas</span>}
@@ -203,9 +203,9 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                             <div className="flex gap-2 w-full sm:w-auto">
                                                 <button
                                                     onClick={() => handleAcceptBooking(booking.id)}
-                                                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all shadow-lg shadow-blue-500/10"
+                                                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all shadow-lg shadow-blue-500/10 liquid-shimmer"
                                                 >
-                                                    Confirmar
+                                                    <span className="relative z-10">Confirmar</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleRejectBooking(booking.id)}
@@ -236,9 +236,9 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                             <div className="flex gap-2 w-full sm:w-auto">
                                                 <button
                                                     onClick={() => handleAcceptRequest(req.id)}
-                                                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-gold/10"
+                                                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-gold/10 liquid-shimmer"
                                                 >
-                                                    Aceptar
+                                                    <span className="relative z-10">Aceptar</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleRejectRequest(req.id)}
@@ -258,7 +258,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
 
                 {/* Quick Classroom Link */}
                 <div className="w-full lg:w-80 flex flex-col gap-6">
-                    <div className="glass-panel rounded-2xl p-4 md:p-6 flex flex-col gap-4">
+                    <div className="liquid-glass-subtle rounded-2xl p-4 md:p-6 flex flex-col gap-4">
                         <h2 className="text-lg md:text-xl font-bold text-white mb-2">{t('dashboard.quick_access')}</h2>
                         <Link to={`/classroom/${currentUserId}`} className="group relative overflow-hidden rounded-xl aspect-video bg-black flex items-center justify-center border border-white/10 hover:border-gold/50 transition-all">
                             <div className="absolute inset-0 bg-gradient-to-br from-dark-panel to-gold/20 opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
@@ -286,7 +286,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                     </div>
 
                     {/* Lichess Integration */}
-                    <div className="glass-panel rounded-2xl p-4 md:p-6 flex flex-col gap-4 bg-gradient-to-br from-[#1b1a17] to-white/[0.05]">
+                    <div className="liquid-glass-subtle rounded-2xl p-4 md:p-6 flex flex-col gap-4">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                                 <svg viewBox="0 0 448 512" className="w-5 h-5 fill-white opacity-80" xmlns="http://www.w3.org/2000/svg"><path d="M0 432L448 432 448 480 0 480 0 432zM334.8 191.1C355.7 154.5 354 116.3 328.7 87.7 296 50.8 238.2 46.2 199.1 77.5 167.3 103 154.7 146.4 167 182.8 123.6 211.5 96 261.2 96 317.9L96 384l256 0 0-66.2C352 268 332.1 224 334.8 191.1zM224 0C241.7 0 256 14.3 256 32 256 49.7 241.7 64 224 64 206.3 64 192 49.7 192 32 192 14.3 206.3 0 224 0z" /></svg>
@@ -332,7 +332,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                 </div>
 
                 {/* Active Students Section */}
-                <div className="flex-1 glass-panel rounded-2xl p-4 md:p-6 min-h-[400px]">
+                <div className="flex-1 liquid-glass rounded-2xl p-4 md:p-6 min-h-[400px]">
                     <h2 className="text-lg md:text-xl font-bold text-white mb-6">Mis Alumnos</h2>
                     <div className="space-y-4">
                         {isLoading ? (
@@ -355,8 +355,10 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
                                                     <h4 className="font-bold text-white text-sm">{student.name || 'Usuario'}</h4>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <span className="text-[9px] font-black text-white/30 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">ESTUDIANTE</span>
-                                                        <div className="w-1 h-1 rounded-full bg-green-500"></div>
-                                                        <span className="text-[9px] text-green-500/60 font-black uppercase tracking-widest">En línea</span>
+                                                        <div className={`w-1 h-1 rounded-full ${student.onlineStatus === 'online' ? 'bg-green-500' : 'bg-white/20'}`}></div>
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest ${student.onlineStatus === 'online' ? 'text-green-500/60' : 'text-white/30'}`}>
+                                                            {student.onlineStatus === 'online' ? 'En línea' : 'Desconectado'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -391,7 +393,7 @@ const TeacherOverviewTab: React.FC<TeacherOverviewTabProps> = ({
 
                 {/* Confirmed Classes Section */}
                 {confirmedBookings.length > 0 && (
-                    <div className="flex-1 glass-panel rounded-2xl p-4 md:p-6">
+                    <div className="flex-1 liquid-glass rounded-2xl p-4 md:p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-lg md:text-xl font-bold text-white">Clases Confirmadas</h2>
                             <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">{confirmedBookings.length} próximas</span>

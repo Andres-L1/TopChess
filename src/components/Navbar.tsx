@@ -97,7 +97,7 @@ const Navbar: React.FC = () => {
         <>
             <nav
                 className={`fixed top-0 left-0 right-0 h-16 z-[100] transition-all duration-500 border-b ${isScrolled || isMenuOpen
-                    ? 'bg-dark-bg/95 backdrop-blur-xl border-white/5 shadow-2xl'
+                    ? 'liquid-glass-dark border-b-0'
                     : 'bg-transparent border-transparent'}`}
             >
                 <div className="h-full px-6 flex items-center justify-between relative z-[101]">
@@ -128,9 +128,9 @@ const Navbar: React.FC = () => {
                                 <button
                                     onClick={handleLogin}
                                     disabled={isLoginLoading}
-                                    className="btn-primary"
+                                    className="btn-primary liquid-shimmer"
                                 >
-                                    {isLoginLoading ? '...' : t('nav.login')}
+                                    <span className="relative z-10">{isLoginLoading ? '...' : t('nav.login')}</span>
                                 </button>
                             </div>
                         ) : (
@@ -153,7 +153,7 @@ const Navbar: React.FC = () => {
 
                                     {/* Desktop Notifications Dropdown */}
                                     {showNotifications && (
-                                        <div className="absolute top-14 right-0 w-80 bg-stone-900 border border-white/5 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-3xl animate-enter">
+                                        <div className="absolute top-14 right-0 w-80 liquid-glass-dark border-white/10 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden animate-enter">
                                             <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                                                 <h3 className="font-bold text-sm text-white uppercase tracking-wider">{t('notifications.title')}</h3>
                                                 {unreadCount > 0 && (
@@ -239,7 +239,7 @@ const Navbar: React.FC = () => {
 
             {isMenuOpen && createPortal(
                 <div
-                    className={`fixed inset-0 z-[99] bg-dark-bg/95 backdrop-blur-xl transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+                    className={`fixed inset-0 z-[99] liquid-glass-dark border-0 transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
                         }`}
                 >
                     <div className="absolute top-0 right-0 p-6 z-[101]">
@@ -266,10 +266,12 @@ const Navbar: React.FC = () => {
                                 <button
                                     onClick={handleLogin}
                                     disabled={isLoginLoading}
-                                    className="btn-primary w-full"
+                                    className="btn-primary w-full liquid-shimmer"
                                 >
-                                    {isLoginLoading && <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
-                                    {isLoginLoading ? 'Iniciando...' : t('nav.login')}
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {isLoginLoading && <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
+                                        {isLoginLoading ? 'Iniciando...' : t('nav.login')}
+                                    </span>
                                 </button>
                             </div>
                         ) : (

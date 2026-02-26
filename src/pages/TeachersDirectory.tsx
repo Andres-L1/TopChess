@@ -62,8 +62,7 @@ const TeachersDirectory = () => {
     );
 
     const handleReserveClick = (teacher: Teacher) => {
-        setSelectedTeacher(teacher);
-        setIsBookingModalOpen(true);
+        navigate(`/office/${teacher.id}`);
     };
 
     return (
@@ -71,7 +70,7 @@ const TeachersDirectory = () => {
             <div className="max-w-6xl mx-auto">
                 <motion.div initial="hidden" animate="visible" variants={containerVariants}>
                     <motion.div variants={itemVariants} className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-gold text-xs font-black uppercase tracking-[4px] mb-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full liquid-glass-subtle border-white/10 text-gold text-xs font-black uppercase tracking-[4px] mb-6 liquid-glow">
                             <ShieldCheck size={14} /> Red de Élite
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6">
@@ -91,7 +90,7 @@ const TeachersDirectory = () => {
                             placeholder="Buscar maestro por nombre o especialidad..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-full py-6 pl-16 pr-8 text-white placeholder:text-white/30 focus:outline-none focus:border-gold/50 focus:bg-[#111] transition-all text-lg font-light"
+                            className="w-full input-premium py-6 pl-16 pr-8 text-lg font-light"
                         />
                     </motion.div>
 
@@ -110,7 +109,7 @@ const TeachersDirectory = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredTeachers.map(teacher => (
-                                <motion.div key={teacher.id} variants={itemVariants} className="glass-panel p-6 rounded-3xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-gold/30 transition-all duration-300 group flex flex-col h-full">
+                                <motion.div key={teacher.id} variants={itemVariants} className="liquid-glass p-6 rounded-3xl transition-all duration-300 group flex flex-col h-full hover:border-gold/40">
                                     <div className="flex gap-4 items-start mb-6">
                                         <div className="relative">
                                             <img
@@ -148,7 +147,7 @@ const TeachersDirectory = () => {
                                             <span className="ml-2 font-white font-bold">{teacher.price} {teacher.currency === 'USD' ? '$' : '€'}/h</span>
                                         </div>
                                         <PremiumButton size="md" onClick={() => handleReserveClick(teacher)} className="px-6 rounded-xl">
-                                            AGENDA
+                                            VISITAR SALA
                                         </PremiumButton>
                                     </div>
                                 </motion.div>

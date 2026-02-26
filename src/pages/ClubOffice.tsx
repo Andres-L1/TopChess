@@ -98,7 +98,7 @@ const Room: React.FC<{
     className?: string;
     gridPattern?: boolean;
 }> = ({ title, icon, teachers, emptyText, accentColor, className = '', gridPattern = true }) => (
-    <div className={`relative rounded-xl overflow-hidden border border-white/[0.06] bg-[#0d0d0f] ${className}`}>
+    <div className={`relative rounded-2xl overflow-hidden liquid-glass ${className}`}>
         {/* Floor pattern */}
         {gridPattern && (
             <div className="absolute inset-0 opacity-[0.04]" style={{
@@ -117,7 +117,7 @@ const Room: React.FC<{
         <div className="absolute top-0 left-0 w-full h-1 opacity-60" style={{ background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)` }} />
 
         {/* Room header */}
-        <div className="relative z-10 px-4 py-2 border-b border-white/[0.04] flex items-center gap-2 bg-black/30">
+        <div className="relative z-10 px-4 py-2.5 border-b border-white/[0.06] flex items-center gap-2 liquid-glass-subtle rounded-none border-x-0 border-t-0">
             <span className="text-sm">{icon}</span>
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">{title}</span>
             {teachers.length > 0 && (
@@ -320,7 +320,7 @@ const ClubOffice: React.FC = () => {
                 </div>
 
                 {/* Office Grid - 2D Pixel Office Layout */}
-                <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-3 md:p-4 overflow-hidden relative">
+                <div className="rounded-3xl liquid-glass p-3 md:p-4 overflow-hidden relative">
                     {/* Building outline glow */}
                     <div className="absolute inset-0 bg-gradient-to-b from-gold/[0.02] to-transparent pointer-events-none" />
 
@@ -366,7 +366,7 @@ const ClubOffice: React.FC = () => {
                     </div>
 
                     {/* Bottom status bar */}
-                    <div className="mt-4 pt-3 border-t border-white/[0.04] flex flex-wrap items-center gap-4 justify-between">
+                    <div className="mt-4 pt-3 border-t border-white/[0.06] flex flex-wrap items-center gap-4 justify-between">
                         <div className="flex items-center gap-4">
                             {teachers.map(t => (
                                 <div key={t.id} className="flex items-center gap-2">
