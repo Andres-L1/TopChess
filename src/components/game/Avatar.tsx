@@ -21,37 +21,59 @@ const Avatar: React.FC<AvatarProps> = ({ name, x, y, color = '#D4AF37', status, 
             style={{
                 left: 0,
                 top: 0,
-                // Avatar is usually centered above its (x,y) footprint
                 transform: 'translate(-50%, -100%)',
-                width: 40,
-                height: 60
+                width: 48,
+                height: 70
             }}
         >
             {/* Name Tag */}
-            <div className="bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 whitespace-nowrap backdrop-blur-sm border border-white/10 relative">
-                {name}
-                {isLocalUser && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-gold animate-pulse" />
+            <div className={`
+                flex items-center gap-1.5 px-3 py-1 rounded-full mb-2 whitespace-nowrap 
+                backdrop-blur-md border shadow-lg transition-all duration-300
+                ${isLocalUser
+                    ? 'bg-gold/10 border-gold/30 text-gold shadow-gold/20'
+                    : 'bg-white/5 border-white/10 text-white shadow-black/50'
+                }
+            `}>
+                <span className="text-[10px] font-black uppercase tracking-wider">{name}</span>
+                {status === 'online' && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e] animate-pulse" />
+                )}
+                {status === 'in_class' && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_5px_#3b82f6]" />
                 )}
             </div>
 
-            {/* Basic body (temp shape) */}
-            <div className="relative flex flex-col items-center">
+            {/* Premium Character Body */}
+            <div className="relative flex flex-col items-center drop-shadow-2xl">
+                {/* Glow behind local user */}
+                {isLocalUser && (
+                    <div className="absolute inset-0 bg-gold/20 blur-xl rounded-full scale-150 -z-10" />
+                )}
+
                 {/* Head */}
                 <div
-                    className="w-6 h-6 rounded-md shadow-lg z-10"
+                    className="w-7 h-7 rounded-full shadow-[inset_0_-4px_10px_rgba(0,0,0,0.3),_0_4px_10px_rgba(0,0,0,0.5)] z-10 relative"
                     style={{ backgroundColor: '#ffcb9a' }}
-                />
-                {/* Body */}
+                >
+                    <div className="absolute top-1 right-2 w-2 h-2 bg-white/40 rounded-full" />
+                </div>
+
+                {/* Body / Suit */}
                 <div
-                    className="w-8 h-10 rounded-t-lg -mt-1 shadow-lg border-2 border-black/20"
-                    style={{ backgroundColor: color }}
-                />
-                {/* Shadow */}
-                <div className="absolute -bottom-1 w-6 h-2 bg-black/40 blur-[2px] rounded-full z-[-1]" />
+                    className="w-10 h-10 rounded-t-2xl rounded-b-md -mt-2 shadow-[inset_0_-5px_15px_rgba(0,0,0,0.5),_0_5px_15px_rgba(0,0,0,0.5)] relative overflow-hidden backdrop-blur-sm border border-white/10"
+                    style={{ backgroundColor: `${color}f0` }}
+                >
+                    {/* Suit highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
+                </div>
+
+                {/* Ground Shadow */}
+                <div className="absolute -bottom-1.5 w-8 h-2.5 bg-black/60 blur-[3px] rounded-full z-[-1]" />
             </div>
         </motion.div>
     );
 };
 
 export default Avatar;
+
