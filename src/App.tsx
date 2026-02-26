@@ -13,7 +13,7 @@ import AppSidebar from './components/AppSidebar';
 
 
 // Lazy Load Pages
-const Home = lazy(() => import('./pages/Home'));
+
 const Classroom = lazy(() => import('./pages/Classroom'));
 const Chat = lazy(() => import('./pages/Chat'));
 const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'));
@@ -278,17 +278,15 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+        <Route path="/" element={<PageTransition><VirtualWorld /></PageTransition>} />
         <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
         <Route path="/mentors" element={<PrivateRoute><PageTransition><TeachersDirectory /></PageTransition></PrivateRoute>} />
         <Route path="/chat/:teacherId" element={<PrivateRoute><PageTransition><Chat /></PageTransition></PrivateRoute>} />
         <Route path="/room/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
         <Route path="/classroom/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
         <Route path="/office/:teacherId" element={<PrivateRoute><PageTransition><VisitorRoom /></PageTransition></PrivateRoute>} />
-        <Route path="/dashboard" element={<PrivateRoute><PageTransition><TeacherDashboard /></PageTransition></PrivateRoute>} />
-        <Route path="/student-dashboard" element={<PrivateRoute><PageTransition><StudentDashboard /></PageTransition></PrivateRoute>} />
-        <Route path="/world" element={<PrivateRoute><PageTransition><VirtualWorld /></PageTransition></PrivateRoute>} />
-        <Route path="/virtual-room/:teacherId" element={<PrivateRoute><PageTransition><VirtualRoom /></PageTransition></PrivateRoute>} />
+        <Route path="/world" element={<PageTransition><VirtualWorld /></PageTransition>} />
+        <Route path="/virtual-room/:teacherId" element={<PageTransition><VirtualRoom /></PageTransition>} />
         <Route path="/wallet" element={<PrivateRoute><PageTransition><Wallet /></PageTransition></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><PageTransition><UserProfile /></PageTransition></PrivateRoute>} />
         <Route path="/office" element={<PrivateRoute><PageTransition><ClubOffice /></PageTransition></PrivateRoute>} />
