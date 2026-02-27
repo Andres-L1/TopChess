@@ -21,7 +21,7 @@ const LichessCallback = () => {
 
             if (error) {
                 toast.error("Error al autorizar con Lichess");
-                navigate('/dashboard');
+                navigate('/world');
                 return;
             }
 
@@ -32,7 +32,7 @@ const LichessCallback = () => {
             const codeVerifier = sessionStorage.getItem('lichess_code_verifier');
             if (!codeVerifier) {
                 toast.error("Sesión de autenticación expirada");
-                navigate('/dashboard');
+                navigate('/world');
                 return;
             }
 
@@ -60,7 +60,7 @@ const LichessCallback = () => {
                 console.error(e);
                 toast.error("Error en la sincronización");
             } finally {
-                navigate('/dashboard');
+                navigate('/world');
             }
         };
 

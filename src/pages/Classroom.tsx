@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { usePeerAudio } from '../hooks/usePeerAudio';
 import Board, { BoardHandle } from '../components/Board';
 import { useClassroom } from './Classroom/hooks/useClassroom';
@@ -17,8 +17,18 @@ import {
 } from 'lucide-react';
 import { firebaseService } from '../services/firebaseService';
 
-const Classroom: React.FC = () => {
-    const { teacherId } = useParams<{ teacherId: string }>();
+interface ClassroomProps {
+    teacherId?: string; // Optional if you still want a fallback, but normally required when embedded
+    onClose?: () => void;
+}
+
+const Classroom: React.FC<ClassroomProps> = ({ teacherId: propsTeacherId, onClose }) => {
+    // If we're rendered as a route, we might still want to grab it from URL, 
+    // but in this setup we assume the prop is passed by VirtualRoom.
+    // For safety, we keep a fallback just in case some other code still routes here.
+    const navigate = useNavigate();
+    const teacherId = propsTeacherId || "";
+
     const { currentUser } = useAuth();
 
     const {
@@ -162,6 +172,7 @@ const Classroom: React.FC = () => {
                 teacherId={teacherId || ""}
                 teacherName={teacherProfile?.name}
                 onResetStudy={resetStudy}
+                onClose={onClose}
             />
 
             {/* ── Main body */}

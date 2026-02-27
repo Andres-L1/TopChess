@@ -62,11 +62,11 @@ const TeachersDirectory = () => {
     );
 
     const handleReserveClick = (teacher: Teacher) => {
-        navigate(`/office/${teacher.id}`);
+        navigate(`/virtual-room/${teacher.id}`);
     };
 
     return (
-        <div className="min-h-screen pt-28 pb-20 px-4 bg-[#050505]">
+        <div className="p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
                 <motion.div initial="hidden" animate="visible" variants={containerVariants}>
                     <motion.div variants={itemVariants} className="text-center mb-16">

@@ -12,21 +12,9 @@ import AppSidebar from './components/AppSidebar';
 
 
 
-// Lazy Load Pages
-
-const Classroom = lazy(() => import('./pages/Classroom'));
-const Chat = lazy(() => import('./pages/Chat'));
-const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'));
-const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
-const Wallet = lazy(() => import('./pages/Wallet'));
-const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const LichessCallback = lazy(() => import('./pages/LichessCallback'));
-const ClubOffice = lazy(() => import('./pages/ClubOffice'));
-const TeachersDirectory = lazy(() => import('./pages/TeachersDirectory'));
-const VisitorRoom = lazy(() => import('./pages/VisitorRoom'));
-const WorldMap = lazy(() => import('./pages/WorldMap'));
 const VirtualWorld = lazy(() => import('./pages/VirtualWorld'));
 const VirtualRoom = lazy(() => import('./pages/VirtualRoom'));
 
@@ -280,16 +268,8 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><VirtualWorld /></PageTransition>} />
         <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
-        <Route path="/mentors" element={<PrivateRoute><PageTransition><TeachersDirectory /></PageTransition></PrivateRoute>} />
-        <Route path="/chat/:teacherId" element={<PrivateRoute><PageTransition><Chat /></PageTransition></PrivateRoute>} />
-        <Route path="/room/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
-        <Route path="/classroom/:teacherId" element={<PrivateRoute><PageTransition><Classroom /></PageTransition></PrivateRoute>} />
-        <Route path="/office/:teacherId" element={<PrivateRoute><PageTransition><VisitorRoom /></PageTransition></PrivateRoute>} />
         <Route path="/world" element={<PageTransition><VirtualWorld /></PageTransition>} />
         <Route path="/virtual-room/:teacherId" element={<PageTransition><VirtualRoom /></PageTransition>} />
-        <Route path="/wallet" element={<PrivateRoute><PageTransition><Wallet /></PageTransition></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><PageTransition><UserProfile /></PageTransition></PrivateRoute>} />
-        <Route path="/office" element={<PrivateRoute><PageTransition><ClubOffice /></PageTransition></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><PageTransition><AdminDashboard /></PageTransition></AdminRoute>} />
         <Route path="/lichess-callback" element={<PageTransition><LichessCallback /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
@@ -299,15 +279,9 @@ const AnimatedRoutes = () => {
 };
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  const { isAuthenticated } = useAuth();
-  const isImmersive = location.pathname.includes('/classroom/') || location.pathname.includes('/room/') || location.pathname.includes('/office/') || location.pathname.includes('/world') || location.pathname.includes('/virtual-room');
-
   return (
-    <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans flex">
-      {isAuthenticated && !isImmersive && <AppSidebar />}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isAuthenticated && !isImmersive ? 'lg:pl-64' : ''}`}>
-        {!isImmersive && !isAuthenticated && <Navbar />}
+    <div className="min-h-screen bg-[#161512] text-[#bababa] font-sans flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Toaster
           position="top-center"
           toastOptions={{
@@ -330,7 +304,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             },
           }}
         />
-        <main className={isImmersive ? 'w-full h-full' : (isAuthenticated ? 'pt-6' : 'pt-16')}>
+        <main className="w-full h-full">
           {children}
         </main>
       </div>

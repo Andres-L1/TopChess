@@ -14,6 +14,7 @@ interface ClassroomHeaderProps {
     teacherId: string;
     teacherName?: string;
     onResetStudy: () => void;
+    onClose?: () => void;
 }
 
 const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
@@ -25,7 +26,8 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
     userRole,
     teacherId,
     teacherName,
-    onResetStudy
+    onResetStudy,
+    onClose
 }) => {
     const navigate = useNavigate();
 
@@ -113,7 +115,12 @@ const ClassroomHeader: React.FC<ClassroomHeaderProps> = ({
                             }
                         }
                         toast.success('Clase finalizada');
-                        navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard');
+
+                        if (onClose) {
+                            onClose();
+                        } else {
+                            navigate(userRole === 'teacher' ? '/dashboard' : '/student-dashboard');
+                        }
                     }}
                     className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-2.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest border border-red-500/20 transition-all group"
                 >

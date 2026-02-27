@@ -12,6 +12,12 @@ import { getTeacherTier } from '../utils/progression';
 // Dashboard Components
 import TeacherDashboard from './TeacherDashboard';
 import StudentDashboard from './StudentDashboard';
+import TeachersDirectory from './TeachersDirectory';
+import UserProfile from './UserProfile';
+import Wallet from './Wallet';
+import Chat from './Chat';
+import Classroom from './Classroom';
+import { User, Settings, LayoutDashboard, Search, LogOut, MessagesSquare, Wallet as WalletIcon } from 'lucide-react';
 
 const TILE_SIZE = 40;
 const MOVEMENT_SPEED = 7;
@@ -71,7 +77,8 @@ const VirtualRoom: React.FC = () => {
 
     const [teacher, setTeacher] = useState<Teacher | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeModal, setActiveModal] = useState<string | null>(null);
+    const [activeModal, setActiveModal] = useState<'student_dashboard' | 'teacher_dashboard' | 'directory' | 'booking' | 'lichess' | 'profile' | 'classroom' | 'wallet' | null>(null);
+    const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
     useEffect(() => {
         const loadClassroom = async () => {
@@ -285,36 +292,88 @@ const VirtualRoom: React.FC = () => {
                 </div>
             </div>
 
-            {/* Exit Button */}
-            <div className="fixed top-6 right-6 z-50">
-                <button
-                    onClick={() => navigate('/world')}
-                    className="group relative overflow-hidden rounded-full p-[1px] transition-all hover:scale-105 active:scale-95"
-                >
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/40 to-white/20 rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative bg-[#05050A]/80 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/5 flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4 text-white/50 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                        </svg>
-                        <span className="text-white/80 group-hover:text-white font-bold text-xs tracking-widest uppercase transition-colors">
-                            Volver al Mundo
-                        </span>
-                    </div>
-                </button>
-            </div>
-
-            {/* UI Overlay: HUD for logged-in users */}
+            {/* UI Overlay: Premium HUD for logged-in users */}
             {auth?.isAuthenticated && (
-                <div className="fixed bottom-8 right-8 z-50 flex gap-4">
-                    {(currentUser as any)?.role === 'teacher' ? (
-                        <button onClick={() => setActiveModal('teacher_dashboard')} className="px-6 py-3 bg-[#111]/90 border border-white/10 rounded-full text-white font-bold hover:bg-white/10 backdrop-blur-xl flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95">
-                            <span className="text-xl">📊</span> Mi Academia
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                    <div className="bg-[#0A0A0F]/90 backdrop-blur-2xl border border-white/10 p-2 rounded-2xl flex items-center gap-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+
+                        {/* Avatar Mini-profile */}
+                        <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/5 mr-4">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/50 to-gold/20 flex items-center justify-center border border-gold/30">
+                                <User className="w-5 h-5 text-gold" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-white font-bold text-sm leading-tight">{currentUserName}</span>
+                                <span className="text-gold/80 text-xs font-semibold uppercase tracking-wider">
+                                    {(currentUser as any)?.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Main Action Buttons */}
+                        <button
+                            onClick={() => setActiveModal('directory')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <Search className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Explorar</span>
                         </button>
-                    ) : (
-                        <button onClick={() => setActiveModal('student_dashboard')} className="px-6 py-3 bg-[#111]/90 border border-white/10 rounded-full text-white font-bold hover:bg-white/10 backdrop-blur-xl flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95">
-                            <span className="text-xl">🎒</span> Mi Perfil
+
+                        {(currentUser as any)?.role === 'teacher' ? (
+                            <button
+                                onClick={() => setActiveModal('teacher_dashboard')}
+                                className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group relative"
+                            >
+                                <div className="absolute inset-0 bg-gold/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <LayoutDashboard className="w-6 h-6 group-hover:text-gold transition-colors relative z-10" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">Academia</span>
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => setActiveModal('student_dashboard')}
+                                className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group relative"
+                            >
+                                <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <User className="w-6 h-6 group-hover:text-blue-400 transition-colors relative z-10" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">Perfil</span>
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => setActiveModal('wallet')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <WalletIcon className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Billetera</span>
                         </button>
-                    )}
+
+                        <button
+                            onClick={() => {
+                                if (auth?.isAuthenticated && teacherId) {
+                                    setActiveChatId(teacherId);
+                                }
+                            }}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <MessagesSquare className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Chat</span>
+                        </button>
+
+                        <button
+                            onClick={() => setActiveModal('profile')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <Settings className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Ajustes</span>
+                        </button>
+
+                        <div className="w-px h-10 bg-white/10 mx-2" />
+
+                        <button
+                            onClick={() => navigate('/world')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all active:scale-95 group relative"
+                        >
+                            <LogOut className="w-6 h-6 group-hover:text-red-400 transition-colors relative z-10" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">Lobby</span>
+                        </button>
+
+                    </div>
                 </div>
             )}
 
@@ -391,6 +450,21 @@ const VirtualRoom: React.FC = () => {
                 ))}
             </div>
 
+            {/* Chat Drawer */}
+            <AnimatePresence>
+                {activeChatId && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed right-0 top-0 bottom-0 w-full md:w-[400px] z-[110] bg-[#0A0A0F] border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.8)]"
+                    >
+                        <Chat targetId={activeChatId} onClose={() => setActiveChatId(null)} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Modals for Interactive UI (Superimposed over 2D World) */}
             <AnimatePresence>
                 {activeModal && (
@@ -405,17 +479,19 @@ const VirtualRoom: React.FC = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-[#0A0A0F]/90 backdrop-blur-2xl border border-white/10 rounded-3xl w-full max-w-5xl h-[80vh] overflow-hidden overflow-y-auto relative shadow-[0_0_50px_rgba(212,175,55,0.1)]"
+                            className={`bg-[#0A0A0F]/90 backdrop-blur-2xl border border-white/10 rounded-3xl w-full ${activeModal === 'classroom' ? 'max-w-[100vw] h-[100vh] rounded-none' : 'max-w-5xl h-[80vh] overflow-hidden overflow-y-auto relative shadow-[0_0_50px_rgba(212,175,55,0.1)]'}`}
                             onClick={e => e.stopPropagation()}
                         >
-                            <button
-                                onClick={() => setActiveModal(null)}
-                                className="absolute top-6 right-6 z-50 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 p-3 rounded-full backdrop-blur-md transition-all"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                            {activeModal !== 'classroom' && (
+                                <button
+                                    onClick={() => setActiveModal(null)}
+                                    className="absolute top-6 right-6 z-50 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 p-3 rounded-full backdrop-blur-md transition-all"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
 
                             {/* Inject the traditional UI components here based on what was clicked */}
                             {activeModal === 'student_dashboard' && (
@@ -426,6 +502,26 @@ const VirtualRoom: React.FC = () => {
                             {activeModal === 'teacher_dashboard' && (
                                 <div className="p-0 relative h-full bg-[#05050A]">
                                     <TeacherDashboard />
+                                </div>
+                            )}
+                            {activeModal === 'directory' && (
+                                <div className="p-0 relative h-full bg-[#05050A]">
+                                    <TeachersDirectory />
+                                </div>
+                            )}
+                            {activeModal === 'profile' && (
+                                <div className="p-0 relative h-full bg-[#05050A]">
+                                    <UserProfile />
+                                </div>
+                            )}
+                            {activeModal === 'wallet' && (
+                                <div className="p-0 relative h-full bg-[#05050A]">
+                                    <Wallet />
+                                </div>
+                            )}
+                            {activeModal === 'classroom' && (
+                                <div className="p-0 relative h-full bg-[#05050A]">
+                                    <Classroom teacherId={teacherId!} onClose={() => setActiveModal(null)} />
                                 </div>
                             )}
                             {activeModal === 'booking' && (

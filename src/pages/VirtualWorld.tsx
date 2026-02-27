@@ -7,8 +7,14 @@ import { firebaseService } from '../services/firebaseService';
 import { useVirtualWorld } from '../hooks/useVirtualWorld';
 import { Teacher } from '../types/index';
 import { getTeacherTier } from '../utils/progression';
+import { User, Settings, LayoutDashboard, Search, MessagesSquare, Wallet as WalletIcon } from 'lucide-react';
 import StudentDashboard from './StudentDashboard';
 import TeacherDashboard from './TeacherDashboard';
+import TeachersDirectory from './TeachersDirectory';
+import UserProfile from './UserProfile';
+import Chat from './Chat';
+import Wallet from './Wallet';
+import toast from 'react-hot-toast';
 
 // Constants for the map
 const TILE_SIZE = 40;
@@ -40,7 +46,8 @@ const VirtualWorld: React.FC = () => {
     const [keysPressed, setKeysPressed] = useState<{ [key: string]: boolean }>({});
     const [clickEffect, setClickEffect] = useState<{ x: number, y: number, id: number } | null>(null);
     const [showLoginModal, setShowLoginModal] = useState(false);
-    const [activeModal, setActiveModal] = useState<'student_dashboard' | 'teacher_dashboard' | null>(null);
+    const [activeModal, setActiveModal] = useState<'student_dashboard' | 'teacher_dashboard' | 'directory' | 'profile' | 'wallet' | null>(null);
+    const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
     // Real-time Multiplayer
     const { users, updatePosition } = useVirtualWorld(currentUserId, 'lobby', position.x, position.y);
@@ -186,36 +193,82 @@ const VirtualWorld: React.FC = () => {
                 </div>
             </div>
 
-            {/* UI Overlay: Exit Button */}
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-                <button
-                    onClick={() => navigate('/')}
-                    className="group relative overflow-hidden rounded-full p-[1px] transition-all hover:scale-105 active:scale-95"
-                >
-                    <span className="absolute inset-0 bg-gradient-to-r from-gold/50 via-white/20 to-gold/50 rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative bg-[#05050A]/90 backdrop-blur-xl px-10 py-3 rounded-full border border-white/5 flex items-center justify-center gap-3">
-                        <svg className="w-4 h-4 text-white/70 group-hover:text-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        <span className="text-white/80 group-hover:text-white font-bold text-sm tracking-[0.2em] uppercase transition-colors">
-                            Salir al Lobby
-                        </span>
-                    </div>
-                </button>
-            </div>
-
-            {/* UI Overlay: HUD for logged-in users */}
+            {/* UI Overlay: Premium HUD for logged-in users */}
             {auth?.isAuthenticated && (
-                <div className="fixed bottom-8 right-8 z-50 flex gap-4">
-                    {(currentUser as any)?.role === 'teacher' ? (
-                        <button onClick={() => setActiveModal('teacher_dashboard')} className="px-6 py-3 bg-[#111]/90 border border-white/10 rounded-full text-white font-bold hover:bg-white/10 backdrop-blur-xl flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95">
-                            <span className="text-xl">📊</span> Mi Academia
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                    <div className="bg-[#0A0A0F]/90 backdrop-blur-2xl border border-white/10 p-2 rounded-2xl flex items-center gap-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+
+                        {/* Avatar Mini-profile */}
+                        <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/5 mr-4">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/50 to-gold/20 flex items-center justify-center border border-gold/30">
+                                <User className="w-5 h-5 text-gold" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-white font-bold text-sm leading-tight">{currentUserName}</span>
+                                <span className="text-gold/80 text-xs font-semibold uppercase tracking-wider">
+                                    {(currentUser as any)?.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Main Action Buttons */}
+                        {(currentUser as any)?.role === 'teacher' ? (
+                            <button
+                                onClick={() => setActiveModal('teacher_dashboard')}
+                                className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group relative"
+                            >
+                                <div className="absolute inset-0 bg-gold/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <LayoutDashboard className="w-6 h-6 group-hover:text-gold transition-colors relative z-10" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">Mi Academia</span>
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => setActiveModal('student_dashboard')}
+                                className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group relative"
+                            >
+                                <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <User className="w-6 h-6 group-hover:text-blue-400 transition-colors relative z-10" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">Mi Perfil</span>
+                            </button>
+                        )}
+
+                        <div className="w-px h-10 bg-white/10 mx-2" />
+
+                        <button
+                            onClick={() => setActiveModal('directory')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <Search className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Explorar</span>
                         </button>
-                    ) : (
-                        <button onClick={() => setActiveModal('student_dashboard')} className="px-6 py-3 bg-[#111]/90 border border-white/10 rounded-full text-white font-bold hover:bg-white/10 backdrop-blur-xl flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95">
-                            <span className="text-xl">🎒</span> Mi Perfil
+
+                        <button
+                            onClick={() => {
+                                if (!auth?.isAuthenticated) {
+                                    setShowLoginModal(true);
+                                    return;
+                                }
+                                toast.error("Entra a la academia de un profesor para conversar con el.");
+                            }}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group relative"
+                        >
+                            <MessagesSquare className="w-6 h-6 group-hover:text-white transition-colors relative z-10" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">Chat</span>
                         </button>
-                    )}
+
+                        <button
+                            onClick={() => setActiveModal('profile')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <Settings className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Ajustes</span>
+                        </button>
+
+                        <button
+                            onClick={() => setActiveModal('wallet')}
+                            className="flex flex-col items-center gap-1 p-3 px-5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 group">
+                            <WalletIcon className="w-6 h-6 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Billetera</span>
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -412,6 +465,21 @@ const VirtualWorld: React.FC = () => {
                 )}
             </AnimatePresence>
 
+            {/* Chat Drawer */}
+            <AnimatePresence>
+                {activeChatId && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed right-0 top-0 bottom-0 w-full md:w-[400px] z-[110] bg-[#0A0A0F] border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.8)]"
+                    >
+                        <Chat targetId={activeChatId} onClose={() => setActiveChatId(null)} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Dashboard Modals */}
             <AnimatePresence>
                 {activeModal && (
@@ -441,6 +509,9 @@ const VirtualWorld: React.FC = () => {
                             <div className="p-0 relative h-full bg-[#05050A]">
                                 {activeModal === 'student_dashboard' && <StudentDashboard />}
                                 {activeModal === 'teacher_dashboard' && <TeacherDashboard />}
+                                {activeModal === 'directory' && <TeachersDirectory />}
+                                {activeModal === 'profile' && <UserProfile />}
+                                {activeModal === 'wallet' && <Wallet />}
                             </div>
                         </motion.div>
                     </motion.div>

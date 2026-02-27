@@ -55,22 +55,7 @@ const Wallet: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#111] text-[#e0e0d1] font-sans pb-20 selection:bg-gold/30 selection:text-white">
-            {/* Header */}
-            <div className="sticky top-0 z-50 bg-[#111]/80 backdrop-blur-xl border-b border-white/5 px-4 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-white">
-                        <ChevronLeft size={20} />
-                    </button>
-                    <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        Mi Billetera <Sparkles size={16} className="text-gold" />
-                    </h1>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-transparent border border-gold/10 flex items-center justify-center p-1 overflow-hidden">
-                    <img src={currentUser?.photoURL || ''} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                </div>
-            </div>
-
+        <div className="w-full font-sans selection:bg-gold/30 selection:text-white">
             <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
                 {/* Virtual Card (Fintech Style) */}
                 <div className="relative w-full aspect-[1.586/1] max-w-md mx-auto rounded-3xl p-8 mb-8 overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform transition-transform duration-500 hover:scale-[1.02]">

@@ -11,16 +11,15 @@ const Onboarding = () => {
     const [view, setView] = useState<'selection' | 'student_form' | 'teacher_form'>('selection');
 
     React.useEffect(() => {
-        if (userRole === 'teacher') navigate('/dashboard');
-        if (userRole === 'student') navigate('/student-dashboard');
+        if (userRole === 'teacher' || userRole === 'student') navigate('/world');
     }, [userRole, navigate]);
 
     const handleStudentComplete = () => {
-        navigate('/student-dashboard');
+        navigate('/world');
     };
 
     const handleTeacherComplete = () => {
-        navigate('/dashboard');
+        navigate('/world');
     };
 
     if (view === 'student_form') {

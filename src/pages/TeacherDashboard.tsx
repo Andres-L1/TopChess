@@ -22,6 +22,8 @@ import { getTeacherTierProgress } from '../utils/progression';
 import CharacterCreatorModal from '../components/CharacterCreatorModal';
 import { RoomView, FurniturePlacement } from '../components/RoomView';
 import { FurnitureType } from '../components/Furniture';
+import ProgressionModal from '../components/ProgressionModal';
+
 interface DashboardStats {
     earnings: number;
     students: number;
@@ -52,6 +54,7 @@ const TeacherDashboard = () => {
     const [showClubNameModal, setShowClubNameModal] = useState(false);
     const [clubNameInput, setClubNameInput] = useState('');
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+    const [isProgressionModalOpen, setIsProgressionModalOpen] = useState(false);
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -425,6 +428,14 @@ const TeacherDashboard = () => {
                                         </span>
                                     )}
                                 </div>
+
+                                <button
+                                    onClick={() => setIsProgressionModalOpen(true)}
+                                    className="mt-4 px-4 py-2 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold border border-gold/20 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 w-max"
+                                >
+                                    <TrendingUp className="w-4 h-4" />
+                                    Ver Roadmap de Mejoras
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -579,6 +590,7 @@ const TeacherDashboard = () => {
                 )}
             </div>
             <CharacterCreatorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
+            <ProgressionModal isOpen={isProgressionModalOpen} onClose={() => setIsProgressionModalOpen(false)} currentEarnings={teacherProfile?.earnings || 0} />
         </React.Fragment>
     );
 
